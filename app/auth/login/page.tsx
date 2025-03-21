@@ -4,11 +4,20 @@ import Container from "@/components/Containter";
 import Link from "next/link";
 import { useState } from "react";
 import api from "@/app/lib/axios";
+import { useRouter } from "next/navigation";
 
 export default function Login() {
+    const router = useRouter()
     const [loginData, setLoginData] = useState({})
     const handleLogin = async () => {
         const res = await api.post("/auth/login", loginData)
+        console.log("RES", res.data.token);
+        console.log(res);
+        
+        if (res.data.token !== ""){
+            console.log("dentro if");
+            router.push("/home")
+        }
     }
 
     return (

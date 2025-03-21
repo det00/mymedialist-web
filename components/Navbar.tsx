@@ -18,7 +18,8 @@ export default function Navbar() {
           <div className="col-12">
             <nav className="main-nav">
               <Link href="/" className="logo">
-                <img src="/assets//images/logo.png" alt="Logo" />
+                {/* <img src="/assets//images/logo.png" alt="Logo" /> */}
+                MYMEDIALIST(logo a futuro)
               </Link>
               <div className="search-input">
                 <form id="search" action="#">

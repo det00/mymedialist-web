@@ -1,15 +1,14 @@
+"use client";
 
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
 export default function Home() {
-  return (
-<div className="container">
-  <div className="row">
-    <div className="col-lg-12">
-      <div className="page-content">
-        -- Contenido aquí --
-      </div>
-    </div>
-  </div>
-</div>
-  );
+  const router = useRouter();
+
+  useEffect(() => {
+    router.push("/auth/login");
+  }, []);
+
+  return null;
 }

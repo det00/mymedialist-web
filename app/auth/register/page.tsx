@@ -2,13 +2,18 @@
 import Container from "@/components/Containter";
 import { useState } from "react";
 import api from "@/app/lib/axios";
+import { useRouter } from "next/navigation";
 
 
 export default function Login() {
+    const router = useRouter()
     const [registerData, setRegisterData] = useState({})
     const handleRegister = async () => {
         const res = await api.post("/auth/register", registerData)
         console.log("RES", res);
+        if (res.data.message === ""){
+            router.push("/auth/login")
+        }
     }
 
 
