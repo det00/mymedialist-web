@@ -1,15 +1,15 @@
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@100;200;300;400;500;600;700;800;900&display=swap');
-@import url('/assets/css/bootstrap.min.css');
-@import url('/assets/css/fontawesome.css');
-@import url('/assets/css/templatemo-cyborg-gaming.css');
-@import url('/assets/css/owl.css');
-@import url('/assets/css/animate.css');
-@import url('https://unpkg.com/swiper@7/swiper-bundle.min.css');
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@100;200;300;400;500;600;700;800;900&display=swap");
+@import url("/assets/css/bootstrap.min.css");
+@import url("/assets/css/fontawesome.css");
+@import url("/assets/css/templatemo-cyborg-gaming.css");
+@import url("/assets/css/owl.css");
+@import url("/assets/css/animate.css");
+@import url("https://unpkg.com/swiper@7/swiper-bundle.min.css");
 
 body {
   margin: 0;
   padding: 0;
-  font-family: 'Poppins', sans-serif;
+  font-family: "Poppins", sans-serif;
   min-height: 100vh; /* Asegura que el body ocupe al menos toda la pantalla */
   display: flex;
   flex-direction: column;
@@ -22,4 +22,25 @@ body {
 footer {
   flex-shrink: 0; /* Evita que el footer se comprima */
   width: 100%;
+}
+
+.ahref {
+  font-size: 14px;
+  color: #fff;
+  background-color: #e75e8d;
+  padding: 12px 30px;
+  display: inline-block;
+  border-radius: 25px;
+  font-weight: 400;
+  text-transform: capitalize;
+  letter-spacing: 0.5px;
+  transition: all .3s;
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.ahref:hover {
+  background-color: #fff;
+  color: #e75e8d;
 }
