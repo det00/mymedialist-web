@@ -13,6 +13,7 @@ body {
   min-height: 100vh; /* Asegura que el body ocupe al menos toda la pantalla */
   display: flex;
   flex-direction: column;
+  background-color: #0f1010; /* NUEVO COLOR*/
 }
 
 .main-content {
@@ -34,7 +35,7 @@ footer {
   font-weight: 400;
   text-transform: capitalize;
   letter-spacing: 0.5px;
-  transition: all .3s;
+  transition: all 0.3s;
   position: relative;
   overflow: hidden;
   cursor: pointer;
@@ -43,4 +44,88 @@ footer {
 .ahref:hover {
   background-color: #fff;
   color: #e75e8d;
+}
+
+#search input {
+  color: #adacac !important;
+}
+
+.mt-110 {
+  margin-top: 100px;
+}
+
+.bg-content {
+  /* background-color: #27292a; */
+  background-color: #191b1c;
+}
+
+.z-1000 {
+  z-index: 1000;
+}
+
+.text-bg-pink {
+  background-color: #e75e8d;
+}
+
+.text-multiline-truncate {
+  display: -webkit-box;
+  line-clamp: 3;
+  -webkit-line-clamp: 3; /* Número de líneas antes de truncar */
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.bg-2{
+  background-color: #1f2122;
+}
+
+.bg-3{
+  background-color: #0f1011;
+}
+
+.bg-search{
+  background-color: #26282a;
+}
+
+.cursor-pointer{
+  cursor: pointer;
+}
+
+.text-color-base{
+  color: #ababab;
+}
+
+.dropdown-menu {
+  transition: opacity 0.2s ease;
+}
+
+@keyframes slideLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-10);
+  }
+}
+
+@keyframes slideRight {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+}
+
+.dropstart .dropdown-menu {
+  animation: slideLeft 0.3s ease-out;
+}
+
+.dropstart .dropdown-menu:not(.show) {
+  animation: slideRight 0.2s ease-in;
+  display: none !important;
 }
