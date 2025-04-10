@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Diseño de Aplicación</title>
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Google Fonts (Roboto) -->
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      background-color: #f1f5f9;
+      font-family: 'Roboto', sans-serif;
+    }
+    .main-container {
+      background-color: #f8f9fa;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      min-height: 400px;
+      padding: 20px;
+    }
+    .section {
+      background-color: #e9ecef;
+      border-radius: 8px;
+      padding: 16px;
+    }
+    .left-section img {
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+    .right-section img {
+      max-width: 100%;
+      max-height: 50%;
+      border-radius: 8px;
+    }
+    .right-section .metadata {
+      color: #6c757d;
+      font-size: 14px;
+      margin-top: 16px;
+    }
+    .right-section .btn {
+      margin: 8px 4px;
+    }
+    .description {
+      font-size: 16px;
+      color: #212529;
+    }
+  </style>
+</head>
+<body>
+  <div class="container my-4">
+    <div class="main-container d-flex">
+      <div class="row flex-grow-1">
+        <!-- Sección izquierda -->
+        <div class="col-md-8 left-section">
+          <div class="row mb-3">
+            <div class="section d-flex justify-content-center">
+              <img src="https://via.placeholder.com/300x200" alt="Portada del libro">
+            </div>
+          </div>
+          <div class="row">
+            <div class="section">
+              <p class="description fw-bold">
+                La aclamada continuación de <span class="fst-italic">El camino de los reyes</span> es, como el primer volumen de «El Archivo de las Tormentas», el resultado de más de una década de construcción y escritura de universos, convertida en una obra maestra de la fantasía contemporánea en diez volúmenes. Brandon Sanderson se postula con ella como el autor del género que más lectores está ganando en todo el mundo.
+              </p>
+            </div>
+          </div>
+        </div>
+        <!-- Sección derecha -->
+        <div class="col-md-4 right-section d-flex flex-column align-items-center justify-content-center section">
+          <img src="https://via.placeholder.com/200x300" alt="Portada grande">
+          <div class="metadata text-center">
+            <p>Autor: Brandon Sanderson</p>
+            <p>Género: Fantasía</p>
+            <p>Año: 2014</p>
+          </div>
+          <div class="text-center">
+            <button class="btn btn-primary">Agregar a favoritos</button>
+            <button class="btn btn-primary">Leer ahora</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

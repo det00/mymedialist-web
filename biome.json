@@ -1,0 +1,18 @@
+{
+    "linter": {
+      "enabled": true,
+      "rules": {
+        "correctness": {
+          "noUnusedVariables": "warn"
+        },
+        "suspicious": {
+          "noExplicitAny": "warn"
+        }
+      }
+    },
+    "formatter": {
+      "enabled": true,
+      "indentStyle": "space",
+      "indentWidth": 2
+    }
+  }

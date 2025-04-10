@@ -20,7 +20,7 @@ export default function Login() {
 
   return (
     <div className="row vh-100 justify-content-center align-items-center">
-      <div className="col-8 col-sm-5 col-md-5 col-lg-4 col-xl-2 bg-content rounded-4 p-4">
+      <div className="col-8 col-sm-5 col-md-5 col-lg-4 col-xl-3 bg-content rounded-4 p-4">
         <h1 className="card-title text-center mb-4">Login</h1>
         <form>
           <div className="mb-3">
@@ -28,6 +28,11 @@ export default function Login() {
               type="email"
               className="form-control"
               placeholder="Email"
+/*               onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  console.log("Se presionó Enter");
+                }
+              }} */
               onChange={(e) =>
                 setLoginData((prev) => ({
                   ...prev,

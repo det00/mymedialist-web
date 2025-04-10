@@ -1,11 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import api from "@/app/lib/axios";
 import { motion } from "framer-motion";
 import Image from "next/image";
-import { Buscar } from "@/app/types";
+import type { Buscar } from "@/app/types";
 import { useRouter } from "next/navigation";
 
 export default function Navbar() {
@@ -16,8 +16,7 @@ export default function Navbar() {
   const [resultados, setResultados] = useState<Buscar[]>([]);
   const [token, setToken] = useState<string | null>("");
 
-  const search = async () => {
-    console.log("BT", busqueda, tipo);
+  const search = useCallback(async () => {
     const res = await api.get("/buscar", {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -27,7 +26,7 @@ export default function Navbar() {
     console.log(res);
 
     setResultados(res.data);
-  };
+  }, [busqueda, tipo, token]);
 
   const toggleMenu = (): void => {
     setIsMenuOpen(!isMenuOpen);
@@ -43,17 +42,41 @@ export default function Navbar() {
       event.preventDefault();
       setShowResultados(false);
       router.push(
-        `/busqueda?busqueda=${encodeURIComponent(busqueda)}&tipo=${encodeURIComponent(tipo)}`
+        `/busqueda?busqueda=${encodeURIComponent(
+          busqueda
+        )}&tipo=${encodeURIComponent(tipo)}`
       );
     }
+  };
+
+  const getTipoUrl = () => {
+    switch (tipo) {
+      case "P": {
+        return "pelicula";
+      }
+      case "V": {
+        return "videojuego";
+      }
+      case "L": {
+        return "libro";
+      }
+      case "S": {
+        return "serie";
+      }
+    }
+  };
+
+  const handleSearhItem = () => {
+    setShowResultados(false);
+    setBusqueda("");
+    setResultados([]);
   };
 
   useEffect(() => {
     if (busqueda.length > 2) {
       search();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [busqueda, tipo]);
+  }, [busqueda, search]);
 
   useEffect(() => {
     setToken(localStorage.getItem("token"));
@@ -66,7 +89,6 @@ export default function Navbar() {
           <div className="col-12">
             <nav className="main-nav">
               <Link href="/home" className="logo">
-                {/* <img src="/assets//images/logo.png" alt="Logo" /> */}
                 MYMEDIALIST(logo a futuro)
               </Link>
               <div className="search-input position-relative z-1000">
@@ -82,7 +104,7 @@ export default function Navbar() {
                     onPointerUp={() => setShowResultados(true)}
                     onKeyDown={handleEnter}
                   />
-                  <i className="fa fa-search"></i>
+                  <i className="fa fa-search" />
                 </form>
               </div>
               <ul
@@ -109,6 +131,7 @@ export default function Navbar() {
                   </Link>
                 </li>
               </ul>
+              {/* biome-ignore lint/a11y/useValidAnchor: <explanation> */}
               <a className="menu-trigger" onClick={toggleMenu}>
                 <span>Menu</span>
               </a>
@@ -133,25 +156,33 @@ export default function Navbar() {
               <div className="col-lg-12">
                 <div className="heading-section mb-4">
                   <span
-                    className={`badge rounded-pill p-2 m-1 fw-normal ${tipo === "P" ? "text-bg-pink" : "btn btn-secondary"}`}
+                    className={`badge rounded-pill p-2 m-1 fw-normal ${
+                      tipo === "P" ? "text-bg-pink" : "btn btn-secondary"
+                    }`}
                     onClick={() => setTipo("P")}
                   >
-                    Penículas
+                    Películas
                   </span>
                   <span
-                    className={`badge rounded-pill p-2 m-1 fw-normal ${tipo === "L" ? "text-bg-pink" : "btn btn-secondary"}`}
+                    className={`badge rounded-pill p-2 m-1 fw-normal ${
+                      tipo === "L" ? "text-bg-pink" : "btn btn-secondary"
+                    }`}
                     onClick={() => setTipo("L")}
                   >
                     Libros
                   </span>
                   <span
-                    className={`badge rounded-pill p-2 m-1 fw-normal ${tipo === "V" ? "text-bg-pink" : "btn btn-secondary"}`}
+                    className={`badge rounded-pill p-2 m-1 fw-normal ${
+                      tipo === "V" ? "text-bg-pink" : "btn btn-secondary"
+                    }`}
                     onClick={() => setTipo("V")}
                   >
                     Juegos
                   </span>
                   <span
-                    className={`badge rounded-pill p-2 m-1 fw-normal ${tipo === "S" ? "text-bg-pink" : "btn btn-secondary"}`}
+                    className={`badge rounded-pill p-2 m-1 fw-normal ${
+                      tipo === "S" ? "text-bg-pink" : "btn btn-secondary"
+                    }`}
                     onClick={() => setTipo("S")}
                   >
                     Series
@@ -166,35 +197,43 @@ export default function Navbar() {
                   {/* <div className="row"> */}
                   {resultados.slice(0, 6).map((item) => {
                     return (
-                      <div
-                        key={item.id_api}
-                        className="col-lg-12 shadow-lg bg-search rounded-4 p-2 shadow cursor-pointer"
-                        style={{
-                          transition:
-                            "transform 0.3s ease, box-shadow 0.3s ease", // Transición suave
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.transform = "translateY(-10px)"; // Mueve la tarjeta hacia arriba
-                          e.currentTarget.style.boxShadow =
-                            "0 10px 20px rgba(0, 0, 0, 0.3)"; // Aumenta la sombra
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.transform = "translateY(0)"; // Vuelve a la posición original
-                          e.currentTarget.style.boxShadow =
-                            "0 0.5rem 1rem rgba(0, 0, 0, 0.15)"; // Sombra original de shadow-lg
-                        }}
-                      >
-                        <Image
-                          src={item.imagen}
-                          alt={item.titulo}
-                          width={100}
-                          height={100}
-                          className="img-fluid rounded-4"
-                        />
-                        <div className="text-secondary pb-10 fw-normal text-justify">
-                          {item.titulo}
-                        </div>
-                      </div>
+                      <>
+                        <Link
+                          key={item.id_api}
+                          href={`/${getTipoUrl()}/${item.id_api}`}
+                          onClick={handleSearhItem}
+                        >
+                          <div
+                            className="col-lg-12 shadow-lg bg-search rounded-4 p-2 shadow cursor-pointer"
+                            style={{
+                              transition:
+                                "transform 0.3s ease, box-shadow 0.3s ease", // Transición suave
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.transform =
+                                "translateY(-10px)"; // Mueve la tarjeta hacia arriba
+                              e.currentTarget.style.boxShadow =
+                                "0 10px 20px rgba(0, 0, 0, 0.3)"; // Aumenta la sombra
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.transform = "translateY(0)"; // Vuelve a la posición original
+                              e.currentTarget.style.boxShadow =
+                                "0 0.5rem 1rem rgba(0, 0, 0, 0.15)"; // Sombra original de shadow-lg
+                            }}
+                          >
+                            <Image
+                              src={item.imagen}
+                              alt={item.titulo}
+                              width={1000}
+                              height={100}
+                              className="img-fluid rounded-4"
+                            />
+                            <div className="text-secondary pb-10 fw-normal text-justify">
+                              {item.titulo}
+                            </div>
+                          </div>
+                        </Link>
+                      </>
                     );
                   })}
                 </div>

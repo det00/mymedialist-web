@@ -2,7 +2,7 @@
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import api from "@/app/lib/axios";
-import { Buscar } from "@/app/types";
+import type { Buscar } from "@/app/types";
 import moment from "moment";
 import "moment/locale/es";
 import ItemSearchScreen from "@/components/ItemSearchScreen";
@@ -27,6 +27,8 @@ export default function Busqueda() {
         },
       });
       setResultados(res.data);
+      console.log("RESBUSCAR", res.data);
+      
     };
     search();
   }, [searchParams]);
