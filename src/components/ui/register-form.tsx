@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { X } from "lucide-react";
 import { AvatarSelector } from "@/components/AvatarSelector";
+import { authService } from "@/lib/auth";
 
 interface RegisterFormProps {
   showRegistro: (value: boolean) => void;
@@ -23,31 +24,69 @@ export function RegisterForm({ showRegistro, showLogin }: RegisterFormProps) {
   const [error, setError] = useState<string | null>(null);
   const [step, setStep] = useState<number>(1); // 1: datos básicos, 2: selección de avatar
 
-  // Simular registro sin backend
+  // Registrar usuario con el backend
   const registrarUsuario = async (): Promise<boolean> => {
     setLoading(true);
     setError(null);
     
     try {
-      // Simular retraso de red
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Registrar usuario con el servicio de autenticación
+      const response = await authService.register(nombre, email, password);
       
-      // Guardar datos en localStorage para simular un usuario registrado
+      // Verificar si hubo errores específicos
+      if (response.message === "email") {
+        setError("El email ya está registrado");
+        return false;
+      }
+      
+      if (response.message === "user") {
+        setError("El nombre de usuario ya está en uso");
+        return false;
+      }
+      
+      if (response.message === "password") {
+        setError("La contraseña no cumple con los requisitos");
+        return false;
+      }
+      
+      if (response.message && response.message !== "") {
+        setError(`Error en el registro: ${response.message}`);
+        return false;
+      }
+      
+      // Si no hay errores, hacer login directamente
+      await authService.login(email, password);
+      
+      // Actualizar los datos del usuario con el avatar seleccionado
+      // Es importante hacerlo después del login para que no se sobrescriba
       const userData = {
         nombre,
         email,
         avatar
       };
-      
       localStorage.setItem("userData", JSON.stringify(userData));
-      localStorage.setItem("token", "fake-token-" + Date.now()); // Token falso
-      localStorage.setItem("id_usuario", "user123"); // ID falso
+      console.log("Avatar guardado:", avatar);
       
-      console.log("Usuario registrado localmente:", userData);
       return true;
-    } catch (error) {
-      console.error("Error en simulación:", error);
-      setError("Error al simular el registro");
+    } catch (error: any) {
+      console.error("Error en registro:", error);
+      
+      // Manejar diferentes tipos de errores
+      if (error.response) {
+        // El servidor respondió con un código de error
+        if (error.response.data && error.response.data.message) {
+          setError(error.response.data.message);
+        } else {
+          setError("Error en el servidor. Inténtalo de nuevo.");
+        }
+      } else if (error.request) {
+        // La petición se hizo pero no se recibió respuesta
+        setError("No se pudo conectar con el servidor. Verifica tu conexión.");
+      } else {
+        // Error en la configuración de la petición
+        setError("Error al procesar la solicitud");
+      }
+      
       return false;
     } finally {
       setLoading(false);
@@ -71,6 +110,13 @@ export function RegisterForm({ showRegistro, showLogin }: RegisterFormProps) {
       return;
     }
     
+    // Validación simple de email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setError("Por favor, introduce un email válido");
+      return;
+    }
+    
     // Si todas las validaciones pasan, avanzar al paso 2
     setError(null);
     setStep(2);
@@ -89,13 +135,17 @@ export function RegisterForm({ showRegistro, showLogin }: RegisterFormProps) {
       // Cerrar el modal
       showRegistro(false);
       
-      // Opcional: Recargar la página
-      window.location.reload();
+      // Disparar evento personalizado para actualizar la UI sin recargar
+      window.dispatchEvent(new Event('userDataUpdated'));
+      
+      // Cerrar modal y recargar la página después de un breve retraso
+      setTimeout(() => {
+        window.location.reload();
+      }, 100);
     }
   };
 
   const handleSwitchToLogin = () => {
-    console.log("Intentando cambiar a login", showLogin);
     if (showLogin) {
       showLogin();
     } else {

@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { AuthModal } from "./ui/auth-modal";
+import { authService } from "@/lib/auth";
 
 interface AuthGuardProps {
   children: React.ReactNode;
@@ -9,17 +11,17 @@ interface AuthGuardProps {
 }
 
 export function AuthGuard({ children, requireAuth = false }: AuthGuardProps) {
-  const [token, setToken] = useState<string | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
   const [showModal, setShowModal] = useState<boolean>(false);
 
   useEffect(() => {
-    // Verificar si hay un token almacenado
-    const storedToken = localStorage.getItem("token");
-    setToken(storedToken);
+    // Verificar si hay un token almacenado usando el servicio de autenticación
+    const authenticated = authService.isAuthenticated();
+    setIsAuthenticated(authenticated);
     
     // Si requiere autenticación y no hay token, mostrar el modal
-    if (requireAuth && !storedToken) {
+    if (requireAuth && !authenticated) {
       setShowModal(true);
     }
     
@@ -36,7 +38,7 @@ export function AuthGuard({ children, requireAuth = false }: AuthGuardProps) {
   }
 
   // Si se requiere autenticación y no hay token, mostrar el modal
-  if (requireAuth && !token) {
+  if (requireAuth && !isAuthenticated) {
     return (
       <>
         {/* Mostrar algún contenido de placeholder para páginas que requieren autenticación */}

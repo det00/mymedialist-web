@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { X } from "lucide-react";
+import { authService } from "@/lib/auth";
 
 interface LoginFormProps {
   showInicioSesion: (value: boolean) => void;
@@ -27,40 +28,33 @@ export function LoginForm(props: LoginFormProps) {
     setPassword(e.target.value);
   };
 
-  // Simular inicio de sesión sin backend
   const iniciarSesion = async (): Promise<boolean> => {
     setLoading(true);
     setError(null);
     
     try {
-      // Simular retraso de red
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Llamar al servicio de autenticación
+      await authService.login(email, password);
+      return true;
+    } catch (error: any) {
+      console.error("Error en inicio de sesión:", error);
       
-      // Para propósitos de demo, aceptar cualquier email/contraseña
-      // En una implementación real, esto se validaría con el backend
-      
-      // Crear datos de usuario para modo estático
-      const userData = JSON.parse(localStorage.getItem("userData") || "{}");
-      
-      // Si no hay datos existentes, crear unos datos ficticios de demo
-      if (!Object.keys(userData).length) {
-        const demoUserData = {
-          nombre: "Usuario Demo",
-          email: email,
-          avatar: "avatar1"
-        };
-        localStorage.setItem("userData", JSON.stringify(demoUserData));
+      // Manejar diferentes tipos de errores
+      if (error.response) {
+        // El servidor respondió con un código de error
+        if (error.response.status === 401) {
+          setError("Credenciales incorrectas");
+        } else {
+          setError("Error en el servidor. Inténtalo de nuevo.");
+        }
+      } else if (error.request) {
+        // La petición se hizo pero no se recibió respuesta
+        setError("No se pudo conectar con el servidor. Verifica tu conexión.");
+      } else {
+        // Error en la configuración de la petición
+        setError("Error al procesar la solicitud");
       }
       
-      // Generar token falso
-      localStorage.setItem("token", "fake-token-" + Date.now());
-      localStorage.setItem("id_usuario", "user123");
-      
-      console.log("Inicio de sesión simulado exitoso");
-      return true;
-    } catch (error) {
-      console.error("Error en simulación:", error);
-      setError("Error al simular el inicio de sesión");
       return false;
     } finally {
       setLoading(false);
@@ -82,13 +76,17 @@ export function LoginForm(props: LoginFormProps) {
       // Cerrar el modal
       showInicioSesion(false);
       
-      // Opcional: Recargar la página o redirigir
-      window.location.reload();
+      // Disparar evento personalizado para actualizar la UI sin recargar
+      window.dispatchEvent(new Event('userDataUpdated'));
+      
+      // Cerrar modal y recargar la página después de un breve retraso
+      setTimeout(() => {
+        window.location.reload();
+      }, 100);
     }
   };
 
   const handleSwitchToRegister = () => {
-    console.log("Intentando cambiar a registro", showRegister);
     if (showRegister) {
       showRegister();
     } else {
@@ -157,10 +155,6 @@ export function LoginForm(props: LoginFormProps) {
           >
             {loading ? "Iniciando sesión..." : "Iniciar sesión"}
           </Button>
-          
-          <div className="text-xs text-center text-muted-foreground">
-            Para fines de demostración, puedes usar cualquier email y contraseña
-          </div>
         </form>
       </CardContent>
       <CardFooter className="flex flex-col space-y-4">

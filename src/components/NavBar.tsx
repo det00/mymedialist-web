@@ -13,6 +13,7 @@ import { AuthModal } from "./ui/auth-modal";
 import { Search } from "lucide-react";
 import { ThemeSwitch } from "./theme-switch";
 import { UserAvatar } from "./UserAvatar";
+import { authService } from "@/lib/auth";
 
 interface UserData {
   nombre: string;
@@ -23,7 +24,7 @@ interface UserData {
 export function Navbar() {
   const [busqueda, setBusqueda] = useState<string>("");
   const [tipo, setTipo] = useState<string>("P");
-  const [token, setToken] = useState<string | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [userData, setUserData] = useState<UserData | null>(null);
   const router = useRouter();
   const [showInicioSesion, setShowInicioSesion] = useState<boolean>(false);
@@ -41,45 +42,47 @@ export function Navbar() {
   };
 
   useEffect(() => {
-    // Simular carga
-    setTimeout(() => {
-      // Recuperar token de localStorage
-      const storedToken = localStorage.getItem("token");
-      setToken(storedToken);
+    // Comprobar autenticación usando el servicio
+    const authenticated = authService.isAuthenticated();
+    setIsAuthenticated(authenticated);
+    
+    if (authenticated) {
+      // Obtener datos del usuario
+      const userInfo = authService.getUserData();
+      console.log("Datos de usuario cargados:", userInfo);
+      setUserData(userInfo);
+    }
+    
+    setLoading(false);
+    
+    // Añadir un event listener para detectar cambios en localStorage
+    const handleStorageChange = () => {
+      const authenticated = authService.isAuthenticated();
+      setIsAuthenticated(authenticated);
       
-      if (storedToken) {
-        // Recuperar datos del usuario del localStorage
-        try {
-          const storedUserData = localStorage.getItem("userData");
-          if (storedUserData) {
-            setUserData(JSON.parse(storedUserData));
-          } else {
-            // Si hay token pero no hay datos, crear datos de demostración
-            const demoData = {
-              nombre: "Usuario Demo",
-              email: "demo@example.com",
-              avatar: "avatar1"
-            };
-            localStorage.setItem("userData", JSON.stringify(demoData));
-            setUserData(demoData);
-          }
-        } catch (e) {
-          console.error("Error al cargar datos de usuario:", e);
-        }
+      if (authenticated) {
+        const userInfo = authService.getUserData();
+        setUserData(userInfo);
+      } else {
+        setUserData(null);
       }
-      
-      setLoading(false);
-    }, 500); // Pequeño retraso para simular carga
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    
+    // También podemos crear un evento personalizado para actualizaciones internas
+    window.addEventListener('userDataUpdated', handleStorageChange);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('userDataUpdated', handleStorageChange);
+    };
   }, []);
 
   const cerrarSesion = () => {
-    // Eliminar token y datos de usuario del localStorage
-    localStorage.removeItem("token");
-    localStorage.removeItem("id_usuario");
-    localStorage.removeItem("userData");
-    
-    // Actualizar estado
-    setToken(null);
+    // Usar el servicio de autenticación para cerrar sesión
+    authService.logout();
+    setIsAuthenticated(false);
     setUserData(null);
     
     // Redirigir a la página principal
@@ -113,7 +116,7 @@ export function Navbar() {
               <div className="cursor-pointer">
                 {loading ? (
                   <div className="h-10 w-10 rounded-full bg-muted animate-pulse"></div>
-                ) : token && userData ? (
+                ) : isAuthenticated && userData ? (
                   <UserAvatar avatarData={userData.avatar || "avatar1"} />
                 ) : (
                   <UserAvatar avatarData="initial_#6C5CE7_US" />
@@ -121,7 +124,7 @@ export function Navbar() {
               </div>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              {token ? (
+              {isAuthenticated ? (
                 <>
                   <DropdownMenuItem 
                     onClick={() => router.push("/perfil")}
