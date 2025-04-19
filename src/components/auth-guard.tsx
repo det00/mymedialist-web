@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import { AuthModal } from "./ui/auth-modal";
 
 interface AuthGuardProps {
@@ -13,7 +12,6 @@ export function AuthGuard({ children, requireAuth = false }: AuthGuardProps) {
   const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [showModal, setShowModal] = useState<boolean>(false);
-  const router = useRouter();
 
   useEffect(() => {
     // Verificar si hay un token almacenado
@@ -37,11 +35,40 @@ export function AuthGuard({ children, requireAuth = false }: AuthGuardProps) {
     );
   }
 
+  // Si se requiere autenticación y no hay token, mostrar el modal
+  if (requireAuth && !token) {
+    return (
+      <>
+        {/* Mostrar algún contenido de placeholder para páginas que requieren autenticación */}
+        <div className="flex flex-col items-center justify-center min-h-screen p-4">
+          <h1 className="text-2xl font-bold mb-4">Acceso Restringido</h1>
+          <p className="text-center mb-6">
+            Necesitas iniciar sesión para acceder a esta página
+          </p>
+          <button
+            onClick={() => setShowModal(true)}
+            className="px-4 py-2 bg-primary text-white rounded-md"
+          >
+            Iniciar sesión
+          </button>
+        </div>
+        
+        {/* Modal de autenticación */}
+        <AuthModal 
+          showModal={showModal} 
+          setShowModal={setShowModal} 
+          initialView="login" 
+        />
+      </>
+    );
+  }
+
+  // Si no se requiere autenticación o hay token, mostrar el contenido normal
   return (
     <>
       {children}
       
-      {/* Modal de autenticación */}
+      {/* Modal de autenticación (se muestra solo si showModal es true) */}
       <AuthModal 
         showModal={showModal} 
         setShowModal={setShowModal} 

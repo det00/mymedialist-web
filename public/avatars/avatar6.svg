@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <!-- Fondo del avatar -->
+  <rect width="200" height="200" fill="#E84393" rx="100" ry="100" />
+  
+  <!-- Cabello -->
+  <path d="M40 80 C40 40 60 30 100 30 C140 30 160 40 160 80 C160 90 155 100 150 105 C145 110 140 100 140 95 C140 90 138 80 135 75 C130 70 125 80 120 85 C115 90 110 75 100 70 C90 75 85 90 80 85 C75 80 70 70 65 75 C62 80 60 90 60 95 C60 100 55 110 50 105 C45 100 40 90 40 80 Z" fill="#444444" />
+  
+  <!-- Cara -->
+  <circle cx="100" cy="100" r="40" fill="#FFFFFF" />
+  
+  <!-- Ojos -->
+  <ellipse cx="85" cy="95" rx="6" ry="8" fill="#444444" />
+  <ellipse cx="115" cy="95" rx="6" ry="8" fill="#444444" />
+  
+  <!-- Cejas -->
+  <path d="M75 80 Q85 75 95 80" stroke="#444444" stroke-width="3" fill="transparent" />
+  <path d="M105 80 Q115 75 125 80" stroke="#444444" stroke-width="3" fill="transparent" />
+  
+  <!-- Sonrisa -->
+  <path d="M85 115 Q100 125 115 115" stroke="#444444" stroke-width="3" fill="transparent" />
+  
+  <!-- Cuello -->
+  <rect x="90" y="140" width="20" height="20" fill="#FFFFFF" />
+  
+  <!-- Cuerpo superior -->
+  <path d="M70 160 C70 145 80 140 100 140 C120 140 130 145 130 160 L130 200 L70 200 Z" fill="#FFFFFF" />
+</svg>

@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <!-- Fondo del avatar -->
+  <rect width="200" height="200" fill="#6C5CE7" rx="100" ry="100" />
+  
+  <!-- Cabeza -->
+  <circle cx="100" cy="85" r="40" fill="#FFFFFF" />
+  
+  <!-- Cuerpo -->
+  <path d="M60 145 C60 125 80 120 100 120 C120 120 140 125 140 145 C140 165 120 185 100 185 C80 185 60 165 60 145 Z" fill="#FFFFFF" />
+  
+  <!-- Ojos -->
+  <circle cx="85" cy="75" r="5" fill="#6C5CE7" />
+  <circle cx="115" cy="75" r="5" fill="#6C5CE7" />
+  
+  <!-- Sonrisa -->
+  <path d="M85 95 Q100 110 115 95" stroke="#6C5CE7" stroke-width="4" fill="transparent" />
+</svg>

@@ -8,21 +8,26 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useRouter } from "next/navigation";
 import { AuthModal } from "./ui/auth-modal";
 import { Search } from "lucide-react";
 import { ThemeSwitch } from "./theme-switch";
+import { UserAvatar } from "./UserAvatar";
 
-// Ya no necesitamos una interfaz completa de usuario
+interface UserData {
+  nombre: string;
+  email: string;
+  avatar: string;
+}
 
 export function Navbar() {
   const [busqueda, setBusqueda] = useState<string>("");
   const [tipo, setTipo] = useState<string>("P");
   const [token, setToken] = useState<string | null>(null);
-  const [idUsuario, setIdUsuario] = useState<string | null>(null);
+  const [userData, setUserData] = useState<UserData | null>(null);
   const router = useRouter();
   const [showInicioSesion, setShowInicioSesion] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(true);
 
   const handleEnter = (event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.key === "Enter") {
@@ -36,38 +41,49 @@ export function Navbar() {
   };
 
   useEffect(() => {
-    // Recuperar token de localStorage
-    const storedToken = localStorage.getItem("token");
-    setToken(storedToken);
-    
-    // Si no hay token, mostrar automáticamente el modal de inicio de sesión
-    if (!storedToken) {
-      setShowInicioSesion(true);
-    }
-    
-    // Recuperar ID del usuario
-    const storedIdUsuario = localStorage.getItem("id_usuario");
-    if (storedIdUsuario) {
-      setIdUsuario(storedIdUsuario);
-    }
+    // Simular carga
+    setTimeout(() => {
+      // Recuperar token de localStorage
+      const storedToken = localStorage.getItem("token");
+      setToken(storedToken);
+      
+      if (storedToken) {
+        // Recuperar datos del usuario del localStorage
+        try {
+          const storedUserData = localStorage.getItem("userData");
+          if (storedUserData) {
+            setUserData(JSON.parse(storedUserData));
+          } else {
+            // Si hay token pero no hay datos, crear datos de demostración
+            const demoData = {
+              nombre: "Usuario Demo",
+              email: "demo@example.com",
+              avatar: "avatar1"
+            };
+            localStorage.setItem("userData", JSON.stringify(demoData));
+            setUserData(demoData);
+          }
+        } catch (e) {
+          console.error("Error al cargar datos de usuario:", e);
+        }
+      }
+      
+      setLoading(false);
+    }, 500); // Pequeño retraso para simular carga
   }, []);
 
   const cerrarSesion = () => {
-    // Eliminar token y ID de usuario del localStorage
+    // Eliminar token y datos de usuario del localStorage
     localStorage.removeItem("token");
     localStorage.removeItem("id_usuario");
+    localStorage.removeItem("userData");
     
     // Actualizar estado
     setToken(null);
-    setIdUsuario(null);
+    setUserData(null);
     
-    // Opcional: redirigir a la página principal
+    // Redirigir a la página principal
     router.push("/");
-  };
-
-  // Ya que solo tenemos el ID, usaremos esto para el avatar
-  const getUserAvatar = () => {
-    return idUsuario ? "US" : "US";
   };
 
   return (
@@ -94,15 +110,15 @@ export function Navbar() {
           <ThemeSwitch />
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Avatar className="cursor-pointer border border-border">
-                {token ? (
-                  <AvatarFallback className="bg-primary text-primary-foreground">
-                    {getUserAvatar()}
-                  </AvatarFallback>
+              <div className="cursor-pointer">
+                {loading ? (
+                  <div className="h-10 w-10 rounded-full bg-muted animate-pulse"></div>
+                ) : token && userData ? (
+                  <UserAvatar avatarData={userData.avatar || "avatar1"} />
                 ) : (
-                  <AvatarFallback>US</AvatarFallback>
+                  <UserAvatar avatarData="initial_#6C5CE7_US" />
                 )}
-              </Avatar>
+              </div>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               {token ? (

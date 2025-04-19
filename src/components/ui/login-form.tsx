@@ -6,22 +6,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { X } from "lucide-react";
-import api from "@/lib/axios";
-import axios, { AxiosError } from "axios";
 
 interface LoginFormProps {
   showInicioSesion: (value: boolean) => void;
   showRegister?: () => void;
-  handleContinueAsGuest?: () => void;
-}
-
-interface InicioSesion {
-  token: string;
-  id: string;
 }
 
 export function LoginForm(props: LoginFormProps) {
-  const { showInicioSesion, showRegister, handleContinueAsGuest } = props;
+  const { showInicioSesion, showRegister } = props;
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
@@ -35,60 +27,40 @@ export function LoginForm(props: LoginFormProps) {
     setPassword(e.target.value);
   };
 
+  // Simular inicio de sesión sin backend
   const iniciarSesion = async (): Promise<boolean> => {
     setLoading(true);
     setError(null);
     
     try {
-      console.log("Intentando iniciar sesión con:", { email, password });
-      const res = await api.post<InicioSesion>("auth/login", {
-        email,
-        password
-      });
+      // Simular retraso de red
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
-      // Verificar si el token existe
-      if (!res.data.token) {
-        setError("Error de autenticación: Token no recibido");
-        return false;
+      // Para propósitos de demo, aceptar cualquier email/contraseña
+      // En una implementación real, esto se validaría con el backend
+      
+      // Crear datos de usuario para modo estático
+      const userData = JSON.parse(localStorage.getItem("userData") || "{}");
+      
+      // Si no hay datos existentes, crear unos datos ficticios de demo
+      if (!Object.keys(userData).length) {
+        const demoUserData = {
+          nombre: "Usuario Demo",
+          email: email,
+          avatar: "avatar1"
+        };
+        localStorage.setItem("userData", JSON.stringify(demoUserData));
       }
       
-      console.log("Respuesta de login:", res.data);
+      // Generar token falso
+      localStorage.setItem("token", "fake-token-" + Date.now());
+      localStorage.setItem("id_usuario", "user123");
       
-      // Guardar token en localStorage
-      localStorage.setItem("token", res.data.token);
-      
-      // Guardar ID del usuario
-      localStorage.setItem("id_usuario", res.data.id);
-      
-      console.log("Inicio de sesión exitoso");
+      console.log("Inicio de sesión simulado exitoso");
       return true;
     } catch (error) {
-      console.error("Error al iniciar sesión:", error);
-      
-      // Manejar diferentes tipos de errores para dar feedback más específico
-      if (axios.isAxiosError(error)) {
-        const axiosError = error as AxiosError<{ message?: string }>;
-        if (axiosError.response) {
-          // El servidor respondió con un status code fuera del rango 2xx
-          if (axiosError.response.status === 401) {
-            setError("Email o contraseña incorrectos");
-          } else {
-            setError(`Error del servidor: ${
-              axiosError.response.data?.message || "Intenta de nuevo más tarde"
-            }`);
-          }
-        } else if (axiosError.request) {
-          // La petición fue hecha pero no se recibió respuesta
-          setError("No se pudo conectar con el servidor. Verifica tu conexión.");
-        } else {
-          // Algo ocurrió al configurar la petición
-          setError(`Error de red: ${axiosError.message}`);
-        }
-      } else {
-        // Error no relacionado con Axios
-        setError("Error al procesar la solicitud");
-      }
-      
+      console.error("Error en simulación:", error);
+      setError("Error al simular el inicio de sesión");
       return false;
     } finally {
       setLoading(false);
@@ -121,17 +93,6 @@ export function LoginForm(props: LoginFormProps) {
       showRegister();
     } else {
       console.error("Función showRegister no disponible");
-    }
-  };
-
-  const handleGuestContinue = () => {
-    console.log("Intentando continuar como invitado", handleContinueAsGuest);
-    if (handleContinueAsGuest) {
-      handleContinueAsGuest();
-    } else {
-      console.error("Función handleContinueAsGuest no disponible");
-      // Fallback: simplemente cerrar el modal
-      showInicioSesion(false);
     }
   };
 
@@ -196,6 +157,10 @@ export function LoginForm(props: LoginFormProps) {
           >
             {loading ? "Iniciando sesión..." : "Iniciar sesión"}
           </Button>
+          
+          <div className="text-xs text-center text-muted-foreground">
+            Para fines de demostración, puedes usar cualquier email y contraseña
+          </div>
         </form>
       </CardContent>
       <CardFooter className="flex flex-col space-y-4">
@@ -209,23 +174,6 @@ export function LoginForm(props: LoginFormProps) {
             Regístrate
           </Button>
         </div>
-        <div className="relative">
-          <div className="absolute inset-0 flex items-center">
-            <span className="w-full border-t border-border" />
-          </div>
-          <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-card px-2 text-muted-foreground">
-              o continúa con
-            </span>
-          </div>
-        </div>
-        <Button 
-          variant="outline" 
-          className="w-full"
-          onClick={handleGuestContinue}
-        >
-          Continuar como invitado
-        </Button>
       </CardFooter>
     </Card>
   );

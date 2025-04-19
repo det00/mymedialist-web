@@ -23,11 +23,6 @@ export function AuthModal({ showModal, setShowModal, initialView = "login" }: Au
     console.log("Cambiando a vista de registro");
     setCurrentView("register");
   }, []);
-  
-  const handleContinueAsGuest = useCallback(() => {
-    console.log("Continuando como invitado");
-    setShowModal(false);
-  }, [setShowModal]);
 
   // Si el modal no está visible, no renderizar nada
   if (!showModal) return null;
@@ -39,7 +34,6 @@ export function AuthModal({ showModal, setShowModal, initialView = "login" }: Au
           <LoginForm 
             showInicioSesion={setShowModal} 
             showRegister={showRegister}
-            handleContinueAsGuest={handleContinueAsGuest}
           />
         ) : (
           <RegisterForm 

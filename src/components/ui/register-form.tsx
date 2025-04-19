@@ -6,16 +6,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { X } from "lucide-react";
-import api from "@/lib/axios";
-import axios, { AxiosError } from "axios";
+import { AvatarSelector } from "@/components/AvatarSelector";
 
 interface RegisterFormProps {
   showRegistro: (value: boolean) => void;
   showLogin: () => void;
-}
-
-interface Registro {
-  message?: string;
 }
 
 export function RegisterForm({ showRegistro, showLogin }: RegisterFormProps) {
@@ -23,79 +18,44 @@ export function RegisterForm({ showRegistro, showLogin }: RegisterFormProps) {
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [confirmPassword, setConfirmPassword] = useState<string>("");
+  const [avatar, setAvatar] = useState<string>("avatar1");
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [step, setStep] = useState<number>(1); // 1: datos básicos, 2: selección de avatar
 
+  // Simular registro sin backend
   const registrarUsuario = async (): Promise<boolean> => {
     setLoading(true);
     setError(null);
     
     try {
-      console.log("Intentando registrar usuario:", { nombre, email, password });
-      const res = await api.post<Registro>("auth/register", {
+      // Simular retraso de red
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Guardar datos en localStorage para simular un usuario registrado
+      const userData = {
+        nombre,
         email,
-        password,
-        name: nombre
-      });
+        avatar
+      };
       
-      console.log("Respuesta de registro:", res.data);
+      localStorage.setItem("userData", JSON.stringify(userData));
+      localStorage.setItem("token", "fake-token-" + Date.now()); // Token falso
+      localStorage.setItem("id_usuario", "user123"); // ID falso
       
-      // Si llegamos aquí, significa que el registro fue exitoso
-      // pero aún necesitamos iniciar sesión para obtener el token
-      try {
-        console.log("Intentando inicio de sesión automático después del registro");
-        const loginRes = await api.post<{ token: string; id: string }>("auth/login", {
-          email,
-          password
-        });
-        
-        console.log("Respuesta de login post-registro:", loginRes.data);
-        
-        // Guardar token en localStorage
-        localStorage.setItem("token", loginRes.data.token);
-        
-        // Guardar ID del usuario
-        localStorage.setItem("id_usuario", loginRes.data.id);
-        
-        console.log("Registro e inicio de sesión exitosos");
-        return true;
-      } catch (loginError) {
-        console.error("Registro exitoso pero error al iniciar sesión:", loginError);
-        setError("Tu cuenta fue creada correctamente. Por favor, inicia sesión manualmente.");
-        return true; // Devolvemos true porque el registro fue exitoso
-      }
+      console.log("Usuario registrado localmente:", userData);
+      return true;
     } catch (error) {
-      console.error("Error al registrar usuario:", error);
-      
-      // Manejar diferentes tipos de errores
-      if (axios.isAxiosError(error)) {
-        const axiosError = error as AxiosError<Registro>;
-        if (axiosError.response) {
-          // Si hay un mensaje, es un error
-          if (axiosError.response.data?.message) {
-            setError(axiosError.response.data.message);
-          } else {
-            setError("Error desconocido al registrar usuario");
-          }
-        } else if (axiosError.request) {
-          setError("No se pudo conectar con el servidor. Verifica tu conexión.");
-        } else {
-          setError(`Error de red: ${axiosError.message}`);
-        }
-      } else {
-        setError("Error al procesar la solicitud");
-      }
-      
+      console.error("Error en simulación:", error);
+      setError("Error al simular el registro");
       return false;
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    // Validaciones
+  const handleNextStep = () => {
+    // Validaciones del paso 1
     if (!nombre || !email || !password || !confirmPassword) {
       setError("Por favor, completa todos los campos");
       return;
@@ -110,6 +70,18 @@ export function RegisterForm({ showRegistro, showLogin }: RegisterFormProps) {
       setError("La contraseña debe tener al menos 6 caracteres");
       return;
     }
+    
+    // Si todas las validaciones pasan, avanzar al paso 2
+    setError(null);
+    setStep(2);
+  };
+
+  const handlePreviousStep = () => {
+    setStep(1);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     
     const success = await registrarUsuario();
     
@@ -146,72 +118,113 @@ export function RegisterForm({ showRegistro, showLogin }: RegisterFormProps) {
         </Button>
         <CardTitle className="text-2xl text-center">Crear cuenta</CardTitle>
         <CardDescription className="text-center">
-          Regístrate para comenzar a usar MyMediaList
+          {step === 1 
+            ? "Regístrate para comenzar a usar MyMediaList" 
+            : "Personaliza tu perfil"}
         </CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="nombre">Nombre</Label>
-            <Input
-              id="nombre"
-              placeholder="Tu nombre"
-              value={nombre}
-              onChange={(e) => setNombre(e.target.value)}
-              disabled={loading}
-              required
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="ejemplo@correo.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              disabled={loading}
-              required
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="password">Contraseña</Label>
-            <Input
-              id="password"
-              type="password"
-              placeholder="Al menos 6 caracteres"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              disabled={loading}
-              required
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="confirmPassword">Confirmar Contraseña</Label>
-            <Input
-              id="confirmPassword"
-              type="password"
-              placeholder="Repite tu contraseña"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              disabled={loading}
-              required
-            />
-          </div>
-          
-          {error && (
-            <div className="p-3 bg-destructive/10 text-destructive text-sm rounded-md">
-              {error}
-            </div>
+          {step === 1 ? (
+            // Paso 1: Información básica del usuario
+            <>
+              <div className="space-y-2">
+                <Label htmlFor="nombre">Nombre</Label>
+                <Input
+                  id="nombre"
+                  placeholder="Tu nombre"
+                  value={nombre}
+                  onChange={(e) => setNombre(e.target.value)}
+                  disabled={loading}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="ejemplo@correo.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  disabled={loading}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="password">Contraseña</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  placeholder="Al menos 6 caracteres"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  disabled={loading}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="confirmPassword">Confirmar Contraseña</Label>
+                <Input
+                  id="confirmPassword"
+                  type="password"
+                  placeholder="Repite tu contraseña"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  disabled={loading}
+                  required
+                />
+              </div>
+              
+              {error && (
+                <div className="p-3 bg-destructive/10 text-destructive text-sm rounded-md">
+                  {error}
+                </div>
+              )}
+              
+              <Button 
+                type="button" 
+                className="w-full" 
+                disabled={loading}
+                onClick={handleNextStep}
+              >
+                Continuar
+              </Button>
+            </>
+          ) : (
+            // Paso 2: Selección de avatar
+            <>
+              <AvatarSelector 
+                selectedAvatar={avatar} 
+                onSelectAvatar={setAvatar} 
+              />
+              
+              {error && (
+                <div className="p-3 bg-destructive/10 text-destructive text-sm rounded-md">
+                  {error}
+                </div>
+              )}
+              
+              <div className="flex space-x-2 pt-2">
+                <Button 
+                  type="button" 
+                  variant="outline"
+                  className="w-1/2" 
+                  disabled={loading}
+                  onClick={handlePreviousStep}
+                >
+                  Atrás
+                </Button>
+                <Button 
+                  type="submit" 
+                  className="w-1/2" 
+                  disabled={loading}
+                >
+                  {loading ? "Creando cuenta..." : "Crear cuenta"}
+                </Button>
+              </div>
+            </>
           )}
-          
-          <Button 
-            type="submit" 
-            className="w-full" 
-            disabled={loading}
-          >
-            {loading ? "Creando cuenta..." : "Crear cuenta"}
-          </Button>
         </form>
       </CardContent>
       <CardFooter className="flex justify-center">
