@@ -12,6 +12,11 @@ const nextConfig: NextConfig = {
       "assets.nintendo.com",
       "www.themoviedb.org",
       "images-na.ssl-images-amazon.com",
+      "imagessl6.casadellibro.com",
+      "i.blogs.es",
+      "m.media-amazon.com",
+      "pics.filmaffinity.com",
+      "flxt.tmsimg.com"
     ],
   },
 };
