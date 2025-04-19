@@ -1,30 +1,31 @@
 export interface Buscar {
-  empty: unknown;
-  id_api?: number;
+  empty?: unknown;
+  id_api?: number | string;
   tipo?: string;
   imagen: string;
   titulo: string;
   descripcion?: string;
-  genero: string[];
+  genero?: string[];
   creador?: string;
   autor?: string;
-  fechaLanzamiento: string;
-  numAmigos: number
+  fechaLanzamiento?: string;
+  numAmigos?: number;
 }
 
 export interface Contenido {
   id_api: string;
-  imagen: string;
+  imagen?: string;
   titulo: string;
   descripcion: string;
-  genero: string[];
-  autor: string;
+  genero?: string[];
+  autor?: string;
   paginas?: number;
-  fechaLanzamiento: string;
+  fechaLanzamiento?: string;
   duracion?: string;
   temporadas?: number;
   episodios?: number;
   valoracion?: number;
+  tipo: string; // Esta propiedad ahora es requerida, no opcional
   item?: {  
     id: string;
     estado: string;
@@ -32,7 +33,7 @@ export interface Contenido {
   amigos: {
     id: string;
     estado: string;
-    imagen_id: string;
+    imagen_id?: string;
     progreso?: string;
   }[];
 }
