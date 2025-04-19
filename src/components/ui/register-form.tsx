@@ -54,18 +54,11 @@ export function RegisterForm({ showRegistro, showLogin }: RegisterFormProps) {
         return false;
       }
       
-      // Si no hay errores, hacer login directamente
+      // Iniciar sesión directamente
       await authService.login(email, password);
       
-      // Actualizar los datos del usuario con el avatar seleccionado
-      // Es importante hacerlo después del login para que no se sobrescriba
-      const userData = {
-        nombre,
-        email,
-        avatar
-      };
-      localStorage.setItem("userData", JSON.stringify(userData));
-      console.log("Avatar guardado:", avatar);
+      // Guardar avatar
+      authService.setUserAvatar(avatar);
       
       return true;
     } catch (error: any) {
@@ -135,13 +128,8 @@ export function RegisterForm({ showRegistro, showLogin }: RegisterFormProps) {
       // Cerrar el modal
       showRegistro(false);
       
-      // Disparar evento personalizado para actualizar la UI sin recargar
-      window.dispatchEvent(new Event('userDataUpdated'));
-      
-      // Cerrar modal y recargar la página después de un breve retraso
-      setTimeout(() => {
-        window.location.reload();
-      }, 100);
+      // Recargar la página
+      window.location.reload();
     }
   };
 

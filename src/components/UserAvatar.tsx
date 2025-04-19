@@ -9,14 +9,21 @@ interface UserAvatarProps {
 }
 
 export function UserAvatar({ avatarData, size = "md", className = "" }: UserAvatarProps) {
+  // Valores por defecto
+  if (!avatarData) {
+    avatarData = "avatar1";
+  }
+
   // Determinar si es un avatar predefinido o de iniciales
-  const isPredefined = !avatarData.startsWith("initial_");
+  const isPredefined = avatarData.startsWith("avatar") || 
+                       (avatarData.includes("/avatars/") && avatarData.endsWith(".png")) ||
+                       (avatarData.includes("/avatars/") && avatarData.endsWith(".svg"));
   
-  // Obtener información del avatar de iniciales si es el caso
+  // Obtener color y iniciales si es avatar de iniciales
   let avatarColor = "#6C5CE7"; // Color predeterminado
   let userInitials = "US"; // Iniciales predeterminadas
   
-  if (!isPredefined && avatarData) {
+  if (!isPredefined && avatarData.startsWith("initial_")) {
     const parts = avatarData.split("_");
     if (parts.length >= 3) {
       avatarColor = parts[1];
@@ -40,11 +47,22 @@ export function UserAvatar({ avatarData, size = "md", className = "" }: UserAvat
     xl: "text-2xl"
   }[size];
   
+  // Construir ruta de avatar predefinido
+  const predefinedAvatarPath = isPredefined 
+    ? (avatarData.startsWith("avatar") 
+        ? `/avatars/${avatarData}.svg` 
+        : avatarData)
+    : "";
+  
   return (
     <Avatar className={`${sizeClass} ${className}`}>
       {isPredefined ? (
         <>
-          <AvatarImage src={`/avatars/${avatarData}.png`} alt="Avatar de usuario" />
+          <AvatarImage 
+            src={predefinedAvatarPath} 
+            alt="Avatar de usuario" 
+            className="object-cover"
+          />
           <AvatarFallback>US</AvatarFallback>
         </>
       ) : (

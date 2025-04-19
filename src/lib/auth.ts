@@ -5,6 +5,7 @@ import api from "@/lib/axios";
 interface LoginResponse {
   token: string;
   id: number;
+  name?: string;
 }
 
 interface RegisterResponse {
@@ -37,28 +38,18 @@ export const authService = {
         localStorage.setItem("token", response.data.token);
         localStorage.setItem("id_usuario", String(response.data.id));
         
-        // Preservar avatar existente si ya hay datos de usuario
-        const existingUserData = localStorage.getItem("userData");
-        let avatar = "avatar1"; // Avatar por defecto
-        
-        if (existingUserData) {
-          try {
-            const userData = JSON.parse(existingUserData);
-            if (userData.avatar) {
-              avatar = userData.avatar;
-            }
-          } catch (e) {
-            console.error("Error al procesar datos de usuario existentes:", e);
-          }
-        }
-        
-        // Crear o actualizar datos básicos de usuario
+        // Generar datos de usuario
         const userData: UserData = {
-          nombre: email.split('@')[0], // Temporal hasta obtener el nombre real
+          nombre: response.data.name || email.split('@')[0], 
           email: email,
-          avatar: avatar
+          avatar: localStorage.getItem("user_avatar") || "avatar1"
         };
+        
         localStorage.setItem("userData", JSON.stringify(userData));
+        
+        // Disparar eventos para actualización
+        window.dispatchEvent(new Event('userDataUpdated'));
+        window.dispatchEvent(new Event('storage'));
       }
       
       return response.data;
@@ -91,12 +82,32 @@ export const authService = {
   },
   
   /**
+   * Establecer avatar del usuario
+   * @param avatar ID o ruta del avatar
+   */
+  setUserAvatar(avatar: string): void {
+    localStorage.setItem("user_avatar", avatar);
+    
+    // Actualizar datos de usuario existentes
+    const currentUserData = this.getUserData();
+    if (currentUserData) {
+      currentUserData.avatar = avatar;
+      localStorage.setItem("userData", JSON.stringify(currentUserData));
+    }
+    
+    // Disparar eventos para actualización
+    window.dispatchEvent(new Event('userDataUpdated'));
+    window.dispatchEvent(new Event('storage'));
+  },
+  
+  /**
    * Cerrar sesión (eliminar token y datos de localStorage)
    */
   logout(): void {
     localStorage.removeItem("token");
     localStorage.removeItem("id_usuario");
     localStorage.removeItem("userData");
+    localStorage.removeItem("user_avatar");
   },
   
   /**
@@ -122,7 +133,17 @@ export const authService = {
   getUserData(): UserData | null {
     const userData = localStorage.getItem("userData");
     if (userData) {
-      return JSON.parse(userData);
+      try {
+        const parsedData = JSON.parse(userData);
+        // Añadir fallback para avatar
+        if (!parsedData.avatar) {
+          parsedData.avatar = localStorage.getItem("user_avatar") || "avatar1";
+        }
+        return parsedData;
+      } catch (error) {
+        console.error("Error parsing user data:", error);
+        return null;
+      }
     }
     return null;
   }

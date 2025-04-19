@@ -41,41 +41,34 @@ export function Navbar() {
     }
   };
 
-  useEffect(() => {
-    // Comprobar autenticación usando el servicio
+  // Función para manejar cambios en los datos de usuario
+  const handleUserDataUpdate = () => {
     const authenticated = authService.isAuthenticated();
     setIsAuthenticated(authenticated);
     
     if (authenticated) {
-      // Obtener datos del usuario
       const userInfo = authService.getUserData();
-      console.log("Datos de usuario cargados:", userInfo);
+      console.log("Datos de usuario actualizados en NavBar:", userInfo);
       setUserData(userInfo);
+    } else {
+      setUserData(null);
     }
     
     setLoading(false);
+  };
+
+  useEffect(() => {
+    // Configurar listeners de eventos
+    window.addEventListener('userDataUpdated', handleUserDataUpdate);
+    window.addEventListener('storage', handleUserDataUpdate);
     
-    // Añadir un event listener para detectar cambios en localStorage
-    const handleStorageChange = () => {
-      const authenticated = authService.isAuthenticated();
-      setIsAuthenticated(authenticated);
-      
-      if (authenticated) {
-        const userInfo = authService.getUserData();
-        setUserData(userInfo);
-      } else {
-        setUserData(null);
-      }
-    };
+    // Ejecutar la verificación inicial
+    handleUserDataUpdate();
     
-    window.addEventListener('storage', handleStorageChange);
-    
-    // También podemos crear un evento personalizado para actualizaciones internas
-    window.addEventListener('userDataUpdated', handleStorageChange);
-    
+    // Limpiar listeners al desmontar
     return () => {
-      window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('userDataUpdated', handleStorageChange);
+      window.removeEventListener('userDataUpdated', handleUserDataUpdate);
+      window.removeEventListener('storage', handleUserDataUpdate);
     };
   }, []);
 
@@ -92,7 +85,10 @@ export function Navbar() {
   return (
     <header className="w-full border-b bg-background px-4 py-2 shadow-sm text-foreground">
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-4">
-        <div className="text-xl font-bold text-primary w-32 cursor-pointer" onClick={() => router.push("/")}>
+        <div 
+          className="text-xl font-bold text-primary w-32 cursor-pointer" 
+          onClick={() => router.push("/")}
+        >
           MyMediaList
         </div>
 
@@ -117,7 +113,10 @@ export function Navbar() {
                 {loading ? (
                   <div className="h-10 w-10 rounded-full bg-muted animate-pulse"></div>
                 ) : isAuthenticated && userData ? (
-                  <UserAvatar avatarData={userData.avatar || "avatar1"} />
+                  <UserAvatar 
+                    avatarData={userData.avatar || "avatar1"} 
+                    size="md" 
+                  />
                 ) : (
                   <UserAvatar avatarData="initial_#6C5CE7_US" />
                 )}
