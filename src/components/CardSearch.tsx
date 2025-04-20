@@ -2,56 +2,31 @@
 
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import Image from "next/image";
-import EstadoContenido from "./EstadoContenido";
+import EstadoContenidoApi from "@/components/EstadoContenidoApi";
 import { useEffect, useState } from "react";
-import { Buscar } from "@/lib/types";
-import api from "@/lib/axios";
+import { SearchResult } from "@/lib/search";
 
-interface ItemSearchScreenProps {
-  item: Buscar;
+interface CardSearchProps {
+  item: SearchResult;
 }
 
-const CardSearch: React.FC<ItemSearchScreenProps> = ({ item }) => {
-  const [estado, setEstado] = useState<string>("");
+export function CardSearch({ item }: CardSearchProps) {
+  const [estado, setEstado] = useState<string>(item.item?.estado || "");
   
   useEffect(() => {
-    console.log("Estado actualizado:", estado);
-    
-    // Aquí podrías implementar una lógica para guardar el estado en la API
-    if (estado && item.id_api) {
-      const updateEstado = async () => {
-        try {
-          const token = localStorage.getItem("token");
-          if (!token) return;
-          
-          // Determinar el tipo basado en la propiedad item.tipo o inferirlo de otra manera
-          const tipo = item.tipo || "P"; // Valor por defecto
-          
-          await api.post("/estado", {
-            id_api: item.id_api,
-            tipo,
-            estado
-          }, {
-            headers: {
-              Authorization: `Bearer ${token}`
-            }
-          });
-          
-          console.log("Estado guardado correctamente");
-        } catch (error) {
-          console.error("Error al guardar el estado:", error);
-        }
-      };
-      
-      // Descomenta esto cuando tengas la API lista
-      // updateEstado();
+    // Actualizar estado si cambia el item
+    if (item.item?.estado) {
+      setEstado(item.item.estado);
     }
-  }, [estado, item.id_api, item.tipo]);
-
+  }, [item.item?.estado]);
+  
   // Asegurarse de que las URLs de imagen sean válidas
   const imageUrl = item.imagen && item.imagen.startsWith("http") 
     ? item.imagen 
     : "https://via.placeholder.com/100x150";
+
+  // Obtener la primera letra del tipo en mayúscula
+  const tipoMayuscula = item.tipo?.toUpperCase().charAt(0) || 'P';
 
   return (
     <Card className="flex flex-row gap-4 p-4 max-w-xl mx-auto w-full shadow-background hover:shadow-md transition-shadow duration-200">
@@ -75,7 +50,12 @@ const CardSearch: React.FC<ItemSearchScreenProps> = ({ item }) => {
             </p>
           </div>
           <div className="flex items-end">
-            <EstadoContenido estado={estado} setEstado={setEstado} />
+            <EstadoContenidoApi 
+              id_api={item.id_api}
+              tipo={tipoMayuscula}
+              estadoInicial={estado}
+              onUpdateSuccess={() => console.log("Estado actualizado")}
+            />
           </div>
         </div>
       </CardContent>
@@ -83,4 +63,5 @@ const CardSearch: React.FC<ItemSearchScreenProps> = ({ item }) => {
   );
 }
 
+// Exportación predeterminada para usar en importaciones
 export default CardSearch;

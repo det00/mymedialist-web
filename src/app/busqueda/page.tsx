@@ -1,26 +1,27 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import CardSearch from "@/components/CardSearch";
+import { CardSearch } from "@/components/CardSearch";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import api from "@/lib/axios";
-import { Buscar } from "@/lib/types";
+import { searchService, SearchResult } from "@/lib/search";
 import moment from "moment";
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
-import { ChevronLeft, ChevronRight } from "lucide-react";
-
-type TipoBusqueda = "V" | "P" | "L" | "S";
+import { ChevronLeft, ChevronRight, Search, AlertCircle } from "lucide-react";
+import { authService } from "@/lib/auth";
+import { AuthModal } from "@/components/ui/auth-modal";
 
 export default function Busqueda() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const [resultados, setResultados] = useState<Buscar[]>([]);
+  const [resultados, setResultados] = useState<SearchResult[]>([]);
   const [rutaTipo, setRutaTipo] = useState<string>("");
-  const [tipo, setTipo] = useState<TipoBusqueda>("P");
+  const [tipo, setTipo] = useState<string>("P");
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [showAuthModal, setShowAuthModal] = useState<boolean>(false);
   
   // Paginación
   const [currentPage, setCurrentPage] = useState<number>(1);
@@ -29,14 +30,14 @@ export default function Busqueda() {
   
   moment.locale("es");
 
-  const tipoAMapeo: Record<TipoBusqueda, string> = {
+  const tipoAMapeo: Record<string, string> = {
     V: "videojuego",
     P: "pelicula",
     L: "libro",
     S: "serie",
   };
 
-  const tipoCompleto: Record<TipoBusqueda, string> = {
+  const tipoCompleto: Record<string, string> = {
     V: "Videojuegos",
     P: "Películas",
     L: "Libros",
@@ -44,7 +45,7 @@ export default function Busqueda() {
   };
 
   // Función para cambiar el tipo de contenido
-  const cambiarTipo = (nuevoTipo: TipoBusqueda) => {
+  const cambiarTipo = (nuevoTipo: string) => {
     const currentBusqueda = searchParams.get("busqueda") || "";
     const url = `/busqueda?busqueda=${encodeURIComponent(currentBusqueda)}&tipo=${nuevoTipo}`;
     router.push(url);
@@ -65,20 +66,31 @@ export default function Busqueda() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  // Verificar autenticación
   useEffect(() => {
-    const search = async () => {
+    setIsAuthenticated(authService.isAuthenticated());
+  }, []);
+
+  useEffect(() => {
+    const realizarBusqueda = async () => {
       setLoading(true);
       setError(null);
       
       try {
-        const token = localStorage.getItem("token");
+        // Verificar autenticación
+        if (!isAuthenticated) {
+          setError("Necesitas iniciar sesión para buscar contenido");
+          setLoading(false);
+          return;
+        }
+        
         const busqueda = searchParams.get("busqueda") || "";
         const rawTipo = searchParams.get("tipo");
         
         // Validar el tipo de búsqueda
         const tipoValido =
           rawTipo === "V" || rawTipo === "P" || rawTipo === "L" || rawTipo === "S"
-            ? (rawTipo as TipoBusqueda)
+            ? rawTipo
             : "P";
         
         setTipo(tipoValido);
@@ -91,18 +103,11 @@ export default function Busqueda() {
           rutaTipo: tipoAMapeo[tipoValido]
         });
         
-        const res = await api.get("/buscar", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          params: {
-            busqueda,
-            tipo: tipoValido,
-          },
-        });
+        // Llamar al servicio de búsqueda
+        const resultadosBusqueda = await searchService.searchContent(busqueda, tipoValido);
         
         // Asegurarse de que los resultados tengan el tipo correcto
-        const resultadosConTipo = res.data.map((item: Buscar) => ({
+        const resultadosConTipo = resultadosBusqueda.map((item: SearchResult) => ({
           ...item,
           tipo: tipoValido // Añadir el tipo a cada resultado
         }));
@@ -118,8 +123,8 @@ export default function Busqueda() {
       }
     };
     
-    search();
-  }, [searchParams]); // Solo depende de searchParams
+    realizarBusqueda();
+  }, [searchParams, isAuthenticated]); // Dependencias actualizadas
 
   // Renderizar paginación
   const renderPaginacion = () => {
@@ -238,6 +243,34 @@ export default function Busqueda() {
     );
   };
 
+  // Mostrar modal de autenticación si no está autenticado
+  if (!isAuthenticated && !loading) {
+    return (
+      <div className="min-h-screen flex flex-col px-8 sm:px-12 md:px-24 lg:px-32">
+        <Card className="mt-8 mb-12 shadow-md p-0">
+          <CardContent className="p-6 sm:p-10">
+            <div className="flex flex-col items-center justify-center h-64 text-center">
+              <AlertCircle className="h-16 w-16 text-muted-foreground mb-4" />
+              <h2 className="text-xl font-semibold mb-2">Necesitas iniciar sesión</h2>
+              <p className="text-muted-foreground mb-6">
+                Para buscar y explorar contenido, primero debes iniciar sesión
+              </p>
+              <Button onClick={() => setShowAuthModal(true)}>
+                Iniciar sesión
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <AuthModal
+          showModal={showAuthModal}
+          setShowModal={setShowAuthModal}
+          initialView="login"
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex flex-col px-8 sm:px-12 md:px-24 lg:px-32">
       <Card className="mt-8 mb-12 shadow-md p-0">
@@ -248,7 +281,7 @@ export default function Busqueda() {
           
           {/* Filtros de tipo */}
           <div className="flex flex-wrap gap-2 mb-6">
-            {(Object.keys(tipoAMapeo) as TipoBusqueda[]).map((tipoKey) => (
+            {(Object.keys(tipoAMapeo) as Array<string>).map((tipoKey) => (
               <Button
                 key={tipoKey}
                 variant={tipo === tipoKey ? "default" : "outline"}
@@ -264,15 +297,25 @@ export default function Busqueda() {
           <div className="relative min-h-[600px]">
             {loading ? (
               <div className="flex items-center justify-center h-[540px]">
-                <div className="text-center">Cargando resultados...</div>
+                <div className="text-center">
+                  <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-primary mx-auto mb-4"></div>
+                  <div>Cargando resultados...</div>
+                </div>
               </div>
             ) : error ? (
               <div className="flex items-center justify-center h-[540px]">
-                <div className="text-center text-red-500">{error}</div>
+                <div className="text-center text-red-500">
+                  <AlertCircle className="h-8 w-8 mx-auto mb-4" />
+                  <div>{error}</div>
+                </div>
               </div>
             ) : resultados.length === 0 ? (
               <div className="flex items-center justify-center h-[540px]">
-                <div className="text-center">No se encontraron resultados para tu búsqueda</div>
+                <div className="text-center">
+                  <Search className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+                  <div className="text-lg mb-2">No se encontraron resultados para tu búsqueda</div>
+                  <p className="text-muted-foreground">Intenta con otro término o cambia el tipo de contenido</p>
+                </div>
               </div>
             ) : (
               <>

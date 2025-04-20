@@ -104,10 +104,25 @@ export const authService = {
    * Cerrar sesión (eliminar token y datos de localStorage)
    */
   logout(): void {
+    // Eliminar todos los datos de autenticación y usuario
     localStorage.removeItem("token");
     localStorage.removeItem("id_usuario");
     localStorage.removeItem("userData");
-    localStorage.removeItem("user_avatar");
+    
+    // Mantener el avatar para futuras sesiones si existe
+    // localStorage.removeItem("user_avatar");
+    
+    // Limpiar cualquier otro dato de sesión de la aplicación
+    // Esto es importante para que no queden rastros de la sesión anterior
+    localStorage.removeItem("currentContent");
+    localStorage.removeItem("watchlist");
+    localStorage.removeItem("trendingContent");
+    
+    console.log("Sesión cerrada correctamente");
+    
+    // Disparar eventos para notificar a todos los componentes
+    window.dispatchEvent(new Event('userDataUpdated'));
+    window.dispatchEvent(new Event('storage'));
   },
   
   /**

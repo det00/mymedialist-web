@@ -76,31 +76,42 @@ export default function Home() {
     A: "#ef4444", // Abandonado - rojo
   };
 
+  // Función para verificar la autenticación y cargar datos del usuario
+  const checkAuthAndLoadUserData = () => {
+    const authenticated = authService.isAuthenticated();
+    setIsAuthenticated(authenticated);
+
+    if (authenticated) {
+      const userInfo = authService.getUserData();
+      setUserData(userInfo);
+    } else {
+      // Si no está autenticado, limpiar todos los datos personales
+      setUserData(null);
+      setCurrentContent([]);
+      setWatchlist([]);
+      setTrendingContent([]);
+      setIsWatchingNow(null);
+    }
+
+    setLoading(false);
+  };
+
   // Cargar datos del usuario
   useEffect(() => {
-    const checkAuth = () => {
-      const authenticated = authService.isAuthenticated();
-      setIsAuthenticated(authenticated);
-
-      if (authenticated) {
-        const userInfo = authService.getUserData();
-        setUserData(userInfo);
-      }
-
-      setLoading(false);
-    };
-
-    checkAuth();
+    checkAuthAndLoadUserData();
 
     // Listener para actualizaciones de autenticación
     const handleAuthChange = () => {
-      checkAuth();
+      checkAuthAndLoadUserData();
     };
 
+    // Escuchar eventos de autenticación
     window.addEventListener("userDataUpdated", handleAuthChange);
+    window.addEventListener("storage", handleAuthChange);
 
     return () => {
       window.removeEventListener("userDataUpdated", handleAuthChange);
+      window.removeEventListener("storage", handleAuthChange);
     };
   }, []);
 
@@ -126,6 +137,11 @@ export default function Home() {
       };
 
       loadCurrentContent();
+    } else {
+      // Si no está autenticado, limpiar datos y establecer como no cargando
+      setCurrentContent([]);
+      setIsWatchingNow(null);
+      setLoadingCurrent(false);
     }
   }, [isAuthenticated]);
 
@@ -145,6 +161,10 @@ export default function Home() {
       };
 
       loadWatchlist();
+    } else {
+      // Si no está autenticado, limpiar datos y establecer como no cargando
+      setWatchlist([]);
+      setLoadingWatchlist(false);
     }
   }, [isAuthenticated]);
 
@@ -164,6 +184,10 @@ export default function Home() {
       };
 
       loadTrending();
+    } else {
+      // Si no está autenticado, limpiar datos y establecer como no cargando
+      setTrendingContent([]);
+      setLoadingTrending(false);
     }
   }, [isAuthenticated]);
 
@@ -551,15 +575,17 @@ export default function Home() {
                       <div className="flex flex-col items-center">
                         <TrendingUp className="h-12 w-12 text-muted-foreground mb-4" />
                         <p className="text-muted-foreground">
-                          No hay tendencias entre tus amigos aún
+                          No tienes contenido en progreso
                         </p>
                         <p className="text-sm text-muted-foreground mb-4">
-                          Añade amigos para ver qué contenido es popular
+                          Busca contenido para añadirlo a tu colección
                         </p>
-                        <Button>
-                          <UserPlus className="h-4 w-4 mr-2" />
-                          Añadir amigos
-                        </Button>
+                        <Link href="/busqueda?busqueda=&tipo=P">
+                          <Button>
+                            <Plus className="h-4 w-4 mr-2" />
+                            Buscar contenido
+                          </Button>
+                        </Link>
                       </div>
                     </div>
                   )}

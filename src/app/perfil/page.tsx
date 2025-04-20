@@ -40,7 +40,7 @@ import { AvatarSelector } from "@/components/AvatarSelector";
 import { ProfileForm } from "@/components/ProfileForm";
 import { ProfileSettings } from "@/components/ProfileSettings";
 import { ProfileActivity } from "@/components/ProfileActivity";
-//import { ProfileCollection } from "@/components/ProfileCollection";
+import { ProfileCollection } from "@/components/ProfileCollection";
 import { ProfileStats } from "@/components/profile-stats";
 import { ProfileFriends } from "@/components/ProfileFriends";
 import { ProfilePublicView } from "@/components/ProfilePublicView";
@@ -441,7 +441,7 @@ export function ProfilePage() {
               )}
               
               {activeTab === "activity" && <ProfileActivity userId={profileData.id} />}
-              {/*activeTab === "collection" && <ProfileCollection userId={profileData.id} />*/}
+              {activeTab === "collection" && <ProfileCollection userId={profileData.id} />}
               {activeTab === "stats" && <ProfileStats profileData={profileData} />}
               {activeTab === "friends" && <ProfileFriends userId={profileData.id} />}
               {activeTab === "settings" && <ProfileSettings userId={profileData.id} />}

@@ -10,10 +10,11 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useRouter } from "next/navigation";
 import { AuthModal } from "./ui/auth-modal";
-import { Search } from "lucide-react";
+import { Search, Film, Tv, BookOpen, Gamepad2 } from "lucide-react";
 import { ThemeSwitch } from "./theme-switch";
 import { UserAvatar } from "./UserAvatar";
 import { authService } from "@/lib/auth";
+import { Button } from "@/components/ui/button";
 
 interface UserData {
   nombre: string;
@@ -29,9 +30,22 @@ export function Navbar() {
   const router = useRouter();
   const [showInicioSesion, setShowInicioSesion] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
+  const [showTipoDropdown, setShowTipoDropdown] = useState<boolean>(false);
+
+  // Tipos de contenido con sus iconos
+  const tiposContenido = [
+    { id: "P", nombre: "Películas", icon: Film },
+    { id: "S", nombre: "Series", icon: Tv },
+    { id: "L", nombre: "Libros", icon: BookOpen },
+    { id: "V", nombre: "Videojuegos", icon: Gamepad2 }
+  ];
+
+  // Obtener el icono y nombre actual del tipo seleccionado
+  const tipoActual = tiposContenido.find(t => t.id === tipo) || tiposContenido[0];
+  const IconoActual = tipoActual.icon;
 
   const handleEnter = (event: React.KeyboardEvent<HTMLInputElement>) => {
-    if (event.key === "Enter") {
+    if (event.key === "Enter" && busqueda.trim()) {
       event.preventDefault();
       router.push(
         `/busqueda?busqueda=${encodeURIComponent(
@@ -41,6 +55,21 @@ export function Navbar() {
     }
   };
 
+  const handleSearch = () => {
+    if (busqueda.trim()) {
+      router.push(
+        `/busqueda?busqueda=${encodeURIComponent(
+          busqueda
+        )}&tipo=${encodeURIComponent(tipo)}`
+      );
+    }
+  };
+
+  const handleTipoChange = (nuevoTipo: string) => {
+    setTipo(nuevoTipo);
+    setShowTipoDropdown(false);
+  };
+
   // Función para manejar cambios en los datos de usuario
   const handleUserDataUpdate = () => {
     const authenticated = authService.isAuthenticated();
@@ -48,7 +77,6 @@ export function Navbar() {
     
     if (authenticated) {
       const userInfo = authService.getUserData();
-      console.log("Datos de usuario actualizados en NavBar:", userInfo);
       setUserData(userInfo);
     } else {
       setUserData(null);
@@ -72,11 +100,18 @@ export function Navbar() {
     };
   }, []);
 
+  // Función mejorada de cierre de sesión
   const cerrarSesion = () => {
     // Usar el servicio de autenticación para cerrar sesión
     authService.logout();
+    
+    // Actualizar estado local
     setIsAuthenticated(false);
     setUserData(null);
+    
+    // Disparar evento para actualizar otros componentes
+    window.dispatchEvent(new Event('userDataUpdated'));
+    window.dispatchEvent(new Event('storage'));
     
     // Redirigir a la página principal
     router.push("/");
@@ -92,18 +127,50 @@ export function Navbar() {
           MyMediaList
         </div>
 
-        <div className="relative justify-center w-2xl mx-auto">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-5 w-5" />
-          <Input
-            type="text"
-            placeholder="Buscar series, pelis, libros..."
-            value={busqueda}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-              setBusqueda(e.target.value)
-            }
-            onKeyDown={handleEnter}
-            className={"rounded-2xl pl-10"}
-          />
+        <div className="relative justify-center w-2xl mx-auto flex items-center">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-5 w-5" />
+            <Input
+              type="text"
+              placeholder="Buscar series, pelis, libros..."
+              value={busqueda}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                setBusqueda(e.target.value)
+              }
+              onKeyDown={handleEnter}
+              className={"rounded-2xl pl-10 pr-24"}
+            />
+            <div className="absolute right-1 top-1/2 -translate-y-1/2">
+              <DropdownMenu open={showTipoDropdown} onOpenChange={setShowTipoDropdown}>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm" className="h-7 gap-1 text-xs">
+                    <IconoActual className="h-4 w-4" />
+                    {tipoActual.nombre}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  {tiposContenido.map(tipoItem => (
+                    <DropdownMenuItem 
+                      key={tipoItem.id}
+                      onClick={() => handleTipoChange(tipoItem.id)}
+                      className="cursor-pointer gap-2"
+                    >
+                      <tipoItem.icon className="h-4 w-4" />
+                      {tipoItem.nombre}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          </div>
+          <Button 
+            size="icon" 
+            variant="ghost" 
+            className="ml-1"
+            onClick={handleSearch}
+          >
+            <Search className="h-5 w-5" />
+          </Button>
         </div>
         <div className="w-auto flex items-center gap-4 justify-end">
           <ThemeSwitch />

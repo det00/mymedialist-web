@@ -16,7 +16,8 @@ const nextConfig: NextConfig = {
       "i.blogs.es",
       "m.media-amazon.com",
       "pics.filmaffinity.com",
-      "flxt.tmsimg.com"
+      "flxt.tmsimg.com",
+      "image.api.playstation.com"
     ],
   },
 };
