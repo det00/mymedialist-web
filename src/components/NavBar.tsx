@@ -37,11 +37,12 @@ export function Navbar() {
     { id: "P", nombre: "Películas", icon: Film },
     { id: "S", nombre: "Series", icon: Tv },
     { id: "L", nombre: "Libros", icon: BookOpen },
-    { id: "V", nombre: "Videojuegos", icon: Gamepad2 }
+    { id: "V", nombre: "Videojuegos", icon: Gamepad2 },
   ];
 
   // Obtener el icono y nombre actual del tipo seleccionado
-  const tipoActual = tiposContenido.find(t => t.id === tipo) || tiposContenido[0];
+  const tipoActual =
+    tiposContenido.find((t) => t.id === tipo) || tiposContenido[0];
   const IconoActual = tipoActual.icon;
 
   const handleEnter = (event: React.KeyboardEvent<HTMLInputElement>) => {
@@ -74,29 +75,29 @@ export function Navbar() {
   const handleUserDataUpdate = () => {
     const authenticated = authService.isAuthenticated();
     setIsAuthenticated(authenticated);
-    
+
     if (authenticated) {
       const userInfo = authService.getUserData();
       setUserData(userInfo);
     } else {
       setUserData(null);
     }
-    
+
     setLoading(false);
   };
 
   useEffect(() => {
     // Configurar listeners de eventos
-    window.addEventListener('userDataUpdated', handleUserDataUpdate);
-    window.addEventListener('storage', handleUserDataUpdate);
-    
+    window.addEventListener("userDataUpdated", handleUserDataUpdate);
+    window.addEventListener("storage", handleUserDataUpdate);
+
     // Ejecutar la verificación inicial
     handleUserDataUpdate();
-    
+
     // Limpiar listeners al desmontar
     return () => {
-      window.removeEventListener('userDataUpdated', handleUserDataUpdate);
-      window.removeEventListener('storage', handleUserDataUpdate);
+      window.removeEventListener("userDataUpdated", handleUserDataUpdate);
+      window.removeEventListener("storage", handleUserDataUpdate);
     };
   }, []);
 
@@ -104,15 +105,15 @@ export function Navbar() {
   const cerrarSesion = () => {
     // Usar el servicio de autenticación para cerrar sesión
     authService.logout();
-    
+
     // Actualizar estado local
     setIsAuthenticated(false);
     setUserData(null);
-    
+
     // Disparar evento para actualizar otros componentes
-    window.dispatchEvent(new Event('userDataUpdated'));
-    window.dispatchEvent(new Event('storage'));
-    
+    window.dispatchEvent(new Event("userDataUpdated"));
+    window.dispatchEvent(new Event("storage"));
+
     // Redirigir a la página principal
     router.push("/");
   };
@@ -120,8 +121,8 @@ export function Navbar() {
   return (
     <header className="w-full border-b bg-background px-4 py-2 shadow-sm text-foreground">
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-4">
-        <div 
-          className="text-xl font-bold text-primary w-32 cursor-pointer" 
+        <div
+          className="text-xl font-bold text-primary w-32 cursor-pointer"
           onClick={() => router.push("/")}
         >
           MyMediaList
@@ -141,16 +142,23 @@ export function Navbar() {
               className={"rounded-2xl pl-10 pr-24"}
             />
             <div className="absolute right-1 top-1/2 -translate-y-1/2">
-              <DropdownMenu open={showTipoDropdown} onOpenChange={setShowTipoDropdown}>
+              <DropdownMenu
+                open={showTipoDropdown}
+                onOpenChange={setShowTipoDropdown}
+              >
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" className="h-7 gap-1 text-xs">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 gap-1 text-xs"
+                  >
                     <IconoActual className="h-4 w-4" />
                     {tipoActual.nombre}
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  {tiposContenido.map(tipoItem => (
-                    <DropdownMenuItem 
+                  {tiposContenido.map((tipoItem) => (
+                    <DropdownMenuItem
                       key={tipoItem.id}
                       onClick={() => handleTipoChange(tipoItem.id)}
                       className="cursor-pointer gap-2"
@@ -163,9 +171,9 @@ export function Navbar() {
               </DropdownMenu>
             </div>
           </div>
-          <Button 
-            size="icon" 
-            variant="ghost" 
+          <Button
+            size="icon"
+            variant="ghost"
             className="ml-1"
             onClick={handleSearch}
           >
@@ -180,9 +188,9 @@ export function Navbar() {
                 {loading ? (
                   <div className="h-10 w-10 rounded-full bg-muted animate-pulse"></div>
                 ) : isAuthenticated && userData ? (
-                  <UserAvatar 
-                    avatarData={userData.avatar || "avatar1"} 
-                    size="md" 
+                  <UserAvatar
+                    avatarData={userData.avatar || "avatar1"}
+                    size="md"
                   />
                 ) : (
                   <UserAvatar avatarData="initial_#6C5CE7_US" />
@@ -192,19 +200,26 @@ export function Navbar() {
             <DropdownMenuContent align="end">
               {isAuthenticated ? (
                 <>
-                  <DropdownMenuItem 
-                    onClick={() => router.push("/perfil")}
+                  <DropdownMenuItem
+                    onClick={() => {
+                      const userId = localStorage.getItem("id_usuario");
+                      if (userId) {
+                        router.push(`/perfil?id=${userId}`);
+                      } else {
+                        router.push("/perfil");
+                      }
+                    }}
                     className="cursor-pointer"
                   >
                     Mi perfil
                   </DropdownMenuItem>
-                  <DropdownMenuItem 
+                  <DropdownMenuItem
                     onClick={() => router.push("/coleccion")}
                     className="cursor-pointer"
                   >
                     Mi colección
                   </DropdownMenuItem>
-                  <DropdownMenuItem 
+                  <DropdownMenuItem
                     onClick={cerrarSesion}
                     className="text-destructive cursor-pointer"
                   >
@@ -227,10 +242,10 @@ export function Navbar() {
         </div>
       </div>
 
-      <AuthModal 
-        showModal={showInicioSesion} 
-        setShowModal={setShowInicioSesion} 
-        initialView="login" 
+      <AuthModal
+        showModal={showInicioSesion}
+        setShowModal={setShowInicioSesion}
+        initialView="login"
       />
     </header>
   );

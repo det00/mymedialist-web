@@ -7,42 +7,20 @@ import { AvatarSelector } from "@/components/AvatarSelector";
 import { UserAvatar } from "@/components/UserAvatar";
 import { Separator } from "@/components/ui/separator";
 import { Save, X } from "lucide-react";
-
-// Interfaz para los datos del perfil
-interface ProfileData {
-  id: string;
-  name: string;
-  username: string;
-  bio: string;
-  joinDate: string;
-  email: string;
-  avatar: string;
-  stats: {
-    totalContent: number;
-    completed: number;
-    inProgress: number;
-    planned: number;
-    dropped: number;
-    movies: number;
-    series: number;
-    books: number;
-    games: number;
-  };
-  isCurrentUser: boolean;
-}
+import { ProfileData } from "@/lib/profile";
 
 interface ProfileFormProps {
   profileData: ProfileData;
-  onSave: (data: Partial<ProfileData>) => void;
+  onSave: (data: Partial<ProfileData>) => Promise<boolean> | void;
   onCancel: () => void;
 }
 
 export function ProfileForm({ profileData, onSave, onCancel }: ProfileFormProps) {
   const [formData, setFormData] = useState({
-    name: profileData.name,
+    nombre: profileData.nombre,
     username: profileData.username,
-    email: profileData.email,
-    bio: profileData.bio,
+    email: profileData.email || "",
+    bio: profileData.bio || "",
     avatar: profileData.avatar
   });
   
@@ -72,8 +50,8 @@ export function ProfileForm({ profileData, onSave, onCancel }: ProfileFormProps)
     // Validación básica
     const newErrors: Record<string, string> = {};
     
-    if (!formData.name.trim()) {
-      newErrors.name = "El nombre es obligatorio";
+    if (!formData.nombre.trim()) {
+      newErrors.nombre = "El nombre es obligatorio";
     }
     
     if (!formData.username.trim()) {
@@ -82,9 +60,7 @@ export function ProfileForm({ profileData, onSave, onCancel }: ProfileFormProps)
       newErrors.username = "Solo letras minúsculas, números y guiones bajos";
     }
     
-    if (!formData.email.trim()) {
-      newErrors.email = "El email es obligatorio";
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+    if (formData.email && !/\S+@\S+\.\S+/.test(formData.email)) {
       newErrors.email = "Email inválido";
     }
     
@@ -94,12 +70,21 @@ export function ProfileForm({ profileData, onSave, onCancel }: ProfileFormProps)
       return;
     }
     
-    // Simulación de guardado
+    // Enviar datos
     setLoading(true);
     
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Simular petición
-      onSave(formData);
+      const success = await onSave({
+        nombre: formData.nombre,
+        username: formData.username,
+        email: formData.email,
+        bio: formData.bio,
+        avatar: formData.avatar
+      });
+      
+      if (!success) {
+        setErrors({ submit: "No se pudieron guardar los cambios" });
+      }
     } catch (error) {
       console.error("Error al guardar el perfil:", error);
       setErrors({ submit: "Error al guardar los cambios" });
@@ -129,16 +114,16 @@ export function ProfileForm({ profileData, onSave, onCancel }: ProfileFormProps)
         
         {/* Nombre */}
         <div className="space-y-2">
-          <Label htmlFor="name">Nombre completo</Label>
+          <Label htmlFor="nombre">Nombre completo</Label>
           <Input
-            id="name"
-            name="name"
-            value={formData.name}
+            id="nombre"
+            name="nombre"
+            value={formData.nombre}
             onChange={handleChange}
             placeholder="Tu nombre"
-            error={errors.name}
+            className={errors.nombre ? "border-destructive" : ""}
           />
-          {errors.name && <p className="text-sm text-destructive">{errors.name}</p>}
+          {errors.nombre && <p className="text-sm text-destructive">{errors.nombre}</p>}
         </div>
         
         {/* Nombre de usuario */}
@@ -154,8 +139,7 @@ export function ProfileForm({ profileData, onSave, onCancel }: ProfileFormProps)
               value={formData.username}
               onChange={handleChange}
               placeholder="username"
-              className="rounded-l-none"
-              error={errors.username}
+              className={`rounded-l-none ${errors.username ? "border-destructive" : ""}`}
             />
           </div>
           {errors.username && <p className="text-sm text-destructive">{errors.username}</p>}
@@ -172,7 +156,7 @@ export function ProfileForm({ profileData, onSave, onCancel }: ProfileFormProps)
             value={formData.email}
             onChange={handleChange}
             placeholder="tu@email.com"
-            error={errors.email}
+            className={errors.email ? "border-destructive" : ""}
           />
           {errors.email && <p className="text-sm text-destructive">{errors.email}</p>}
           <p className="text-xs text-muted-foreground">No compartiremos tu email con otros usuarios.</p>
@@ -188,7 +172,7 @@ export function ProfileForm({ profileData, onSave, onCancel }: ProfileFormProps)
             onChange={handleChange}
             placeholder="Cuéntanos sobre ti y tus gustos..."
             rows={4}
-            error={errors.bio}
+            className={errors.bio ? "border-destructive" : ""}
           />
           {errors.bio && <p className="text-sm text-destructive">{errors.bio}</p>}
           <p className="text-xs text-muted-foreground">Describe tus gustos y lo que te gusta ver, leer o jugar.</p>
@@ -204,11 +188,11 @@ export function ProfileForm({ profileData, onSave, onCancel }: ProfileFormProps)
       
       {/* Botones de acción */}
       <div className="flex justify-end space-x-2">
-        <Button type="button" variant="outline" onClick={onCancel} disabled={loading}>
+        <Button type="button" variant="outline" onClick={onCancel} disabled={loading} className="cursor-pointer">
           <X className="h-4 w-4 mr-2" />
           Cancelar
         </Button>
-        <Button type="submit" disabled={loading}>
+        <Button type="submit" disabled={loading} className="cursor-pointer">
           {loading ? (
             <>
               <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">

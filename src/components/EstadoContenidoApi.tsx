@@ -12,26 +12,32 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { homeService } from "@/lib/home";
+import { collectionService } from "@/lib/collection";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface EstadoContenidoApiProps {
   id_api: string;
   tipo: string;
   estadoInicial: string;
+  itemId?: string; // ID del elemento en la colección (si ya existe)
   onUpdateSuccess?: () => void;
+  size?: "sm" | "md" | "lg";
 }
 
 const EstadoContenidoApi: React.FC<EstadoContenidoApiProps> = ({
   id_api,
   tipo,
   estadoInicial,
-  onUpdateSuccess
+  itemId,
+  onUpdateSuccess,
+  size = "md"
 }) => {
   const [open, setOpen] = useState(false);
   const [isHovering, setIsHovering] = useState(false);
   const [estado, setEstado] = useState(estadoInicial);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<boolean>(false);
 
   const colorEstado = () => {
     switch (estado) {
@@ -64,12 +70,38 @@ const EstadoContenidoApi: React.FC<EstadoContenidoApiProps> = ({
     }
   };
 
+  // Obtener nombre del estado para el tooltip
+  const getNombreEstado = () => {
+    switch (estado) {
+      case "C":
+        return "Completado";
+      case "E":
+        return "En progreso";
+      case "P":
+        return "Pendiente";
+      case "A":
+        return "Abandonado";
+      default:
+        return "Sin estado";
+    }
+  };
+
   useEffect(() => {
-    console.log("Estado inicial:", estadoInicial);
     if (estadoInicial !== estado) {
       setEstado(estadoInicial);
     }
   }, [estadoInicial]);
+
+  // Efecto para mostrar mensaje de éxito brevemente
+  useEffect(() => {
+    if (success) {
+      const timer = setTimeout(() => {
+        setSuccess(false);
+      }, 2000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [success]);
 
   // Maneja la selección de un estado, cierra el dropdown y detiene la propagación
   const handleEstadoChange = async (newEstado: string) => {
@@ -89,8 +121,20 @@ const EstadoContenidoApi: React.FC<EstadoContenidoApiProps> = ({
       setEstado(newEstado);
       setOpen(false);
       
-      // Llamar a la API para actualizar el estado
-      await homeService.updateItemState(id_api, tipo, newEstado);
+      // Si se proporciona un ID de elemento, actualizar, sino añadir nuevo
+      if (itemId && newEstado !== "") {
+        // Actualizar estado del elemento existente
+        await collectionService.updateItem(itemId, newEstado);
+      } else if (newEstado !== "") {
+        // Añadir nuevo elemento a la colección
+        await collectionService.addToCollection(id_api, tipo, newEstado);
+      } else if (itemId) {
+        // Eliminar elemento de la colección
+        await collectionService.removeFromCollection(itemId);
+      }
+      
+      // Mostrar indicador de éxito
+      setSuccess(true);
       
       // Si hay callback de éxito, ejecutarlo
       if (onUpdateSuccess) {
@@ -113,102 +157,128 @@ const EstadoContenidoApi: React.FC<EstadoContenidoApiProps> = ({
     e.stopPropagation();
   };
 
+  // Tamaño del botón según la prop size
+  const buttonSize = {
+    sm: "h-8 w-8",
+    md: "h-9 w-9",
+    lg: "h-10 w-10"
+  }[size];
+
+  // Tamaño del icono según la prop size
+  const iconSize = {
+    sm: "h-4 w-4",
+    md: "h-5 w-5",
+    lg: "h-6 w-6"
+  }[size];
+
   return (
-    <div 
-      onClick={handleClick}
-      className="cursor-pointer"
-      onMouseEnter={() => setIsHovering(true)}
-      onMouseLeave={() => setIsHovering(false)}
-    >
-      <DropdownMenu open={open} onOpenChange={setOpen}>
-        <DropdownMenuTrigger asChild>
-          <Button
-            variant="outline"
-            className="transition-all duration-200 relative"
-            style={{
-              boxShadow: colorEstado() !== "gray" 
-                ? `0 0 ${isHovering ? '12px' : '8px'} ${colorEstado()}` 
-                : isHovering ? '0 0 5px rgba(0,0,0,0.2)' : 'none',
-              transform: isHovering ? 'scale(1.05)' : 'scale(1)',
-              cursor: 'pointer',
-              zIndex: 10,
-              opacity: loading ? 0.7 : 1
-            }}
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-            }}
-            disabled={loading}
-          >
-            <Tag 
-              color={colorEstado()} 
-              className={`transition-transform duration-200 ${isHovering ? 'scale-110' : ''}`}
-            />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent className="w-56 z-50" onClick={(e) => e.stopPropagation()}>
-          <DropdownMenuLabel>Estado</DropdownMenuLabel>
-          {error && (
-            <div className="px-2 py-1 my-1 text-sm text-destructive">
-              {error}
-            </div>
-          )}
-          <DropdownMenuSeparator />
-          <DropdownMenuRadioGroup value={estado}>
-            <DropdownMenuRadioItem 
-              value="C" 
-              className="cursor-pointer"
-              onSelect={(e) => {
-                e.preventDefault();
-                handleEstadoChange("C");
-              }}
-            >
-              Terminado
-            </DropdownMenuRadioItem>
-            <DropdownMenuRadioItem 
-              value="E" 
-              className="cursor-pointer"
-              onSelect={(e) => {
-                e.preventDefault();
-                handleEstadoChange("E");
-              }}
-            >
-              En progreso
-            </DropdownMenuRadioItem>
-            <DropdownMenuRadioItem 
-              value="P" 
-              className="cursor-pointer"
-              onSelect={(e) => {
-                e.preventDefault();
-                handleEstadoChange("P");
-              }}
-            >
-              Pendiente
-            </DropdownMenuRadioItem>
-            <DropdownMenuRadioItem 
-              value="A" 
-              className="cursor-pointer"
-              onSelect={(e) => {
-                e.preventDefault();
-                handleEstadoChange("A");
-              }}
-            >
-              Abandonado
-            </DropdownMenuRadioItem>
-            <DropdownMenuRadioItem 
-              value="" 
-              className="cursor-pointer"
-              onSelect={(e) => {
-                e.preventDefault();
-                handleEstadoChange("");
-              }}
-            >
-              Desmarcar
-            </DropdownMenuRadioItem>
-          </DropdownMenuRadioGroup>
-        </DropdownMenuContent>
-      </DropdownMenu>
-    </div>
+    <TooltipProvider>
+      <div 
+        onClick={handleClick}
+        className="cursor-pointer"
+        onMouseEnter={() => setIsHovering(true)}
+        onMouseLeave={() => setIsHovering(false)}
+      >
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <DropdownMenu open={open} onOpenChange={setOpen}>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="outline"
+                  className={`transition-all duration-200 relative ${buttonSize}`}
+                  style={{
+                    boxShadow: colorEstado() !== "gray" 
+                      ? `0 0 ${isHovering ? '12px' : '8px'} ${colorEstado()}` 
+                      : isHovering ? '0 0 5px rgba(0,0,0,0.2)' : 'none',
+                    transform: isHovering ? 'scale(1.05)' : 'scale(1)',
+                    cursor: 'pointer',
+                    zIndex: 10,
+                    opacity: loading ? 0.7 : 1
+                  }}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                  }}
+                  disabled={loading}
+                >
+                  <Tag 
+                    color={colorEstado()} 
+                    className={`transition-transform duration-200 ${iconSize} ${isHovering ? 'scale-110' : ''}`}
+                  />
+                  {success && (
+                    <span className="absolute -top-1 -right-1 h-3 w-3 bg-green-500 rounded-full border border-background animate-pulse"></span>
+                  )}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-56 z-50" onClick={(e) => e.stopPropagation()}>
+                <DropdownMenuLabel>Estado</DropdownMenuLabel>
+                {error && (
+                  <div className="px-2 py-1 my-1 text-sm text-destructive">
+                    {error}
+                  </div>
+                )}
+                <DropdownMenuSeparator />
+                <DropdownMenuRadioGroup value={estado}>
+                  <DropdownMenuRadioItem 
+                    value="C" 
+                    className="cursor-pointer"
+                    onSelect={(e) => {
+                      e.preventDefault();
+                      handleEstadoChange("C");
+                    }}
+                  >
+                    Terminado
+                  </DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem 
+                    value="E" 
+                    className="cursor-pointer"
+                    onSelect={(e) => {
+                      e.preventDefault();
+                      handleEstadoChange("E");
+                    }}
+                  >
+                    En progreso
+                  </DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem 
+                    value="P" 
+                    className="cursor-pointer"
+                    onSelect={(e) => {
+                      e.preventDefault();
+                      handleEstadoChange("P");
+                    }}
+                  >
+                    Pendiente
+                  </DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem 
+                    value="A" 
+                    className="cursor-pointer"
+                    onSelect={(e) => {
+                      e.preventDefault();
+                      handleEstadoChange("A");
+                    }}
+                  >
+                    Abandonado
+                  </DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem 
+                    value="" 
+                    className="cursor-pointer"
+                    onSelect={(e) => {
+                      e.preventDefault();
+                      handleEstadoChange("");
+                    }}
+                  >
+                    Desmarcar
+                  </DropdownMenuRadioItem>
+                </DropdownMenuRadioGroup>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>{getNombreEstado()}</p>
+          </TooltipContent>
+        </Tooltip>
+      </div>
+    </TooltipProvider>
   );
 };
 
