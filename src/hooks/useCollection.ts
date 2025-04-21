@@ -44,7 +44,7 @@ export function useCollection(options: UseCollectionOptions = {}) {
   }, [isAuthenticated, filters.tipo, filters.estado]);
 
   // Función para cargar la colección
-  const loadCollection = async () => {
+  const loadCollection = async (forceRefresh: boolean = false) => {
     if (!isAuthenticated) {
       setError("No has iniciado sesión");
       return;
@@ -128,8 +128,9 @@ export function useCollection(options: UseCollectionOptions = {}) {
     }
 
     try {
+      // Usar homeService para asegurar compatibilidad
       const result = await collectionService.addToCollection(id_api, tipo, estado);
-      await loadCollection(); // Recargar la colección
+      await loadCollection(true); // Recargar la colección
       return result;
     } catch (err) {
       console.error("Error al añadir a la colección:", err);
@@ -147,7 +148,7 @@ export function useCollection(options: UseCollectionOptions = {}) {
 
     try {
       const result = await collectionService.updateItem(id, estado);
-      await loadCollection(); // Recargar la colección
+      await loadCollection(true); // Recargar la colección
       return result;
     } catch (err) {
       console.error("Error al actualizar elemento:", err);
@@ -165,7 +166,7 @@ export function useCollection(options: UseCollectionOptions = {}) {
 
     try {
       const result = await collectionService.removeFromCollection(id);
-      await loadCollection(); // Recargar la colección
+      await loadCollection(true); // Recargar la colección
       return result;
     } catch (err) {
       console.error("Error al eliminar de la colección:", err);

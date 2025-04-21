@@ -28,7 +28,8 @@ import {
   Ban,
   Calendar,
   CircleSlash,
-  AlertCircle
+  AlertCircle,
+  RefreshCw
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -107,11 +108,10 @@ export function ProfileCollection({ userId }: ProfileCollectionProps) {
     
     // Filtrar por tipo
     if (tipo !== "todo") {
-      // Convertir tipo a formato adecuado (P, S, L, V)
-      const tipoFilter = tipo.charAt(0).toUpperCase();
+      // Convertir tipo a formato adecuado
       filtered = filtered.filter(item => {
-        const itemTipo = item.tipo?.charAt(0).toUpperCase();
-        return itemTipo === tipoFilter;
+        const itemTipo = item.tipo?.toLowerCase();
+        return itemTipo === tipo.toLowerCase();
       });
     }
     
@@ -157,6 +157,30 @@ export function ProfileCollection({ userId }: ProfileCollectionProps) {
     }
     
     setFilteredCollection(filtered);
+  };
+  
+  // Recargar datos
+  const reloadCollection = async () => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      // Cargar la colección completa
+      const result = await collectionService.getUserCollection();
+      setCollection(result);
+      
+      // Cargar estadísticas
+      const statsResult = await collectionService.getCollectionStats();
+      setStats(statsResult);
+      
+      // Aplicar filtros actuales
+      filterCollection(result, activeType, activeStatus, searchQuery, sortBy);
+    } catch (err) {
+      console.error("Error al recargar la colección:", err);
+      setError("No se pudo recargar tu colección. Inténtalo de nuevo más tarde.");
+    } finally {
+      setLoading(false);
+    }
   };
   
   // Función para limpiar todos los filtros
@@ -290,7 +314,8 @@ export function ProfileCollection({ userId }: ProfileCollectionProps) {
         <div className="py-12 text-center">
           <AlertCircle className="h-12 w-12 text-destructive mx-auto mb-4" />
           <p className="text-destructive mb-4">{error}</p>
-          <Button onClick={() => window.location.reload()}>
+          <Button onClick={reloadCollection} className="cursor-pointer">
+            <RefreshCw className="h-4 w-4 mr-2" />
             Intentar de nuevo
           </Button>
         </div>
@@ -485,8 +510,36 @@ export function ProfileCollection({ userId }: ProfileCollectionProps) {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuLabel>Tipo de contenido</DropdownMenuLabel>
+              <DropdownMenuLabel>Ordenar por</DropdownMenuLabel>
               <DropdownMenuSeparator />
+              <DropdownMenuItem
+                className="cursor-pointer"
+                onClick={() => setSortBy("title_asc")}
+              >
+                <div className="w-4 h-4 mr-2">{sortBy === "title_asc" && "✓"}</div>
+                Título (A-Z)
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                className="cursor-pointer"
+                onClick={() => setSortBy("title_desc")}
+              >
+                <div className="w-4 h-4 mr-2">{sortBy === "title_desc" && "✓"}</div>
+                Título (Z-A)
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                className="cursor-pointer"
+                onClick={() => setSortBy("date_desc")}
+              >
+                <div className="w-4 h-4 mr-2">{sortBy === "date_desc" && "✓"}</div>
+                Más recientes
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                className="cursor-pointer"
+                onClick={() => setSortBy("date_asc")}
+              >
+                <div className="w-4 h-4 mr-2">{sortBy === "date_asc" && "✓"}</div>
+                Más antiguos
+              </DropdownMenuItem>
               <DropdownMenuItem
                 className="cursor-pointer"
                 onClick={() => setSortBy("rating_desc")}

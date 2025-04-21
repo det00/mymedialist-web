@@ -12,7 +12,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { collectionService } from "@/lib/collection";
+import { homeService } from "@/lib/home";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface EstadoContenidoApiProps {
@@ -121,17 +121,9 @@ const EstadoContenidoApi: React.FC<EstadoContenidoApiProps> = ({
       setEstado(newEstado);
       setOpen(false);
       
-      // Si se proporciona un ID de elemento, actualizar, sino añadir nuevo
-      if (itemId && newEstado !== "") {
-        // Actualizar estado del elemento existente
-        await collectionService.updateItem(itemId, newEstado);
-      } else if (newEstado !== "") {
-        // Añadir nuevo elemento a la colección
-        await collectionService.addToCollection(id_api, tipo, newEstado);
-      } else if (itemId) {
-        // Eliminar elemento de la colección
-        await collectionService.removeFromCollection(itemId);
-      }
+      // Usamos el método de homeService que sabemos que funciona
+      // para actualizar el estado del contenido
+      await homeService.updateItemState(id_api, tipo, newEstado);
       
       // Mostrar indicador de éxito
       setSuccess(true);
