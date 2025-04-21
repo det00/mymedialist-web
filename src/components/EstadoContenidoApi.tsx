@@ -177,7 +177,7 @@ const EstadoContenidoApi: React.FC<EstadoContenidoApiProps> = ({
               <DropdownMenuTrigger asChild>
                 <Button
                   variant="outline"
-                  className={`transition-all duration-200 relative ${buttonSize}`}
+                  className={`transition-all duration-200 relative ${buttonSize} cursor-pointer`}
                   style={{
                     boxShadow: colorEstado() !== "gray" 
                       ? `0 0 ${isHovering ? '12px' : '8px'} ${colorEstado()}` 

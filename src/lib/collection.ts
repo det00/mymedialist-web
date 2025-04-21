@@ -49,8 +49,9 @@ export const collectionService = {
         }
         
         if (filters?.estado && filters.estado !== "todo") {
+          // Corrección: Usar el campo estado directamente
           combinedResults = combinedResults.filter(item => 
-            item.item && item.item.estado === filters.estado
+            item.estado === filters.estado
           );
         }
         
@@ -75,8 +76,9 @@ export const collectionService = {
         }
         
         if (filters?.estado && filters.estado !== "todo") {
+          // Corrección: Usar el campo estado directamente
           fallbackData = fallbackData.filter(item => 
-            item.item?.estado === filters.estado
+            item.estado === filters.estado
           );
         }
         
@@ -203,7 +205,7 @@ export const collectionService = {
     // Como no tenemos un endpoint para esto, usamos la colección completa
     try {
       const collection = await this.getUserCollection();
-      return collection.find(item => item.item?.id === id) || null;
+      return collection.find(item => item.id === id) || null;
     } catch (error) {
       console.error("Error al buscar elemento por ID:", error);
       return null;
@@ -252,10 +254,11 @@ export const collectionService = {
       
       // Contamos por tipo y estado
       collection.forEach(item => {
-        if (item.item?.estado) {
+        // CORRECCIÓN: Usar el estado directamente en lugar de item.item?.estado
+        if (item.estado) {
           // Incrementamos el contador para este estado
-          if (stats.byStatus[item.item.estado as keyof typeof stats.byStatus] !== undefined) {
-            stats.byStatus[item.item.estado as keyof typeof stats.byStatus]++;
+          if (stats.byStatus[item.estado as keyof typeof stats.byStatus] !== undefined) {
+            stats.byStatus[item.estado as keyof typeof stats.byStatus]++;
           }
         }
         

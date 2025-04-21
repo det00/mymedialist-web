@@ -76,12 +76,15 @@ export function ColeccionCard({ item }: ColeccionCardProps) {
     return coincidencia ? coincidencia[1] : "";
   };
 
+  // Corrección: Obtener el estado directamente desde item.estado
+  const estado = item.estado || "";
+
   return (
     <Link 
       href={`/${getTipoUrl(item)}/${item.id_api}`} 
-      className="block"
+      className="block cursor-pointer"
     >
-      <div className="group relative flex flex-col h-full rounded-lg border overflow-hidden transition-all hover:shadow-md">
+      <div className="group relative flex flex-col h-full rounded-lg border overflow-hidden transition-all hover:shadow-md hover:border-primary">
         {/* Imagen */}
         <div className="relative aspect-[2/3] w-full overflow-hidden bg-muted">
           <Image
@@ -93,10 +96,12 @@ export function ColeccionCard({ item }: ColeccionCardProps) {
             priority={false}
           />
           {/* Indicador de estado */}
-          <div className="absolute bottom-2 right-2">
-            <div className={`w-6 h-6 rounded-full flex items-center justify-center ${estadoABgColor[item.item?.estado || "C"]}`}>
+          {estado && (
+            <div className="absolute bottom-2 right-2">
+              <div className={`w-6 h-6 rounded-full flex items-center justify-center ${estadoABgColor[estado]}`}>
+              </div>
             </div>
-          </div>
+          )}
         </div>
         
         {/* Información */}
@@ -105,9 +110,11 @@ export function ColeccionCard({ item }: ColeccionCardProps) {
           <p className="text-xs text-muted-foreground">
             {getTipoNombre(item.tipo)} {getAnioLanzamiento() && `· ${getAnioLanzamiento()}`}
           </p>
-          <div className={`text-xs mt-1 ${estadoAColor[item.item?.estado || ""]}`}>
-            {estadoANombre[item.item?.estado || ""]}
-          </div>
+          {estado && (
+            <div className={`text-xs mt-1 ${estadoAColor[estado]}`}>
+              {estadoANombre[estado]}
+            </div>
+          )}
         </div>
       </div>
     </Link>

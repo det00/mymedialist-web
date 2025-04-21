@@ -117,7 +117,8 @@ export function ProfileCollection({ userId }: ProfileCollectionProps) {
     
     // Filtrar por estado
     if (estado !== "todo") {
-      filtered = filtered.filter(item => item.item?.estado === estado);
+      // Corrección: Usar el campo estado directamente en la raíz del objeto
+      filtered = filtered.filter(item => item.estado === estado);
     }
     
     // Filtrar por búsqueda
@@ -380,12 +381,12 @@ export function ProfileCollection({ userId }: ProfileCollectionProps) {
                 </div>
                 
                 <div className="absolute top-2 right-2">
-                  {item.item?.estado && (
+                  {item.estado && (
                     <Badge 
                       variant="outline" 
-                      className={`flex items-center gap-1 bg-background/80 backdrop-blur-sm ${getStatusColor(item.item.estado)}`}
+                      className={`flex items-center gap-1 bg-background/80 backdrop-blur-sm ${getStatusColor(item.estado)}`}
                     >
-                      {getStatusIcon(item.item.estado)}
+                      {getStatusIcon(item.estado)}
                     </Badge>
                   )}
                 </div>
@@ -432,9 +433,9 @@ export function ProfileCollection({ userId }: ProfileCollectionProps) {
                 )}
                 
                 {/* Estado */}
-                {item.item?.estado && (
-                  <div className={`mt-auto pt-4 text-sm ${getStatusColor(item.item.estado)}`}>
-                    {getStatusName(item.item.estado)}
+                {item.estado && (
+                  <div className={`mt-auto pt-4 text-sm ${getStatusColor(item.estado)}`}>
+                    {getStatusName(item.estado)}
                   </div>
                 )}
               </div>
