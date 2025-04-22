@@ -51,7 +51,7 @@ export function CardSearch({ item }: CardSearchProps) {
           </div>
           <div className="flex items-end">
             <EstadoContenidoApi 
-              id_api={item.id_api}
+              id_api={String(item.id_api)}
               tipo={tipoMayuscula}
               estadoInicial={estado}
               onUpdateSuccess={() => console.log("Estado actualizado")}

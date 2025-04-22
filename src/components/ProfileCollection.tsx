@@ -5,7 +5,6 @@ import {
   Card, 
   CardContent, 
   CardDescription, 
-  CardFooter, 
   CardHeader, 
   CardTitle 
 } from "@/components/ui/card";
@@ -16,8 +15,7 @@ import { Input } from "@/components/ui/input";
 import { 
   Plus, 
   Search, 
-  Filter, 
-  ArrowUpDown,
+  Filter,
   Film, 
   Tv, 
   BookOpen, 
@@ -39,7 +37,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useRouter } from "next/navigation";
 import { collectionService } from "@/lib/collection";
 import { Contenido } from "@/lib/types";
 
@@ -48,7 +45,6 @@ interface ProfileCollectionProps {
 }
 
 export function ProfileCollection({ userId }: ProfileCollectionProps) {
-  const router = useRouter();
   const [activeStatus, setActiveStatus] = useState<string>("todo");
   const [activeType, setActiveType] = useState<string>("todo");
   const [searchQuery, setSearchQuery] = useState<string>("");
@@ -72,6 +68,8 @@ export function ProfileCollection({ userId }: ProfileCollectionProps) {
       try {
         // Cargar la colección completa
         const result = await collectionService.getUserCollection();
+        console.log("COLLECTIONRESULT", result);
+        
         setCollection(result);
         
         // Cargar estadísticas
@@ -169,6 +167,8 @@ export function ProfileCollection({ userId }: ProfileCollectionProps) {
       // Cargar la colección completa
       const result = await collectionService.getUserCollection();
       setCollection(result);
+      console.log("COLLECTION", result);
+      
       
       // Cargar estadísticas
       const statsResult = await collectionService.getCollectionStats();

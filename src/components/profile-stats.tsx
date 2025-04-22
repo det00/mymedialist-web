@@ -3,11 +3,16 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import { CalendarRange, Film, Tv, BookOpen, Gamepad2, CheckCircle, Clock, ListTodo, Ban, Crown, Award, Star, Zap, TrendingUp } from "lucide-react";
 
 // Componentes para gráficos
-const DonutChart = ({ data, colors }) => {
+interface DonutChartData {
+  name: string;
+  value: number;
+  color: string;
+}
+
+const DonutChart = ({ data, colors }: { data: DonutChartData[]; colors: string[] }) => {
   const total = data.reduce((acc, item) => acc + item.value, 0);
   let cumulativePercent = 0;
   
@@ -58,6 +63,8 @@ const DonutChart = ({ data, colors }) => {
     </div>
   );
 };
+
+
 
 const BarChart = ({ data, maxValue, valueKey = "value", labelKey = "label", colorKey = "color" }) => {
   const max = maxValue || Math.max(...data.map(item => item[valueKey]));
@@ -507,7 +514,7 @@ export function ProfileStats({ profileData }: ProfileStatsProps) {
         </TabsContent>
         
         {/* Pestaña de logros */}
-        <TabsContent value="achievements" className="mt-6">
+        {/* <TabsContent value="achievements" className="mt-6">
           <Card>
             <CardHeader>
               <CardTitle>Logros y recompensas</CardTitle>
@@ -568,7 +575,7 @@ export function ProfileStats({ profileData }: ProfileStatsProps) {
               </Button>
             </CardFooter>
           </Card>
-        </TabsContent>
+        </TabsContent> */}
       </Tabs>
     </div>
   );

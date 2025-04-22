@@ -130,8 +130,8 @@ export function ProfileActivity({ userId }: ProfileActivityProps) {
     
     return (
       <div className="space-y-4">
-        {activities.map((item) => (
-          <div key={item.id} className="border rounded-lg overflow-hidden hover:border-primary transition-colors">
+        {activities.map((item, index) => (
+          <div key={index} className="border rounded-lg overflow-hidden hover:border-primary transition-colors">
             <div className="flex p-4">
               {/* Imagen */}
               <div className="relative h-24 w-16 flex-shrink-0 mr-4">

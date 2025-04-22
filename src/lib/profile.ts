@@ -159,7 +159,7 @@ export const profileService = {
       }
 
       const response = await api.post<{ siguiendo: boolean; mensaje: string }>(
-        `/usuario/toggle-follow/${userId}`,
+        `perfil/usuario/toggle-follow/${userId}`,
         {},
         {
           headers: {

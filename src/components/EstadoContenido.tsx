@@ -40,22 +40,6 @@ const EstadoContenido: React.FC<EstadoContenidoProps> = ({
     }
   };
 
-  // Obtener color más claro para el hover
-  const hoverColorEstado = () => {
-    switch (estado) {
-      case "C":
-        return "#22c55e"; // verde
-      case "E":
-        return "#3b82f6"; // azul
-      case "P":
-        return "#eab308"; // amarillo
-      case "A":
-        return "#ef4444"; // rojo
-      default:
-        return "#94a3b8"; // gris
-    }
-  };
-
   useEffect(() => {
     console.log("ESTADOCOMPONENTE", estado);
   }, [estado]);

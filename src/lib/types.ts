@@ -13,6 +13,7 @@ export interface Buscar {
 }
 
 export interface Contenido {
+  estado: string;
   id_api: string;
   imagen?: string;
   titulo: string;

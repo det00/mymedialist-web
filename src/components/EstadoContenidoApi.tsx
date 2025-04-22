@@ -28,7 +28,6 @@ const EstadoContenidoApi: React.FC<EstadoContenidoApiProps> = ({
   id_api,
   tipo,
   estadoInicial,
-  itemId,
   onUpdateSuccess,
   size = "md"
 }) => {
@@ -51,22 +50,6 @@ const EstadoContenidoApi: React.FC<EstadoContenidoApiProps> = ({
         return "red";
       default:
         return "gray";
-    }
-  };
-
-  // Obtener color más claro para el hover
-  const hoverColorEstado = () => {
-    switch (estado) {
-      case "C":
-        return "#22c55e"; // verde
-      case "E":
-        return "#3b82f6"; // azul
-      case "P":
-        return "#eab308"; // amarillo
-      case "A":
-        return "#ef4444"; // rojo
-      default:
-        return "#94a3b8"; // gris
     }
   };
 
@@ -113,10 +96,7 @@ const EstadoContenidoApi: React.FC<EstadoContenidoApiProps> = ({
     setLoading(true);
     setError(null);
 
-    try {
-      // Guardar estado anterior para posible reversión
-      const estadoAnterior = estado;
-      
+    try {      
       // Actualizar estado en UI inmediatamente para feedback rápido
       setEstado(newEstado);
       setOpen(false);
