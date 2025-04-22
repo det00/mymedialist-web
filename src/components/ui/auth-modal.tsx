@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { LoginForm } from "./login-form";
-import { RegisterForm } from "./register-form";
+import { LoginForm } from "../login-form";
+import { RegisterForm } from "../register-form";
 
 interface AuthModalProps {
   showModal: boolean;

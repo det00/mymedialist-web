@@ -9,16 +9,13 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
-  CardDescription,
-  CardFooter,
+  CardDescription
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { UserAvatar } from "@/components/UserAvatar";
 import moment from "moment";
-import { useRouter } from "next/navigation";
 import {
-  CalendarDays,
   Clock,
   Film,
   Gamepad2,
@@ -39,7 +36,6 @@ import { homeService, ContentItem } from "@/lib/home";
 moment.locale("es");
 
 export default function Home() {
-  const router = useRouter();
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [userData, setUserData] = useState<any>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -200,26 +196,6 @@ export default function Home() {
 
     // Aquí iría la lógica para seguir/dejar de seguir
     console.log("Toggle follow");
-  };
-
-  // Manejar compartir perfil
-  const handleShare = () => {
-    if (navigator.share) {
-      navigator
-        .share({
-          title: `Perfil de ${userData?.nombre || "usuario"} en MyMediaList`,
-          text: `Échale un vistazo al perfil de ${
-            userData?.nombre || "usuario"
-          } en MyMediaList`,
-          url: window.location.href,
-        })
-        .catch((err) => {
-          console.error("Error al compartir:", err);
-        });
-    } else {
-      // Fallback para navegadores que no soportan Web Share API
-      alert(`Comparte este enlace: ${window.location.href}`);
-    }
   };
 
   // Filtrar contenido por tipo

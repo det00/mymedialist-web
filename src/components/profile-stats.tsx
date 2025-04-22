@@ -1,9 +1,8 @@
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { CalendarRange, Film, Tv, BookOpen, Gamepad2, CheckCircle, Clock, ListTodo, Ban, Crown, Award, Star, Zap, TrendingUp } from "lucide-react";
+import { CalendarRange, Film, Tv, BookOpen, Gamepad2, CheckCircle, Clock, ListTodo, Ban, Crown, Star, Zap, TrendingUp } from "lucide-react";
 
 // Componentes para gráficos
 interface DonutChartData {

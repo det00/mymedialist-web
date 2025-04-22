@@ -2,7 +2,6 @@
 import api from "@/lib/axios";
 import { authService } from "@/lib/auth";
 import { Contenido } from "@/lib/types";
-import { mockColeccion } from "@/lib/mockColeccion"; // Importar datos de prueba
 
 export interface CollectionFilter {
   tipo?: string;
@@ -63,37 +62,12 @@ export const collectionService = {
         return combinedResults;
       } catch (error) {
         console.warn("Error al obtener desde API, usando datos locales:", error);
-        
-        // Si falla, usamos datos simulados
-        let fallbackData = [...mockColeccion];
-        
-        // Aplicar filtros a los datos simulados
-        if (filters?.tipo && filters.tipo !== "todo") {
-          const tipoParaBuscar = filters.tipo.toLowerCase();
-          fallbackData = fallbackData.filter(item => 
-            item.tipo.toLowerCase() === tipoParaBuscar
-          );
-        }
-        
-        if (filters?.estado && filters.estado !== "todo") {
-          // Corrección: Usar el campo estado directamente
-          fallbackData = fallbackData.filter(item => 
-            item.estado === filters.estado
-          );
-        }
-        
-        // Aplicar ordenación si se especifica
-        if (filters?.ordenar) {
-          fallbackData = sortCollection(fallbackData, filters.ordenar);
-        }
-        
-        return fallbackData;
+
       }
     } catch (error) {
       console.error("Error al obtener colección:", error);
-      // En caso de error general, devolvemos datos simulados
-      return mockColeccion;
     }
+      return []
   },
 
   /**

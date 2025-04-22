@@ -1,5 +1,4 @@
 import { useState } from "react";
-import Link from "next/link";
 import Image from "next/image";
 import { 
   Tabs, 
@@ -25,7 +24,6 @@ import {
   Tv, 
   BookOpen, 
   Gamepad2,
-  MessageSquare,
   UserPlus,
   UserCheck,
   Share2

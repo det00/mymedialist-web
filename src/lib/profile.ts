@@ -6,6 +6,7 @@ export interface ProfileData {
   id: string;
   nombre: string;
   username: string;
+  email: string
   bio?: string;
   fechaRegistro: string;
   totalContenidos: number;

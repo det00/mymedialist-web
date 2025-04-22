@@ -1,10 +1,8 @@
-import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Film,
@@ -13,15 +11,10 @@ import {
   Gamepad2,
   CalendarDays,
   Clock,
-  Star,
   CheckCircle,
   XCircle,
   PlusCircle,
-  ThumbsUp,
   Eye,
-  MessageCircle,
-  ArrowUpRight,
-  Calendar,
   RefreshCw
 } from "lucide-react";
 import { useActivity } from "@/hooks/useActivity";
