@@ -1,19 +1,8 @@
 // src/lib/activity.ts
 import api from "@/lib/axios";
 import { authService } from "@/lib/auth";
+import type { ActivityItem } from "./types";
 
-export interface ActivityItem {
-  id: number;
-  userId: number;
-  contentTitle: string;
-  contentId: number;
-  contentApiId: string;
-  contentType: "P" | "S" | "L" | "V";
-  contentImage: string | null;
-  actionType: "added" | "started" | "finished" | "dropped";
-  timestamp: string;
-  status: string;
-}
 
 export const activityService = {
   /**

@@ -1,31 +1,8 @@
 // src/lib/profile.ts
 import api from "@/lib/axios";
 import { authService } from "@/lib/auth";
+import { ProfileData } from "./types";
 
-export interface ProfileData {
-  id: string;
-  nombre: string;
-  username: string;
-  email: string
-  bio?: string;
-  fechaRegistro: string;
-  totalContenidos: number;
-  totalAmigos: number;
-  avatar: string;
-  esMiPerfil: boolean;
-  siguiendo: boolean;
-  stats?: {
-    totalContent: number;
-    completed: number;
-    inProgress: number;
-    planned: number;
-    dropped: number;
-    movies: number;
-    series: number;
-    books: number;
-    games: number;
-  };
-}
 
 export const profileService = {
   /**

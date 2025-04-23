@@ -42,3 +42,55 @@ export interface Contenido {
 export interface BuscarPageProps {
   searchParams: { busqueda: string; tipo: string };
 }
+
+
+export interface ActivityItem {
+  id: number;
+  userId: number;
+  contentTitle: string;
+  contentId: number;
+  contentApiId: string;
+  contentType: "P" | "S" | "L" | "V";
+  contentImage: string | null;
+  actionType: "added" | "started" | "finished" | "dropped";
+  timestamp: string;
+  status: string;
+}
+
+
+export type SortOption = "title_asc" | "title_desc" | "date_desc" | "date_asc" | "rating_desc";
+
+export interface UseCollectionOptions {
+  initialFilters?: {
+    tipo?: string;
+    estado?: string;
+  };
+  initialSort?: SortOption;
+  autoLoad?: boolean;
+}
+
+
+export interface ProfileData {
+  id: string;
+  nombre: string;
+  username: string;
+  email: string
+  bio?: string;
+  fechaRegistro: string;
+  totalContenidos: number;
+  totalAmigos: number;
+  avatar: string;
+  esMiPerfil: boolean;
+  siguiendo: boolean;
+  stats?: {
+    totalContent: number;
+    completed: number;
+    inProgress: number;
+    planned: number;
+    dropped: number;
+    movies: number;
+    series: number;
+    books: number;
+    games: number;
+  };
+}

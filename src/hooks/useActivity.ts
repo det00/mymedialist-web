@@ -1,4 +1,3 @@
-// src/hooks/useActivity.ts
 import { useState, useEffect } from "react";
 import { activityService, ActivityItem } from "@/lib/activity";
 

@@ -1,18 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Contenido } from "@/lib/types";
+import { Contenido, SortOption, UseCollectionOptions } from "@/lib/types";
 import { collectionService, CollectionFilter } from "@/lib/collection";
 import { authService } from "@/lib/auth";
-
-export type SortOption = "title_asc" | "title_desc" | "date_desc" | "date_asc" | "rating_desc";
-
-export interface UseCollectionOptions {
-  initialFilters?: {
-    tipo?: string;
-    estado?: string;
-  };
-  initialSort?: SortOption;
-  autoLoad?: boolean;
-}
 
 /**
  * Hook personalizado para gestionar la colección de contenidos del usuario
