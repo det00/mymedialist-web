@@ -8,8 +8,9 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import EstadoContenidoApi from "@/components/EstadoContenidoApi";
-import { contentService, ContentDetail } from "@/lib/content";
+import { contentService } from "@/lib/content";
 import { authService } from "@/lib/auth";
+import { ContentDetail } from "@/lib/types";
 
 const ContenidoPage = () => {
   const params = useParams();

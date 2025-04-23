@@ -4,13 +4,14 @@ import { useState, useEffect } from "react";
 import { CardSearch } from "@/components/CardSearch";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { searchService, SearchResult } from "@/lib/search";
+import { searchService } from "@/lib/search";
 import moment from "moment";
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
 import { ChevronLeft, ChevronRight, Search, AlertCircle } from "lucide-react";
 import { authService } from "@/lib/auth";
 import { AuthModal } from "@/components/ui/auth-modal";
+import { SearchResult } from "@/lib/types";
 
 export default function Busqueda() {
   const searchParams = useSearchParams();
