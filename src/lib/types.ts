@@ -26,7 +26,7 @@ export interface Contenido {
   temporadas?: number;
   episodios?: number;
   valoracion?: number;
-  tipo: string; // Esta propiedad ahora es requerida, no opcional
+  tipo: string;
   item?: {  
     id: string;
     estado: string;
