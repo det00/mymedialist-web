@@ -1,39 +1,9 @@
 // src/lib/content.ts
 import api from "@/lib/axios";
 import { authService } from "@/lib/auth";
-
-export interface ContentDetail {
-  id_api: string;
-  imagen?: string | null;
-  titulo: string;
-  descripcion: string;
-  genero?: string[];
-  autor?: string;
-  paginas?: number;
-  fechaLanzamiento?: string;
-  duracion?: string;
-  temporadas?: number;
-  episodios?: number;
-  valoracion?: number;
-  tipo: string;
-  item?: {  
-    id: string;
-    estado: string;
-  };
-  amigos: {
-    id: string;
-    estado: string;
-    imagen_id?: string;
-    progreso?: string;
-  }[];
-}
+import { ContentDetail } from "./types";
 
 export const contentService = {
-  /**
-   * Obtener detalles de una película
-   * @param id_api ID de la película en la API externa
-   * @returns Promesa con los detalles de la película
-   */
   async getMovieDetails(id_api: string): Promise<ContentDetail> {
     try {
       const token = authService.getToken();
@@ -57,11 +27,6 @@ export const contentService = {
     }
   },
 
-  /**
-   * Obtener detalles de una serie
-   * @param id_api ID de la serie en la API externa
-   * @returns Promesa con los detalles de la serie
-   */
   async getSeriesDetails(id_api: string): Promise<ContentDetail> {
     try {
       const token = authService.getToken();
@@ -85,11 +50,6 @@ export const contentService = {
     }
   },
 
-  /**
-   * Obtener detalles de un libro
-   * @param id_api ID del libro en la API externa
-   * @returns Promesa con los detalles del libro
-   */
   async getBookDetails(id_api: string): Promise<ContentDetail> {
     try {
       const token = authService.getToken();
@@ -113,11 +73,6 @@ export const contentService = {
     }
   },
 
-  /**
-   * Obtener detalles de un videojuego
-   * @param id_api ID del videojuego en la API externa
-   * @returns Promesa con los detalles del videojuego
-   */
   async getGameDetails(id_api: string): Promise<ContentDetail> {
     try {
       const token = authService.getToken();
@@ -141,12 +96,6 @@ export const contentService = {
     }
   },
 
-  /**
-   * Obtener detalles de cualquier tipo de contenido
-   * @param tipo Tipo de contenido (pelicula, serie, libro, videojuego)
-   * @param id_api ID en la API externa
-   * @returns Promesa con los detalles del contenido
-   */
   async getContentDetails(tipo: string, id_api: string): Promise<ContentDetail> {
     switch (tipo) {
       case "pelicula":

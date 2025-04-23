@@ -1,26 +1,9 @@
-// src/lib/home.ts
 import api from "@/lib/axios";
 import { authService } from "@/lib/auth";
+import { ContentItem } from "./types";
 
-export interface ContentItem {
-  id?: string;
-  id_api: string;
-  tipo: string;
-  imagen: string | null;
-  titulo: string;
-  autor: string;
-  genero?: string[];
-  estado?: string;
-  numAmigos?: number;
-  ultimaActividad?: string;
-}
 
 export const homeService = {
-  /**
-   * Obtener tendencias entre amigos
-   * @param limit Número máximo de resultados
-   * @returns Promesa con la lista de contenido popular
-   */
   async getTrending(limit: number = 5): Promise<ContentItem[]> {
     try {
       const token = authService.getToken();
@@ -42,10 +25,6 @@ export const homeService = {
     }
   },
 
-  /**
-   * Obtener contenido en progreso del usuario
-   * @returns Promesa con la lista de contenido en progreso
-   */
   async getCurrentContent(): Promise<ContentItem[]> {
     try {
       const token = authService.getToken();
@@ -66,10 +45,6 @@ export const homeService = {
     }
   },
 
-  /**
-   * Obtener lista de contenido pendiente del usuario
-   * @returns Promesa con la lista de contenido pendiente
-   */
   async getWatchlist(): Promise<ContentItem[]> {
     try {
       console.log("Obteniendo watchlist...");
@@ -92,13 +67,6 @@ export const homeService = {
     }
   },
 
-  /**
-   * Añadir o actualizar un ítem en la colección del usuario
-   * @param id_api ID del contenido en la API externa
-   * @param tipo Tipo de contenido (P, S, L, V)
-   * @param estado Estado del contenido (C, E, P, A)
-   * @returns Promesa con la respuesta del servidor
-   */
   async updateItemState(
     id_api: string,
     tipo: string,
@@ -110,8 +78,6 @@ export const homeService = {
         throw new Error("No hay token de autenticación");
       }
 
-      // Primero verificamos si ya existe el ítem para este usuario
-      // Esto lo haremos haciendo una solicitud GET para buscar el ítem
       try {
         console.log(`Verificando si existe el ítem: ${id_api}, tipo: ${tipo}`);
         const searchResponse = await api.get(
@@ -137,7 +103,6 @@ export const homeService = {
         const existingItem = searchResponse.data.item;
         console.log("Ítem existente:", existingItem);
 
-        // Si estado está vacío, eliminar el ítem
         if (!estado && existingItem) {
           console.log(`Eliminando ítem: ${existingItem.id}`);
           return await api.delete(`/user-items/${existingItem.id}`, {
@@ -147,7 +112,6 @@ export const homeService = {
           });
         }
 
-        // Si ya existe el ítem, actualizar su estado
         if (existingItem) {
           console.log(
             `Actualizando estado del ítem ${existingItem.id} a ${estado}`
@@ -166,10 +130,9 @@ export const homeService = {
         }
       } catch (err) {
         console.error("Error al verificar si existe el ítem:", err);
-        // Continuamos intentando crear un nuevo ítem
+
       }
 
-      // Si no existe el ítem o hubo un error al verificar, crear uno nuevo
       if (estado) {
         console.log(
           `Creando nuevo ítem: ${id_api}, tipo: ${tipo}, estado: ${estado}`

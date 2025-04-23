@@ -5,13 +5,8 @@ import type { ActivityItem } from "./types";
 
 
 export const activityService = {
-  /**
-   * Obtener actividad del usuario autenticado y sus amigos
-   * @param page Número de página (inicia en 1)
-   * @param limit Límite de elementos por página
-   * @returns Promesa con los items de actividad
-   */
-  async getMyActivity(page: number = 1, limit: number = 10): Promise<ActivityItem[]> {
+
+  async getActividad(page: number = 1, limit: number = 10): Promise<ActivityItem[]> {
     try {
       const token = authService.getToken();
       if (!token) {
@@ -35,13 +30,6 @@ export const activityService = {
     }
   },
   
-  /**
-   * Obtener actividad de un usuario específico
-   * @param userId ID del usuario
-   * @param page Número de página (inicia en 1)
-   * @param limit Límite de elementos por página
-   * @returns Promesa con los items de actividad
-   */
   async getUserActivity(userId: string, page: number = 1, limit: number = 10): Promise<ActivityItem[]> {
     try {
       const token = authService.getToken();
@@ -65,12 +53,7 @@ export const activityService = {
       return [];
     }
   },
-  
-  /**
-   * Obtener tipos de contenido en formato legible
-   * @param type Tipo de contenido (P, S, L, V)
-   * @returns Nombre legible del tipo de contenido
-   */
+
   getContentTypeName(type: string): string {
     switch (type) {
       case "P":
@@ -86,11 +69,6 @@ export const activityService = {
     }
   },
   
-  /**
-   * Obtener URL del tipo de contenido para enlaces
-   * @param type Tipo de contenido (P, S, L, V)
-   * @returns URL del tipo de contenido
-   */
   getContentTypeUrl(type: string): string {
     switch (type) {
       case "P":
@@ -106,11 +84,6 @@ export const activityService = {
     }
   },
   
-  /**
-   * Obtener descripción de acción en formato legible
-   * @param actionType Tipo de acción
-   * @returns Descripción legible de la acción
-   */
   getActionDescription(actionType: string): string {
     switch (actionType) {
       case "added":

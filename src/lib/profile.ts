@@ -5,10 +5,7 @@ import { ProfileData } from "./types";
 
 
 export const profileService = {
-  /**
-   * Obtener el perfil del usuario autenticado
-   * @returns Promesa con los datos del perfil
-   */
+
   async getMyProfile(): Promise<ProfileData> {
     try {
       const token = authService.getToken();
@@ -22,10 +19,8 @@ export const profileService = {
         }
       });
       
-      // Calcular estadísticas que no vienen de la API
       const profileData = response.data;
       
-      // Añadir estadísticas si no existen en la respuesta de la API
       if (!profileData.stats) {
         profileData.stats = {
           totalContent: profileData.totalContenidos || 0,
@@ -47,11 +42,6 @@ export const profileService = {
     }
   },
   
-  /**
-   * Obtener el perfil de un usuario específico
-   * @param id ID del usuario
-   * @returns Promesa con los datos del perfil
-   */
   async getUserProfile(id: string): Promise<ProfileData> {
     try {
       const token = authService.getToken();
@@ -65,10 +55,8 @@ export const profileService = {
         }
       });
       
-      // Calcular estadísticas que no vienen de la API
       const profileData = response.data;
       
-      // Añadir estadísticas si no existen en la respuesta de la API
       if (!profileData.stats) {
         profileData.stats = {
           totalContent: profileData.totalContenidos || 0,
@@ -90,11 +78,6 @@ export const profileService = {
     }
   },
   
-  /**
-   * Actualizar el avatar del usuario
-   * @param avatar ID o string del avatar
-   * @returns Promesa con la respuesta del servidor
-   */
   async updateAvatar(avatar: string): Promise<{ mensaje: string; avatar: string }> {
     try {
       const token = authService.getToken();
@@ -112,7 +95,6 @@ export const profileService = {
         }
       );
       
-      // Actualizar el avatar en el servicio de autenticación
       if (response.data.avatar) {
         authService.setUserAvatar(response.data.avatar);
       }
@@ -124,11 +106,6 @@ export const profileService = {
     }
   },
   
-  /**
-   * Seguir o dejar de seguir a un usuario
-   * @param userId ID del usuario a seguir/dejar de seguir
-   * @returns Promesa con la respuesta del servidor
-   */
   async toggleFollow(userId: string): Promise<{ siguiendo: boolean; mensaje: string }> {
     try {
       const token = authService.getToken();
@@ -153,11 +130,6 @@ export const profileService = {
     }
   },
   
-  /**
-   * Actualizar datos del perfil
-   * @param profileData Datos a actualizar
-   * @returns Promesa con la respuesta del servidor
-   */
   async updateProfile(profileData: Partial<ProfileData>): Promise<{ mensaje: string }> {
     try {
       const token = authService.getToken();
@@ -165,26 +137,8 @@ export const profileService = {
         throw new Error("No hay token de autenticación");
       }
 
-      // En este caso usamos un mock ya que no vimos la implementación del endpoint
-      // en el backend proporcionado. En una implementación real, se haría así:
-      /*
-      const response = await api.put<{ mensaje: string }>(
-        "/perfil",
-        profileData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        }
-      );
-      
-      return response.data;
-      */
-      
-      // Mock para simulación
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      // Actualizar datos en localStorage para simular persistencia
       const userData = authService.getUserData();
       if (userData) {
         const updatedData = {
@@ -194,7 +148,6 @@ export const profileService = {
         };
         localStorage.setItem("userData", JSON.stringify(updatedData));
         
-        // Disparar eventos para actualización
         window.dispatchEvent(new Event('userDataUpdated'));
         window.dispatchEvent(new Event('storage'));
       }

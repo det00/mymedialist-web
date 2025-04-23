@@ -94,3 +94,84 @@ export interface ProfileData {
     games: number;
   };
 }
+
+
+export interface LoginResponse {
+  token: string;
+  id: number;
+  name?: string;
+}
+
+export interface RegisterResponse {
+  message: string;
+}
+
+ export interface UserData {
+  nombre: string;
+  email: string;
+  avatar: string;
+}
+
+
+export interface CollectionFilter {
+  tipo?: string;
+  estado?: string;
+  ordenar?: string;
+}
+
+
+export interface ContentDetail {
+  id_api: string;
+  imagen?: string | null;
+  titulo: string;
+  descripcion: string;
+  genero?: string[];
+  autor?: string;
+  paginas?: number;
+  fechaLanzamiento?: string;
+  duracion?: string;
+  temporadas?: number;
+  episodios?: number;
+  valoracion?: number;
+  tipo: string;
+  item?: {  
+    id: string;
+    estado: string;
+  };
+  amigos: {
+    id: string;
+    estado: string;
+    imagen_id?: string;
+    progreso?: string;
+  }[];
+}
+
+export interface ContentItem {
+  id?: string;
+  id_api: string;
+  tipo: string;
+  imagen: string | null;
+  titulo: string;
+  autor: string;
+  genero?: string[];
+  estado?: string;
+  numAmigos?: number;
+  ultimaActividad?: string;
+}
+
+export interface SearchResult {
+  id_api: string;
+  tipo: string;
+  imagen: string | null;
+  titulo: string;
+  descripcion?: string;
+  genero?: string[];
+  creador?: string;
+  autor?: string;
+  fechaLanzamiento?: string;
+  numAmigos?: number;
+  item?: {
+    id: string;
+    estado: string;
+  };
+}
