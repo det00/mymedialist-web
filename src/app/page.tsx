@@ -30,7 +30,8 @@ import {
 } from "lucide-react";
 import { AuthModal } from "@/components/ui/auth-modal";
 import { authService } from "@/lib/auth";
-import { homeService, ContentItem } from "@/lib/home";
+import { homeService } from "@/lib/home";
+import { ContentItem } from "@/lib/types";
 
 // Configurar locale español
 moment.locale("es");
@@ -41,16 +42,15 @@ export default function Home() {
   const [loading, setLoading] = useState<boolean>(true);
   const [showAuthModal, setShowAuthModal] = useState<boolean>(false);
 
-  // Estados para datos de la API
-  const [currentContent, setCurrentContent] = useState<ContentItem[]>([]);
-  const [loadingCurrent, setLoadingCurrent] = useState<boolean>(true);
-
-  const [watchlist, setWatchlist] = useState<ContentItem[]>([]);
-  const [loadingWatchlist, setLoadingWatchlist] = useState<boolean>(true);
-
+  // Estado para almacenar todos los contenidos
+  const [allContent, setAllContent] = useState<ContentItem[]>([]);
+  const [loadingContent, setLoadingContent] = useState<boolean>(true);
+  
+  // Estados para tendencias
   const [trendingContent, setTrendingContent] = useState<ContentItem[]>([]);
   const [loadingTrending, setLoadingTrending] = useState<boolean>(true);
 
+  // Estado para contenido que se está viendo actualmente
   const [isWatchingNow, setIsWatchingNow] = useState<ContentItem | null>(null);
 
   // Estados para filtros
@@ -83,8 +83,7 @@ export default function Home() {
     } else {
       // Si no está autenticado, limpiar todos los datos personales
       setUserData(null);
-      setCurrentContent([]);
-      setWatchlist([]);
+      setAllContent([]);
       setTrendingContent([]);
       setIsWatchingNow(null);
     }
@@ -100,67 +99,61 @@ export default function Home() {
     const handleAuthChange = () => {
       checkAuthAndLoadUserData();
     };
+    
+    // Listener para actualizaciones de estado de contenido
+    const handleContentUpdate = (event: CustomEvent) => {
+      const { id_api, tipo, estado } = event.detail;
+      
+      // Actualización optimista del estado local
+      setAllContent(prevContent => 
+        prevContent.map(item => {
+          if (item.id_api === id_api && item.tipo === tipo) {
+            return {...item, estado};
+          }
+          return item;
+        })
+      );
+    };
 
-    // Escuchar eventos de autenticación
+    // Escuchar eventos
     window.addEventListener("userDataUpdated", handleAuthChange);
     window.addEventListener("storage", handleAuthChange);
+    window.addEventListener("contentStateUpdated", handleContentUpdate as EventListener);
 
     return () => {
       window.removeEventListener("userDataUpdated", handleAuthChange);
       window.removeEventListener("storage", handleAuthChange);
+      window.removeEventListener("contentStateUpdated", handleContentUpdate as EventListener);
     };
   }, []);
 
-  // Cargar contenido actual desde la API
+  // Cargar todo el contenido
   useEffect(() => {
     if (isAuthenticated) {
-      const loadCurrentContent = async () => {
-        setLoadingCurrent(true);
+      const loadContent = async () => {
+        setLoadingContent(true);
+        
         try {
-          const data = await homeService.getCurrentContent();
-          setCurrentContent(data);
-
-          // Establecer aleatoriamente uno de los contenidos en progreso como "viendo ahora"
-          if (data.length > 0) {
-            const randomIndex = Math.floor(Math.random() * data.length);
-            setIsWatchingNow(data[randomIndex]);
+          const data = await homeService.getAllContent();
+          setAllContent(data);
+          
+          // Establecer un contenido en progreso como "viendo ahora"
+          const enProgreso = data.filter(item => item.estado === "E");
+          if (enProgreso.length > 0) {
+            const randomIndex = Math.floor(Math.random() * enProgreso.length);
+            setIsWatchingNow(enProgreso[randomIndex]);
           }
-        } catch (error) {
-          console.error("Error al cargar contenido en progreso:", error);
         } finally {
-          setLoadingCurrent(false);
+          setLoadingContent(false);
         }
       };
 
-      loadCurrentContent();
+      loadContent();
     } else {
-      // Si no está autenticado, limpiar datos y establecer como no cargando
-      setCurrentContent([]);
+      // Si no está autenticado, limpiar datos
+      setAllContent([]);
       setIsWatchingNow(null);
-      setLoadingCurrent(false);
-    }
-  }, [isAuthenticated]);
-
-  // Cargar watchlist desde la API
-  useEffect(() => {
-    if (isAuthenticated) {
-      const loadWatchlist = async () => {
-        setLoadingWatchlist(true);
-        try {
-          const data = await homeService.getWatchlist();
-          setWatchlist(data);
-        } catch (error) {
-          console.error("Error al cargar watchlist:", error);
-        } finally {
-          setLoadingWatchlist(false);
-        }
-      };
-
-      loadWatchlist();
-    } else {
-      // Si no está autenticado, limpiar datos y establecer como no cargando
-      setWatchlist([]);
-      setLoadingWatchlist(false);
+      setLoadingContent(false);
     }
   }, [isAuthenticated]);
 
@@ -172,8 +165,6 @@ export default function Home() {
         try {
           const data = await homeService.getTrending();
           setTrendingContent(data);
-        } catch (error) {
-          console.error("Error al cargar tendencias:", error);
         } finally {
           setLoadingTrending(false);
         }
@@ -181,13 +172,40 @@ export default function Home() {
 
       loadTrending();
     } else {
-      // Si no está autenticado, limpiar datos y establecer como no cargando
       setTrendingContent([]);
       setLoadingTrending(false);
     }
   }, [isAuthenticated]);
 
-  // Manejar seguir/dejar de seguir
+  // Obtener contenido en progreso filtrado del contenido total
+  const getCurrentContent = () => {
+    if (!allContent.length) return [];
+    
+    let filtered = allContent.filter(item => item.estado === "E");
+    
+    // Aplicar filtro por tipo si es necesario
+    if (contentTypeFilter !== "all") {
+      filtered = filtered.filter(item => item.tipo === contentTypeFilter);
+    }
+    
+    return filtered;
+  };
+  
+  // Obtener watchlist filtrada del contenido total
+  const getWatchlist = () => {
+    if (!allContent.length) return [];
+    
+    let filtered = allContent.filter(item => item.estado === "P");
+    
+    // Aplicar filtro por tipo si es necesario
+    if (contentTypeFilter !== "all") {
+      filtered = filtered.filter(item => item.tipo === contentTypeFilter);
+    }
+    
+    return filtered;
+  };
+
+  // Función para manejar seguir/dejar de seguir
   const handleFollowToggle = () => {
     if (!isAuthenticated) {
       setShowAuthModal(true);
@@ -196,12 +214,6 @@ export default function Home() {
 
     // Aquí iría la lógica para seguir/dejar de seguir
     console.log("Toggle follow");
-  };
-
-  // Filtrar contenido por tipo
-  const filterContentByType = (content: ContentItem[], type: string) => {
-    if (type === "all") return content;
-    return content.filter((item) => item.tipo === type);
   };
 
   // Renderizar icono basado en tipo de contenido
@@ -240,7 +252,7 @@ export default function Home() {
           <div className="flex flex-col gap-4 mt-6">
             <Button
               size="lg"
-              className="w-full"
+              className="w-full cursor-pointer"
               onClick={() => setShowAuthModal(true)}
             >
               Iniciar sesión
@@ -250,7 +262,7 @@ export default function Home() {
               ¿No tienes una cuenta?{" "}
               <Button
                 variant="link"
-                className="p-0 h-auto"
+                className="p-0 h-auto cursor-pointer"
                 onClick={() => {
                   setShowAuthModal(true);
                 }}
@@ -294,6 +306,10 @@ export default function Home() {
       </div>
     );
   }
+
+  // Obtener contenido filtrado para las tabs
+  const currentContent = getCurrentContent();
+  const watchlist = getWatchlist();
 
   return (
     <div className="min-h-screen pb-12 pt-4">
@@ -367,9 +383,7 @@ export default function Home() {
                             className="bg-background/20 text-white border-none"
                           >
                             <Clock className="h-3 w-3 mr-1" />
-                            <span>
-                              {moment(isWatchingNow.ultimaActividad).fromNow()}
-                            </span>
+                            <span>Actualizado recientemente</span>
                           </Badge>
                         </div>
                       </div>
@@ -379,7 +393,7 @@ export default function Home() {
                         <Button
                           variant="secondary"
                           size="sm"
-                          className="shadow-md"
+                          className="shadow-md cursor-pointer"
                         >
                           Continuar
                         </Button>
@@ -406,9 +420,9 @@ export default function Home() {
             {/* Pestañas para navegar entre secciones */}
             <Tabs defaultValue="current" className="w-full">
               <TabsList className="grid grid-cols-3 mb-6">
-                <TabsTrigger value="current">En progreso</TabsTrigger>
-                <TabsTrigger value="watchlist">Por ver</TabsTrigger>
-                <TabsTrigger value="trends">Tendencias</TabsTrigger>
+                <TabsTrigger value="current" className="cursor-pointer">En progreso</TabsTrigger>
+                <TabsTrigger value="watchlist" className="cursor-pointer">Por ver</TabsTrigger>
+                <TabsTrigger value="trends" className="cursor-pointer">Tendencias</TabsTrigger>
               </TabsList>
 
               {/* Contenido en progreso */}
@@ -419,7 +433,7 @@ export default function Home() {
                     variant={
                       contentTypeFilter === "all" ? "default" : "outline"
                     }
-                    className="rounded-full"
+                    className="rounded-full cursor-pointer"
                     onClick={() => setContentTypeFilter("all")}
                     size="sm"
                   >
@@ -427,7 +441,7 @@ export default function Home() {
                   </Button>
                   <Button
                     variant={contentTypeFilter === "P" ? "default" : "outline"}
-                    className="rounded-full"
+                    className="rounded-full cursor-pointer"
                     onClick={() => setContentTypeFilter("P")}
                     size="sm"
                   >
@@ -435,7 +449,7 @@ export default function Home() {
                   </Button>
                   <Button
                     variant={contentTypeFilter === "S" ? "default" : "outline"}
-                    className="rounded-full"
+                    className="rounded-full cursor-pointer"
                     onClick={() => setContentTypeFilter("S")}
                     size="sm"
                   >
@@ -443,7 +457,7 @@ export default function Home() {
                   </Button>
                   <Button
                     variant={contentTypeFilter === "L" ? "default" : "outline"}
-                    className="rounded-full"
+                    className="rounded-full cursor-pointer"
                     onClick={() => setContentTypeFilter("L")}
                     size="sm"
                   >
@@ -451,7 +465,7 @@ export default function Home() {
                   </Button>
                   <Button
                     variant={contentTypeFilter === "V" ? "default" : "outline"}
-                    className="rounded-full"
+                    className="rounded-full cursor-pointer"
                     onClick={() => setContentTypeFilter("V")}
                     size="sm"
                   >
@@ -461,124 +475,14 @@ export default function Home() {
 
                 {/* Lista de contenido */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {loadingCurrent ? (
+                  {loadingContent ? (
                     // Loader para datos en carga
                     <div className="col-span-2 flex justify-center py-12">
                       <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-primary"></div>
                     </div>
-                  ) : filterContentByType(currentContent, contentTypeFilter)
-                      .length > 0 ? (
+                  ) : currentContent.length > 0 ? (
                     // Mostrar contenido filtrado
-                    filterContentByType(currentContent, contentTypeFilter).map(
-                      (item) => (
-                        <Link
-                          key={`${item.id || item.id_api}-${item.tipo}`}
-                          href={`/${
-                            item.tipo === "P"
-                              ? "pelicula"
-                              : item.tipo === "S"
-                              ? "serie"
-                              : item.tipo === "L"
-                              ? "libro"
-                              : "videojuego"
-                          }/${item.id_api}`}
-                        >
-                          <Card className="overflow-hidden hover:shadow-md transition-shadow cursor-pointer h-full">
-                            <div className="flex h-full">
-                              <div className="w-1/3 relative">
-                                <Image
-                                  src={
-                                    item.imagen ||
-                                    "https://via.placeholder.com/300x450"
-                                  }
-                                  alt={item.titulo}
-                                  fill
-                                  className="object-cover"
-                                />
-                              </div>
-                              <div className="w-2/3 p-4 flex flex-col justify-between">
-                                <div>
-                                  <h3 className="font-bold line-clamp-2">
-                                    {item.titulo}
-                                  </h3>
-                                  <p className="text-sm text-muted-foreground">
-                                    {item.autor}
-                                  </p>
-                                  <div className="flex flex-wrap gap-1 mt-2">
-                                    {item.genero
-                                      ?.slice(0, 2)
-                                      .map((gen, idx) => (
-                                        <Badge
-                                          key={idx}
-                                          variant="secondary"
-                                          className="text-xs"
-                                        >
-                                          {gen}
-                                        </Badge>
-                                      ))}
-                                  </div>
-                                </div>
-                                <div className="flex justify-between items-center mt-2">
-                                  <Badge
-                                    variant="outline"
-                                    className="flex items-center gap-1"
-                                  >
-                                    {renderContentTypeIcon(item.tipo)}
-                                    {
-                                      tipoInfo[
-                                        item.tipo as keyof typeof tipoInfo
-                                      ]?.nombre
-                                    }
-                                  </Badge>
-                                  <div
-                                    className="w-3 h-3 rounded-full"
-                                    style={{
-                                      backgroundColor:
-                                        estadoColor[item.estado || "E"] ||
-                                        "#94a3b8",
-                                    }}
-                                  ></div>
-                                </div>
-                              </div>
-                            </div>
-                          </Card>
-                        </Link>
-                      )
-                    )
-                  ) : (
-                    // Mensaje cuando no hay datos
-                    <div className="col-span-2 flex flex-col items-center justify-center py-12">
-                      <div className="flex flex-col items-center">
-                        <TrendingUp className="h-12 w-12 text-muted-foreground mb-4" />
-                        <p className="text-muted-foreground">
-                          No tienes contenido en progreso
-                        </p>
-                        <p className="text-sm text-muted-foreground mb-4">
-                          Busca contenido para añadirlo a tu colección
-                        </p>
-                        <Link href="/busqueda?busqueda=&tipo=P">
-                          <Button>
-                            <Plus className="h-4 w-4 mr-2" />
-                            Buscar contenido
-                          </Button>
-                        </Link>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </TabsContent>
-              {/* Watchlist (Por ver) */}
-              <TabsContent value="watchlist" className="space-y-6">
-                {/* Lista de contenido por ver */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {loadingWatchlist ? (
-                    // Loader para datos en carga
-                    <div className="col-span-2 flex justify-center py-12">
-                      <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-primary"></div>
-                    </div>
-                  ) : watchlist.length > 0 ? (
-                    // Mostrar contenido pendiente
-                    watchlist.map((item) => (
+                    currentContent.map((item) => (
                       <Link
                         key={`${item.id || item.id_api}-${item.tipo}`}
                         href={`/${
@@ -590,103 +494,7 @@ export default function Home() {
                             ? "libro"
                             : "videojuego"
                         }/${item.id_api}`}
-                      >
-                        <Card className="overflow-hidden hover:shadow-md transition-shadow cursor-pointer h-full">
-                          <div className="flex h-full">
-                            <div className="w-1/3 relative">
-                              <Image
-                                src={
-                                  item.imagen ||
-                                  "https://via.placeholder.com/300x450"
-                                }
-                                alt={item.titulo}
-                                fill
-                                className="object-cover"
-                              />
-                            </div>
-                            <div className="w-2/3 p-4 flex flex-col justify-between">
-                              <div>
-                                <h3 className="font-bold line-clamp-2">
-                                  {item.titulo}
-                                </h3>
-                                <p className="text-sm text-muted-foreground">
-                                  {item.autor}
-                                </p>
-                                <div className="flex flex-wrap gap-1 mt-2">
-                                  {item.genero?.slice(0, 2).map((gen, idx) => (
-                                    <Badge
-                                      key={idx}
-                                      variant="secondary"
-                                      className="text-xs"
-                                    >
-                                      {gen}
-                                    </Badge>
-                                  ))}
-                                </div>
-                              </div>
-                              <div className="flex justify-between items-center mt-2">
-                                <Badge
-                                  variant="outline"
-                                  className="flex items-center gap-1"
-                                >
-                                  {renderContentTypeIcon(item.tipo)}
-                                  {
-                                    tipoInfo[item.tipo as keyof typeof tipoInfo]
-                                      ?.nombre
-                                  }
-                                </Badge>
-                                <div
-                                  className="w-3 h-3 rounded-full"
-                                  style={{
-                                    backgroundColor:
-                                      estadoColor[item.estado || "P"] ||
-                                      "#94a3b8",
-                                  }}
-                                ></div>
-                              </div>
-                            </div>
-                          </div>
-                        </Card>
-                      </Link>
-                    ))
-                  ) : (
-                    // Mensaje cuando no hay datos
-                    <div className="col-span-2 flex flex-col items-center justify-center py-12">
-                      <p className="text-muted-foreground mb-4">
-                        Tu lista de pendientes está vacía
-                      </p>
-                      <Link href="/busqueda?busqueda=&tipo=P">
-                        <Button>
-                          <Plus className="h-4 w-4 mr-2" />
-                          Buscar contenido
-                        </Button>
-                      </Link>
-                    </div>
-                  )}
-                </div>
-              </TabsContent>
-              {/* Tendencias */}
-              <TabsContent value="trends" className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {loadingTrending ? (
-                    // Loader para datos en carga
-                    <div className="col-span-2 flex justify-center py-12">
-                      <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-primary"></div>
-                    </div>
-                  ) : trendingContent.length > 0 ? (
-                    // Mostrar contenido en tendencia
-                    trendingContent.map((item) => (
-                      <Link
-                        key={`trend-${item.id_api}-${item.tipo}`}
-                        href={`/${
-                          item.tipo === "P"
-                            ? "pelicula"
-                            : item.tipo === "S"
-                            ? "serie"
-                            : item.tipo === "L"
-                            ? "libro"
-                            : "videojuego"
-                        }/${item.id_api}`}
+                        className="cursor-pointer"
                       >
                         <Card className="overflow-hidden hover:shadow-md transition-shadow cursor-pointer h-full">
                           <div className="flex h-full">
@@ -754,7 +562,7 @@ export default function Home() {
                         <p className="text-sm text-muted-foreground mb-4">
                           Añade amigos para ver qué contenido es popular
                         </p>
-                        <Button>
+                        <Button className="cursor-pointer">
                           <UserPlus className="h-4 w-4 mr-2" />
                           Añadir amigos
                         </Button>
@@ -773,7 +581,7 @@ export default function Home() {
               <CardHeader className="pb-2">
                 <CardTitle className="flex justify-between items-center">
                   <span>Mi perfil</span>
-                  <Button variant="ghost" size="sm">
+                  <Button variant="ghost" size="sm" className="cursor-pointer">
                     <MoreHorizontal className="h-4 w-4" />
                   </Button>
                 </CardTitle>
@@ -797,13 +605,13 @@ export default function Home() {
                 <div className="grid grid-cols-3 gap-2 text-center">
                   <div className="bg-muted p-2 rounded-md">
                     <div className="text-lg font-bold">
-                      {currentContent.length + watchlist.length}
+                      {allContent.length}
                     </div>
                     <div className="text-xs text-muted-foreground">Total</div>
                   </div>
                   <div className="bg-muted p-2 rounded-md">
                     <div className="text-lg font-bold text-blue-500">
-                      {currentContent.length}
+                      {allContent.filter(item => item.estado === "E").length}
                     </div>
                     <div className="text-xs text-muted-foreground">
                       En progreso
@@ -811,7 +619,7 @@ export default function Home() {
                   </div>
                   <div className="bg-muted p-2 rounded-md">
                     <div className="text-lg font-bold text-amber-500">
-                      {watchlist.length}
+                      {allContent.filter(item => item.estado === "P").length}
                     </div>
                     <div className="text-xs text-muted-foreground">
                       Pendientes
@@ -820,8 +628,8 @@ export default function Home() {
                 </div>
 
                 <div className="mt-4">
-                  <Link href="/perfil">
-                    <Button variant="outline" size="sm" className="w-full">
+                  <Link href="/perfil" className="cursor-pointer">
+                    <Button variant="outline" size="sm" className="w-full cursor-pointer">
                       Ver perfil completo
                     </Button>
                   </Link>
@@ -837,7 +645,7 @@ export default function Home() {
                     <Users className="h-5 w-5" />
                     <span>Amigos</span>
                   </div>
-                  <Button variant="ghost" size="sm">
+                  <Button variant="ghost" size="sm" className="cursor-pointer">
                     <MoreHorizontal className="h-4 w-4" />
                   </Button>
                 </CardTitle>
@@ -855,7 +663,7 @@ export default function Home() {
 
                 <Button
                   onClick={handleFollowToggle}
-                  className="w-full gap-2"
+                  className="w-full gap-2 cursor-pointer"
                   variant="outline"
                 >
                   <UserPlus className="h-4 w-4" />
@@ -890,6 +698,7 @@ export default function Home() {
                             ? "libro"
                             : "videojuego"
                         }/${item.id_api}`}
+                        className="cursor-pointer"
                       >
                         <div className="bg-muted rounded-md p-2 flex gap-3 cursor-pointer hover:bg-muted/80 transition-colors">
                           <div className="relative w-16 aspect-[2/3] flex-shrink-0">
@@ -930,7 +739,7 @@ export default function Home() {
                   </div>
                 )}
 
-                <Button variant="outline" size="sm" className="w-full mt-4">
+                <Button variant="outline" size="sm" className="w-full mt-4 cursor-pointer">
                   Ver más tendencias
                 </Button>
               </CardContent>

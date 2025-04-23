@@ -1,3 +1,4 @@
+// src/lib/types.ts
 export interface Buscar {
   empty?: unknown;
   id_api?: number | string;
@@ -43,7 +44,6 @@ export interface BuscarPageProps {
   searchParams: { busqueda: string; tipo: string };
 }
 
-
 export interface ActivityItem {
   id: number;
   userId: number;
@@ -57,7 +57,6 @@ export interface ActivityItem {
   status: string;
 }
 
-
 export type SortOption = "title_asc" | "title_desc" | "date_desc" | "date_asc" | "rating_desc";
 
 export interface UseCollectionOptions {
@@ -68,7 +67,6 @@ export interface UseCollectionOptions {
   initialSort?: SortOption;
   autoLoad?: boolean;
 }
-
 
 export interface ProfileData {
   id: string;
@@ -95,7 +93,6 @@ export interface ProfileData {
   };
 }
 
-
 export interface LoginResponse {
   token: string;
   id: number;
@@ -106,19 +103,17 @@ export interface RegisterResponse {
   message: string;
 }
 
- export interface UserData {
+export interface UserData {
   nombre: string;
   email: string;
   avatar: string;
 }
-
 
 export interface CollectionFilter {
   tipo?: string;
   estado?: string;
   ordenar?: string;
 }
-
 
 export interface ContentDetail {
   id_api: string;
@@ -147,16 +142,15 @@ export interface ContentDetail {
 }
 
 export interface ContentItem {
-  id?: string;
+  id: number;
   id_api: string;
   tipo: string;
-  imagen: string | null;
   titulo: string;
   autor: string;
   genero?: string[];
-  estado?: string;
+  imagen: string | null;
+  estado: string;
   numAmigos?: number;
-  ultimaActividad?: string;
 }
 
 export interface SearchResult {
@@ -174,4 +168,15 @@ export interface SearchResult {
     id: string;
     estado: string;
   };
+}
+
+// Definiciones de eventos personalizados
+declare global {
+  interface WindowEventMap {
+    contentStateUpdated: CustomEvent<{
+      id_api: string;
+      tipo: string;
+      estado: string;
+    }>;
+  }
 }

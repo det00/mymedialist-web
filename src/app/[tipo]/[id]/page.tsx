@@ -26,35 +26,35 @@ const ContenidoPage = () => {
   // Cargar los detalles del contenido
   const fetchContenido = useCallback(async () => {
     if (!tipo || !id) {
-      console.log("Parámetros de URL incompletos:", { tipo, id });
       setError("No se pudieron obtener los parámetros de la URL");
       setLoading(false);
       return;
     }
 
-    try {
-      setLoading(true);
-      
-      // Verificar si hay token de autenticación
-      const token = authService.getToken();
-      if (!token) {
-        setError("Necesitas iniciar sesión para ver este contenido");
-        setLoading(false);
-        return;
-      }
-      
-      // Obtener detalles del contenido
-      const data = await contentService.getContentDetails(tipo, id);
-      
-      console.log("Datos recibidos:", data);
+    setLoading(true);
+    
+    // Verificar si hay token de autenticación
+    const token = authService.getToken();
+    if (!token) {
+      setError("Necesitas iniciar sesión para ver este contenido");
+      setLoading(false);
+      return;
+    }
+    
+    // Obtener detalles del contenido
+    const data = await contentService.getContentDetails(tipo, id)
+      .catch(err => {
+        console.error("Error al obtener los datos:", err);
+        setError("Error al cargar el contenido");
+        return null;
+      });
+    
+    if (data) {
       setContenido(data);
       setEstado(data.item?.estado || "");
-      setLoading(false);
-    } catch (err) {
-      console.error("Error al obtener los datos:", err);
-      setError("Error al cargar el contenido");
-      setLoading(false);
     }
+    
+    setLoading(false);
   }, [tipo, id]);
 
   // Obtener datos al cargar
@@ -62,9 +62,42 @@ const ContenidoPage = () => {
     fetchContenido();
   }, [fetchContenido]);
 
+  // Manejar actualizaciones de estado optimistas
+  useEffect(() => {
+    const handleContentUpdate = (event: CustomEvent) => {
+      const { id_api, tipo: contentTipo, estado: newEstado } = event.detail;
+      
+      // Si el evento está relacionado con este contenido, actualizar el estado local
+      if (id_api === id && contentTipo.charAt(0).toUpperCase() === tipo.charAt(0).toUpperCase()) {
+        setEstado(newEstado);
+        
+        // También actualizar el estado en el objeto de contenido
+        setContenido(prevContent => {
+          if (!prevContent) return null;
+          
+          return {
+            ...prevContent,
+            item: prevContent.item 
+              ? { ...prevContent.item, estado: newEstado }
+              : { id: 'temp-id', estado: newEstado }
+          };
+
+export default ContenidoPage;
+        });
+      }
+    };
+    
+    // Añadir y eliminar event listener
+    window.addEventListener('contentStateUpdated', handleContentUpdate as EventListener);
+    return () => {
+      window.removeEventListener('contentStateUpdated', handleContentUpdate as EventListener);
+    };
+  }, [id, tipo]);
+
   // Función para refrescar datos después de actualizar el estado
   const handleUpdateSuccess = () => {
-    fetchContenido();
+    // No es necesario refrescar los datos completos con el enfoque optimista
+    // fetchContenido();
   };
 
   // Si está cargando, mostrar indicador
@@ -208,6 +241,22 @@ const ContenidoPage = () => {
                 
                 {/* Temporadas (si es una serie) */}
                 {tipo === 'serie' && (
+                  <div className="flex">
+                    <span className="font-medium w-28 text-foreground">Temporadas:</span>
+                    <span className="text-muted-foreground">{contenido.temporadas}</span>
+                  </div>
+                )}
+                
+                {/* Episodios (si es una serie) */}
+                {tipo === 'serie' && contenido.episodios && (
+                  <div className="flex">
+                    <span className="font-medium w-28 text-foreground">Episodios:</span>
+                    <span className="text-muted-foreground">{contenido.episodios}</span>
+                  </div>
+                )}
+                
+                {/* Páginas (si es un libro) */}
+                {tipo === 'libro' && (
                   <div className="flex">
                     <span className="font-medium w-28 text-foreground">Páginas:</span>
                     <span className="text-muted-foreground">{contenido.paginas}</span>

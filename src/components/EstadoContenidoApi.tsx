@@ -35,8 +35,42 @@ const EstadoContenidoApi: React.FC<EstadoContenidoApiProps> = ({
   const [isHovering, setIsHovering] = useState(false);
   const [estado, setEstado] = useState(estadoInicial);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<boolean>(false);
+  
+  // Escuchar cambios de estado optimistas desde otros componentes
+  useEffect(() => {
+    const handleContentStateUpdated = (event: CustomEvent) => {
+      const { id_api: updatedId, tipo: updatedTipo, estado: updatedEstado } = event.detail;
+      
+      // Si el evento está relacionado con este contenido, actualizar el estado local
+      if (updatedId === id_api && updatedTipo === tipo) {
+        setEstado(updatedEstado);
+      }
+    };
+    
+    // Añadir y eliminar event listener
+    window.addEventListener('contentStateUpdated', handleContentStateUpdated as EventListener);
+    return () => {
+      window.removeEventListener('contentStateUpdated', handleContentStateUpdated as EventListener);
+    };
+  }, [id_api, tipo]);
+
+  useEffect(() => {
+    if (estadoInicial !== estado) {
+      setEstado(estadoInicial);
+    }
+  }, [estadoInicial]);
+
+  // Efecto para mostrar mensaje de éxito brevemente
+  useEffect(() => {
+    if (success) {
+      const timer = setTimeout(() => {
+        setSuccess(false);
+      }, 2000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [success]);
 
   const colorEstado = () => {
     switch (estado) {
@@ -69,23 +103,6 @@ const EstadoContenidoApi: React.FC<EstadoContenidoApiProps> = ({
     }
   };
 
-  useEffect(() => {
-    if (estadoInicial !== estado) {
-      setEstado(estadoInicial);
-    }
-  }, [estadoInicial]);
-
-  // Efecto para mostrar mensaje de éxito brevemente
-  useEffect(() => {
-    if (success) {
-      const timer = setTimeout(() => {
-        setSuccess(false);
-      }, 2000);
-      
-      return () => clearTimeout(timer);
-    }
-  }, [success]);
-
   // Maneja la selección de un estado, cierra el dropdown y detiene la propagación
   const handleEstadoChange = async (newEstado: string) => {
     if (newEstado === estado) {
@@ -94,33 +111,30 @@ const EstadoContenidoApi: React.FC<EstadoContenidoApiProps> = ({
     }
 
     setLoading(true);
-    setError(null);
-
-    try {      
-      // Actualizar estado en UI inmediatamente para feedback rápido
-      setEstado(newEstado);
-      setOpen(false);
-      
-      // Usamos el método de homeService que sabemos que funciona
-      // para actualizar el estado del contenido
-      await homeService.updateItemState(id_api, tipo, newEstado);
-      
-      // Mostrar indicador de éxito
-      setSuccess(true);
-      
-      // Si hay callback de éxito, ejecutarlo
-      if (onUpdateSuccess) {
-        onUpdateSuccess();
-      }
-    } catch (err) {
-      console.error("Error al actualizar estado:", err);
-      setError("Error al actualizar estado");
-      
-      // Revertir a estado anterior en caso de error
-      setEstado(estado);
-    } finally {
-      setLoading(false);
-    }
+    
+    // Actualización optimista - actualizar UI inmediatamente
+    setEstado(newEstado);
+    setOpen(false);
+    
+    // Llamar al servicio para actualizar en el backend
+    homeService.updateItemState(id_api, tipo, newEstado)
+      .then(() => {
+        // Mostrar indicador de éxito
+        setSuccess(true);
+        
+        // Si hay callback de éxito, ejecutarlo
+        if (onUpdateSuccess) {
+          onUpdateSuccess();
+        }
+      })
+      .catch(error => {
+        console.error("Error al actualizar estado:", error);
+        // En caso de error, revertir a estado anterior
+        setEstado(estado);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   };
 
   // Detener la propagación en todo el componente
@@ -184,11 +198,6 @@ const EstadoContenidoApi: React.FC<EstadoContenidoApiProps> = ({
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-56 z-50" onClick={(e) => e.stopPropagation()}>
                 <DropdownMenuLabel>Estado</DropdownMenuLabel>
-                {error && (
-                  <div className="px-2 py-1 my-1 text-sm text-destructive">
-                    {error}
-                  </div>
-                )}
                 <DropdownMenuSeparator />
                 <DropdownMenuRadioGroup value={estado}>
                   <DropdownMenuRadioItem 
