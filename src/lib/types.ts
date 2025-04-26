@@ -1,43 +1,35 @@
 // src/lib/types.ts
-export interface Buscar {
-  empty?: unknown;
-  id_api?: number | string;
-  tipo?: string;
-  imagen: string;
-  titulo: string;
-  descripcion?: string;
-  genero?: string[];
-  creador?: string;
-  autor?: string;
-  fechaLanzamiento?: string;
-  numAmigos?: number;
+export interface CardBuscar {
+  autor: string,
+  descripcion: string,
+  fechaLanzamiento: string,
+  genero: string[],
+  id_api: string,
+  imagen: string,
+  item?: {
+    id: number,
+    estado: string
+  },
+  numAmigos: number,
+  paginas?: number,
+  tipo: string,
+  titulo: string,
+  plataformas?: string[]
 }
 
-export interface Contenido {
-  estado: string;
+
+
+
+
+export interface CardBasic {
+  id: number;
   id_api: string;
-  imagen?: string;
-  titulo: string;
-  descripcion: string;
-  genero?: string[];
-  autor?: string;
-  paginas?: number;
-  fechaLanzamiento?: string;
-  duracion?: string;
-  temporadas?: number;
-  episodios?: number;
-  valoracion?: number;
   tipo: string;
-  item?: {  
-    id: string;
-    estado: string;
-  };
-  amigos: {
-    id: string;
-    estado: string;
-    imagen_id?: string;
-    progreso?: string;
-  }[];
+  titulo: string;
+  autor?: string;
+  genero?: string[];
+  imagen?: string;
+  estado: string;
 }
 
 export interface BuscarPageProps {
@@ -57,7 +49,12 @@ export interface ActivityItem {
   status: string;
 }
 
-export type SortOption = "title_asc" | "title_desc" | "date_desc" | "date_asc" | "rating_desc";
+export type SortOption =
+  | "title_asc"
+  | "title_desc"
+  | "date_desc"
+  | "date_asc"
+  | "rating_desc";
 
 export interface UseCollectionOptions {
   initialFilters?: {
@@ -72,7 +69,7 @@ export interface ProfileData {
   id: string;
   nombre: string;
   username: string;
-  email: string
+  email: string;
   bio?: string;
   fechaRegistro: string;
   totalContenidos: number;
@@ -129,7 +126,7 @@ export interface ContentDetail {
   episodios?: number;
   valoracion?: number;
   tipo: string;
-  item?: {  
+  item?: {
     id: string;
     estado: string;
   };
@@ -142,32 +139,18 @@ export interface ContentDetail {
 }
 
 export interface ContentItem {
-  id: number;
   id_api: string;
   tipo: string;
   titulo: string;
-  autor: string;
-  genero?: string[];
-  imagen: string | null;
-  estado: string;
-  numAmigos?: number;
-}
-
-export interface SearchResult {
-  id_api: string;
-  tipo: string;
-  imagen: string | null;
-  titulo: string;
-  descripcion?: string;
-  genero?: string[];
-  creador?: string;
   autor?: string;
-  fechaLanzamiento?: string;
-  numAmigos?: number;
+  genero?: string[];
+  imagen: string | null;
   item?: {
     id: string;
     estado: string;
+    fechaAdd?: string;
   };
+  numAmigos?: number;
 }
 
 // Definiciones de eventos personalizados

@@ -12,68 +12,56 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { homeService } from "@/lib/home";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import collectionService from "@/lib/collection";
 
 interface EstadoContenidoApiProps {
   id_api: string;
   tipo: string;
-  estadoInicial: string;
-  itemId?: string; // ID del elemento en la colección (si ya existe)
+  estado: string;
+  itemId: number;
   onUpdateSuccess?: () => void;
   size?: "sm" | "md" | "lg";
 }
 
+/**
+ * Componente para gestionar el estado de un contenido (película, serie, libro, etc.)
+ * Permite marcar como completado, en progreso, pendiente, abandonado o desmarcar
+ */
 const EstadoContenidoApi: React.FC<EstadoContenidoApiProps> = ({
   id_api,
   tipo,
-  estadoInicial,
+  estado,
+  itemId,
   onUpdateSuccess,
-  size = "md"
+  size = "md",
 }) => {
-  const [open, setOpen] = useState(false);
-  const [isHovering, setIsHovering] = useState(false);
-  const [estado, setEstado] = useState(estadoInicial);
-  const [loading, setLoading] = useState(false);
+  const [open, setOpen] = useState<boolean>(false);
+  const [isHovering, setIsHovering] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(false);
   const [success, setSuccess] = useState<boolean>(false);
-  
-  // Escuchar cambios de estado optimistas desde otros componentes
-  useEffect(() => {
-    const handleContentStateUpdated = (event: CustomEvent) => {
-      const { id_api: updatedId, tipo: updatedTipo, estado: updatedEstado } = event.detail;
-      
-      // Si el evento está relacionado con este contenido, actualizar el estado local
-      if (updatedId === id_api && updatedTipo === tipo) {
-        setEstado(updatedEstado);
-      }
-    };
-    
-    // Añadir y eliminar event listener
-    window.addEventListener('contentStateUpdated', handleContentStateUpdated as EventListener);
-    return () => {
-      window.removeEventListener('contentStateUpdated', handleContentStateUpdated as EventListener);
-    };
-  }, [id_api, tipo]);
+  const [estadoLocal, setEstadoLocal] = useState<string>(estado);
+  const [itemIdLocal, setItemIdLocal] = useState<number>(itemId);
 
   useEffect(() => {
-    if (estadoInicial !== estado) {
-      setEstado(estadoInicial);
-    }
-  }, [estadoInicial]);
+    setEstadoLocal(estado);
+    setItemIdLocal(itemId);
+  }, [estado, itemId]);
 
-  // Efecto para mostrar mensaje de éxito brevemente
-  useEffect(() => {
+  /*   useEffect(() => {
     if (success) {
-      const timer = setTimeout(() => {
-        setSuccess(false);
-      }, 2000);
-      
+      const timer = setTimeout(() => setSuccess(false), 2000);
       return () => clearTimeout(timer);
     }
-  }, [success]);
+  }, [success]); */
 
-  const colorEstado = () => {
-    switch (estado) {
+  const getEstadoColor = () => {
+    switch (estadoLocal) {
       case "C":
         return "green";
       case "E":
@@ -87,9 +75,8 @@ const EstadoContenidoApi: React.FC<EstadoContenidoApiProps> = ({
     }
   };
 
-  // Obtener nombre del estado para el tooltip
-  const getNombreEstado = () => {
-    switch (estado) {
+  const getEstadoNombre = () => {
+    switch (estadoLocal) {
       case "C":
         return "Completado";
       case "E":
@@ -103,63 +90,58 @@ const EstadoContenidoApi: React.FC<EstadoContenidoApiProps> = ({
     }
   };
 
-  // Maneja la selección de un estado, cierra el dropdown y detiene la propagación
-  const handleEstadoChange = async (newEstado: string) => {
-    if (newEstado === estado) {
+  const handleEstadoChange = async (nuevoEstado: string) => {
+    if (nuevoEstado === estadoLocal) {
       setOpen(false);
       return;
     }
-
     setLoading(true);
-    
-    // Actualización optimista - actualizar UI inmediatamente
-    setEstado(newEstado);
     setOpen(false);
-    
-    // Llamar al servicio para actualizar en el backend
-    homeService.updateItemState(id_api, tipo, newEstado)
-      .then(() => {
-        // Mostrar indicador de éxito
-        setSuccess(true);
-        
-        // Si hay callback de éxito, ejecutarlo
-        if (onUpdateSuccess) {
-          onUpdateSuccess();
-        }
-      })
-      .catch(error => {
-        console.error("Error al actualizar estado:", error);
-        // En caso de error, revertir a estado anterior
-        setEstado(estado);
-      })
-      .finally(() => {
-        setLoading(false);
-      });
+    setEstadoLocal(nuevoEstado);
+
+    if (nuevoEstado === "") {
+      console.log("ITEMIDLOCAL", itemIdLocal);
+      await collectionService.removeFromCollection(itemIdLocal);
+      setItemIdLocal(-1);
+    } else if (estadoLocal !== "" && itemIdLocal !== -1) {
+      await collectionService.updateItem(itemIdLocal, nuevoEstado);
+    } else {
+      const res = await collectionService.addToCollection(
+        id_api,
+        tipo,
+        nuevoEstado
+      );
+      setItemIdLocal(res.id);
+    }
+    setLoading(false);
+    setSuccess(true);
+    if (onUpdateSuccess) {
+      onUpdateSuccess();
+    }
   };
 
-  // Detener la propagación en todo el componente
+  // Evitar propagación de eventos
   const handleClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
   };
 
-  // Tamaño del botón según la prop size
+  // Configurar tamaños según la prop size
   const buttonSize = {
     sm: "h-8 w-8",
     md: "h-9 w-9",
-    lg: "h-10 w-10"
+    lg: "h-10 w-10",
   }[size];
 
-  // Tamaño del icono según la prop size
   const iconSize = {
     sm: "h-4 w-4",
     md: "h-5 w-5",
-    lg: "h-6 w-6"
+    lg: "h-6 w-6",
   }[size];
 
   return (
     <TooltipProvider>
-      <div 
+      <div
         onClick={handleClick}
         className="cursor-pointer"
         onMouseEnter={() => setIsHovering(true)}
@@ -173,80 +155,67 @@ const EstadoContenidoApi: React.FC<EstadoContenidoApiProps> = ({
                   variant="outline"
                   className={`transition-all duration-200 relative ${buttonSize} cursor-pointer`}
                   style={{
-                    boxShadow: colorEstado() !== "gray" 
-                      ? `0 0 ${isHovering ? '12px' : '8px'} ${colorEstado()}` 
-                      : isHovering ? '0 0 5px rgba(0,0,0,0.2)' : 'none',
-                    transform: isHovering ? 'scale(1.05)' : 'scale(1)',
-                    cursor: 'pointer',
-                    zIndex: 10,
-                    opacity: loading ? 0.7 : 1
+                    boxShadow:
+                      getEstadoColor() !== "gray"
+                        ? `0 0 ${
+                            isHovering ? "12px" : "8px"
+                          } ${getEstadoColor()}`
+                        : isHovering
+                        ? "0 0 5px rgba(0,0,0,0.2)"
+                        : "none",
+                    transform: isHovering ? "scale(1.05)" : "scale(1)",
+                    opacity: loading ? 0.7 : 1,
                   }}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                  }}
+                  onClick={handleClick}
                   disabled={loading}
                 >
-                  <Tag 
-                    color={colorEstado()} 
-                    className={`transition-transform duration-200 ${iconSize} ${isHovering ? 'scale-110' : ''}`}
+                  <Tag
+                    color={getEstadoColor()}
+                    className={`transition-transform duration-200 ${iconSize} ${
+                      isHovering ? "scale-110" : ""
+                    }`}
                   />
                   {success && (
                     <span className="absolute -top-1 -right-1 h-3 w-3 bg-green-500 rounded-full border border-background animate-pulse"></span>
                   )}
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-56 z-50" onClick={(e) => e.stopPropagation()}>
+              <DropdownMenuContent className="w-56 z-50" onClick={handleClick}>
                 <DropdownMenuLabel>Estado</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuRadioGroup value={estado}>
-                  <DropdownMenuRadioItem 
-                    value="C" 
+                <DropdownMenuRadioGroup value={estadoLocal || ""}>
+                  <DropdownMenuRadioItem
+                    value="C"
                     className="cursor-pointer"
-                    onSelect={(e) => {
-                      e.preventDefault();
-                      handleEstadoChange("C");
-                    }}
+                    onSelect={() => handleEstadoChange("C")}
                   >
                     Terminado
                   </DropdownMenuRadioItem>
-                  <DropdownMenuRadioItem 
-                    value="E" 
+                  <DropdownMenuRadioItem
+                    value="E"
                     className="cursor-pointer"
-                    onSelect={(e) => {
-                      e.preventDefault();
-                      handleEstadoChange("E");
-                    }}
+                    onSelect={() => handleEstadoChange("E")}
                   >
                     En progreso
                   </DropdownMenuRadioItem>
-                  <DropdownMenuRadioItem 
-                    value="P" 
+                  <DropdownMenuRadioItem
+                    value="P"
                     className="cursor-pointer"
-                    onSelect={(e) => {
-                      e.preventDefault();
-                      handleEstadoChange("P");
-                    }}
+                    onSelect={() => handleEstadoChange("P")}
                   >
                     Pendiente
                   </DropdownMenuRadioItem>
-                  <DropdownMenuRadioItem 
-                    value="A" 
+                  <DropdownMenuRadioItem
+                    value="A"
                     className="cursor-pointer"
-                    onSelect={(e) => {
-                      e.preventDefault();
-                      handleEstadoChange("A");
-                    }}
+                    onSelect={() => handleEstadoChange("A")}
                   >
                     Abandonado
                   </DropdownMenuRadioItem>
-                  <DropdownMenuRadioItem 
-                    value="" 
+                  <DropdownMenuRadioItem
+                    value=""
                     className="cursor-pointer"
-                    onSelect={(e) => {
-                      e.preventDefault();
-                      handleEstadoChange("");
-                    }}
+                    onSelect={() => handleEstadoChange("")}
                   >
                     Desmarcar
                   </DropdownMenuRadioItem>
@@ -255,7 +224,7 @@ const EstadoContenidoApi: React.FC<EstadoContenidoApiProps> = ({
             </DropdownMenu>
           </TooltipTrigger>
           <TooltipContent>
-            <p>{getNombreEstado()}</p>
+            <p>{getEstadoNombre()}</p>
           </TooltipContent>
         </Tooltip>
       </div>

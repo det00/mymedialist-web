@@ -82,7 +82,6 @@ const ContenidoPage = () => {
               : { id: 'temp-id', estado: newEstado }
           };
 
-export default ContenidoPage;
         });
       }
     };

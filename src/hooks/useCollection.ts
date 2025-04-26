@@ -1,11 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Contenido, SortOption, UseCollectionOptions } from "@/lib/types";
-import { collectionService, CollectionFilter } from "@/lib/collection";
+import { CollectionFilter, Contenido, SortOption, UseCollectionOptions } from "@/lib/types";
+import { homeService } from "@/lib/home";
 import { authService } from "@/lib/auth";
 
-/**
- * Hook personalizado para gestionar la colección de contenidos del usuario
- */
 export function useCollection(options: UseCollectionOptions = {}) {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [collection, setCollection] = useState<Contenido[]>([]);
@@ -43,18 +40,45 @@ export function useCollection(options: UseCollectionOptions = {}) {
     setError(null);
 
     try {
-      // Cargar la colección con los filtros aplicados
-      const data = await collectionService.getUserCollection({
-        ...filters
-      });
+      // Usar homeService para obtener todo el contenido
+      const data = await homeService.getAllContent();
+      
+      // Aplicar filtros
+      let filteredData = [...data];
+      
+      if (filters.tipo && filters.tipo !== "todo") {
+        const tipoMayuscula = filters.tipo.charAt(0).toUpperCase();
+        filteredData = filteredData.filter(item => 
+          item.tipo && item.tipo.charAt(0).toUpperCase() === tipoMayuscula
+        );
+      }
+      
+      if (filters.estado && filters.estado !== "todo") {
+        filteredData = filteredData.filter(item => item.estado === filters.estado);
+      }
+
       setCollection(data);
 
-      // Obtener las estadísticas
-      const statsData = await collectionService.getCollectionStats();
+      // Calcular estadísticas
+      const statsData = {
+        total: data.length,
+        byStatus: {
+          C: data.filter(item => item.estado === 'C').length,
+          E: data.filter(item => item.estado === 'E').length,
+          P: data.filter(item => item.estado === 'P').length,
+          A: data.filter(item => item.estado === 'A').length
+        },
+        byType: {
+          P: data.filter(item => item.tipo === 'P').length,
+          S: data.filter(item => item.tipo === 'S').length,
+          L: data.filter(item => item.tipo === 'L').length,
+          V: data.filter(item => item.tipo === 'V').length
+        }
+      };
       setStats(statsData);
 
       // Aplicar ordenación
-      const sorted = sortCollection(data, sortOption);
+      const sorted = sortCollection(filteredData, sortOption);
       setFilteredCollection(sorted);
     } catch (err) {
       console.error("Error al cargar la colección:", err);
@@ -117,9 +141,12 @@ export function useCollection(options: UseCollectionOptions = {}) {
     }
 
     try {
-      // Usar homeService para asegurar compatibilidad
-      const result = await collectionService.addToCollection(id_api, tipo, estado);
-      await loadCollection(true); // Recargar la colección
+      // Usar homeService para actualizar estado
+      const result = await homeService.updateItemState(id_api, tipo, estado);
+      
+      // Recargar la colección para reflejar los cambios
+      await loadCollection(true);
+      
       return result;
     } catch (err) {
       console.error("Error al añadir a la colección:", err);
@@ -136,8 +163,24 @@ export function useCollection(options: UseCollectionOptions = {}) {
     }
 
     try {
-      const result = await collectionService.updateItem(id, estado);
-      await loadCollection(true); // Recargar la colección
+      // Buscar el item en la colección actual para obtener id_api y tipo
+      const itemToUpdate = collection.find(item => item.id === id);
+      
+      if (!itemToUpdate) {
+        setError("No se encontró el elemento");
+        return null;
+      }
+
+      // Usar homeService para actualizar estado
+      const result = await homeService.updateItemState(
+        itemToUpdate.id_api, 
+        itemToUpdate.tipo, 
+        estado
+      );
+      
+      // Recargar la colección para reflejar los cambios
+      await loadCollection(true);
+      
       return result;
     } catch (err) {
       console.error("Error al actualizar elemento:", err);
@@ -154,8 +197,24 @@ export function useCollection(options: UseCollectionOptions = {}) {
     }
 
     try {
-      const result = await collectionService.removeFromCollection(id);
-      await loadCollection(true); // Recargar la colección
+      // Buscar el item en la colección actual para obtener id_api y tipo
+      const itemToRemove = collection.find(item => item.id === id);
+      
+      if (!itemToRemove) {
+        setError("No se encontró el elemento");
+        return null;
+      }
+
+      // Usar homeService para actualizar estado a vacío (desmarcar)
+      const result = await homeService.updateItemState(
+        itemToRemove.id_api, 
+        itemToRemove.tipo, 
+        ""
+      );
+      
+      // Recargar la colección para reflejar los cambios
+      await loadCollection(true);
+      
       return result;
     } catch (err) {
       console.error("Error al eliminar de la colección:", err);

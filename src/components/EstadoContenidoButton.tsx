@@ -30,9 +30,10 @@ import {
 } from "lucide-react";
 import { AuthModal } from "@/components/ui/auth-modal";
 import { authService } from "@/lib/auth";
-import { CardBasic, ContentItem } from "@/lib/types";
-import CardSearch from "@/components/CardSearch";
-import collectionService from "@/lib/collection";
+import { homeService } from "@/lib/home";
+import { ContentItem } from "@/lib/types";
+import EstadoContenidoButton from "@/components/EstadoContenidoButton";
+import { CardConEstado } from "@/components/CardConEstado";
 
 // Configurar locale español
 moment.locale("es");
@@ -44,7 +45,7 @@ export default function Home() {
   const [showAuthModal, setShowAuthModal] = useState<boolean>(false);
 
   // Estado para almacenar todos los contenidos
-  const [allContent, setAllContent] = useState<CardBasic[]>([]);
+  const [allContent, setAllContent] = useState<ContentItem[]>([]);
   const [loadingContent, setLoadingContent] = useState<boolean>(true);
 
   // Estados para tendencias
@@ -63,6 +64,14 @@ export default function Home() {
     S: { nombre: "Serie", icon: Tv },
     L: { nombre: "Libro", icon: Library },
     V: { nombre: "Videojuego", icon: Gamepad2 },
+  };
+
+  // Mapeo de estado a color
+  const estadoColor: Record<string, string> = {
+    C: "#22c55e", // Completado - verde
+    E: "#3b82f6", // En progreso - azul
+    P: "#eab308", // Pendiente - amarillo
+    A: "#ef4444", // Abandonado - rojo
   };
 
   // Función para verificar la autenticación y cargar datos del usuario
@@ -133,8 +142,14 @@ export default function Home() {
         setLoadingContent(true);
 
         try {
-          const data = await collectionService.getAllContent();
+          const data = await homeService.getContenido();
           setAllContent(data);
+
+          const enProgreso = data.filter((item) => item.estado === "E");
+          if (enProgreso.length > 0) {
+            // Seleccionar un elemento aleatorio o el primero como "viendo ahora"
+            setIsWatchingNow(enProgreso[0]);
+          }
         } finally {
           setLoadingContent(false);
         }
@@ -148,10 +163,9 @@ export default function Home() {
       setLoadingContent(false);
     }
   }, [isAuthenticated]);
-  
 
   // Cargar tendencias desde la API
-  /* useEffect(() => {
+  useEffect(() => {
     if (isAuthenticated) {
       const loadTrending = async () => {
         setLoadingTrending(true);
@@ -168,10 +182,10 @@ export default function Home() {
       setTrendingContent([]);
       setLoadingTrending(false);
     }
-  }, [isAuthenticated]); */
+  }, [isAuthenticated]);
 
   // Obtener contenido en progreso filtrado del contenido total
-  const getEnProgreso = () => {
+  const getCurrentContent = () => {
     if (!allContent.length) return [];
 
     let filtered = allContent.filter((item) => item.estado === "E");
@@ -185,7 +199,7 @@ export default function Home() {
   };
 
   // Obtener watchlist filtrada del contenido total
-  const getPendientes = () => {
+  const getWatchlist = () => {
     if (!allContent.length) return [];
 
     let filtered = allContent.filter((item) => item.estado === "P");
@@ -213,6 +227,12 @@ export default function Home() {
   const renderContentTypeIcon = (tipo: string) => {
     const Icon = tipoInfo[tipo as keyof typeof tipoInfo]?.icon || Film;
     return <Icon className="h-4 w-4" />;
+  };
+
+  // Manejar actualización de estado
+  const handleUpdateSuccess = () => {
+    // No es necesario hacer nada aquí, la actualización es optimista
+    console.log("Estado actualizado correctamente");
   };
 
   // Si está cargando, mostrar indicador
@@ -301,10 +321,8 @@ export default function Home() {
   }
 
   // Obtener contenido filtrado para las tabs
-  const currentContent = getEnProgreso();
-  const watchlist = getPendientes();
-
-
+  const currentContent = getCurrentContent();
+  const watchlist = getWatchlist();
 
   return (
     <div className="min-h-screen pb-12 pt-4">
@@ -384,7 +402,7 @@ export default function Home() {
                       </div>
 
                       {/* Botones de acción */}
-                      <div>
+                      <div className="flex flex-col gap-2">
                         <Button
                           variant="secondary"
                           size="sm"
@@ -392,6 +410,17 @@ export default function Home() {
                         >
                           Continuar
                         </Button>
+                        
+                        {/* Botón de estado */}
+                        <div onClick={(e) => e.stopPropagation()}>
+                          <EstadoContenidoButton
+                            id_api={isWatchingNow.id_api}
+                            tipo={isWatchingNow.tipo}
+                            estadoInicial={isWatchingNow.estado || "E"}
+                            variant="badge"
+                            compact={true}
+                          />
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -422,9 +451,10 @@ export default function Home() {
                   Por ver
                 </TabsTrigger>
                 <TabsTrigger value="trends" className="cursor-pointer">
-                  Tendencias (de momento repetido por ver)
+                  Tendencias
                 </TabsTrigger>
               </TabsList>
+
               {/* Filtro de tipos */}
               <div className="flex flex-wrap gap-2 pb-4">
                 <Button
@@ -468,6 +498,7 @@ export default function Home() {
                   <Gamepad2 className="h-4 w-4 mr-1" /> Juegos
                 </Button>
               </div>
+
               {/* Contenido en progreso */}
               <TabsContent value="current" className="space-y-6">
                 {/* Lista de contenido */}
@@ -478,35 +509,83 @@ export default function Home() {
                       <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-primary"></div>
                     </div>
                   ) : currentContent.length > 0 ? (
-                    // Mostrar contenido filtrado
+                    // Mostrar contenido filtrado usando el componente CardConEstado
                     currentContent.map((item) => (
-                      <Link
-                        href={`/${
-                          item.tipo === "P"
-                            ? "pelicula"
-                            : item.tipo === "S"
-                            ? "serie"
-                            : item.tipo === "L"
-                            ? "libro"
-                            : "videojuego"
-                        }/${item.id_api}`}
+                      <CardConEstado 
                         key={`${item.id || item.id_api}-${item.tipo}`}
-                        className="cursor-pointer"
-                      >
-                        <CardSearch
-                          id={item.id ?? -1}
-                          id_api={item.id_api}
-                          tipo={item.tipo}
-                          titulo={item.titulo}
-                          estado={item.estado}
-                          autor={item.autor}
-                          genero={item.genero}
-                          imagen={item.imagen}
-                        />
-                      </Link>
+                        item={item}
+                      />
                     ))
                   ) : (
                     // Mensaje cuando no hay datos
+                    <div className="col-span-2 flex flex-col items-center justify-center py-12">
+                      <div className="flex flex-col items-center">
+                        <TrendingUp className="h-12 w-12 text-muted-foreground mb-4" />
+                        <p className="text-muted-foreground">
+                          No hay contenido en progreso
+                        </p>
+                        <p className="text-sm text-muted-foreground mb-4">
+                          Añade contenido a tu colección para verlo aquí
+                        </p>
+                        <Button className="cursor-pointer">
+                          <Plus className="h-4 w-4 mr-2" />
+                          Añadir contenido
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </TabsContent>
+              
+              {/* Watchlist */}
+              <TabsContent value="watchlist" className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {loadingContent ? (
+                    <div className="col-span-2 flex justify-center py-12">
+                      <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-primary"></div>
+                    </div>
+                  ) : watchlist.length > 0 ? (
+                    watchlist.map((item) => (
+                      <CardConEstado 
+                        key={`${item.id || item.id_api}-${item.tipo}`}
+                        item={item}
+                      />
+                    ))
+                  ) : (
+                    <div className="col-span-2 flex flex-col items-center justify-center py-12">
+                      <div className="flex flex-col items-center">
+                        <Library className="h-12 w-12 text-muted-foreground mb-4" />
+                        <p className="text-muted-foreground">
+                          Tu lista de pendientes está vacía
+                        </p>
+                        <p className="text-sm text-muted-foreground mb-4">
+                          Añade contenido a tu lista para verlo más tarde
+                        </p>
+                        <Button className="cursor-pointer">
+                          <Plus className="h-4 w-4 mr-2" />
+                          Añadir contenido
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </TabsContent>
+              
+              {/* Tendencias */}
+              <TabsContent value="trends" className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {loadingTrending ? (
+                    <div className="col-span-2 flex justify-center py-12">
+                      <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-primary"></div>
+                    </div>
+                  ) : trendingContent.length > 0 ? (
+                    trendingContent.map((item) => (
+                      <CardConEstado 
+                        key={`trend-${item.id_api}-${item.tipo}`}
+                        item={item}
+                      />
+                    ))
+                  ) : (
                     <div className="col-span-2 flex flex-col items-center justify-center py-12">
                       <div className="flex flex-col items-center">
                         <TrendingUp className="h-12 w-12 text-muted-foreground mb-4" />
@@ -519,113 +598,6 @@ export default function Home() {
                         <Button className="cursor-pointer">
                           <UserPlus className="h-4 w-4 mr-2" />
                           Añadir amigos
-                        </Button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </TabsContent>
-              {/* Watchlist */}
-              <TabsContent value="watchlist" className="space-y-6">
-                {/* Filtros de tipos ya existentes */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {loadingContent ? (
-                    <div className="col-span-2 flex justify-center py-12">
-                      <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-primary"></div>
-                    </div>
-                  ) : watchlist.length > 0 ? (
-                    watchlist.map((item) => (
-                      <Link
-                        href={`/${`/${
-                          item.tipo === "P"
-                            ? "pelicula"
-                            : item.tipo === "S"
-                            ? "serie"
-                            : item.tipo === "L"
-                            ? "libro"
-                            : "videojuego"
-                        }/${item.id_api}`}/${item.id_api}`}
-                        key={`${item.id || item.id_api}-${item.tipo}`}
-                        className="block"
-                      >
-                        <CardSearch
-                          id={item.id}
-                          id_api={item.id_api}
-                          tipo={item.tipo}
-                          titulo={item.titulo}
-                          estado={item.estado}
-                          autor={item.autor}
-                          genero={item.genero}
-                          imagen={item.imagen}
-                        />
-                      </Link>
-                    ))
-                  ) : (
-                    <div className="col-span-2 flex flex-col items-center justify-center py-12">
-                      <div className="flex flex-col items-center">
-                        <Library className="h-12 w-12 text-muted-foreground mb-4" />
-                        <p className="text-muted-foreground">
-                          Tu lista de pendientes está vacía
-                        </p>
-                        <p className="text-sm text-muted-foreground mb-4">
-                          Añade contenido a tu lista para verlo más tarde
-                        </p>
-                        <Button className="cursor-pointer">
-                          <Plus className="h-4 w-4 mr-2" />
-                          Añadir contenido
-                        </Button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </TabsContent>
-              <TabsContent value="trends" className="space-y-6">
-                {/* Filtros de tipos ya existentes */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {loadingContent ? (
-                    <div className="col-span-2 flex justify-center py-12">
-                      <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-primary"></div>
-                    </div>
-                  ) : watchlist.length > 0 ? (
-                    watchlist.map((item) => (
-                      <Link
-                        href={`/${`/${
-                          item.tipo === "P"
-                            ? "pelicula"
-                            : item.tipo === "S"
-                            ? "serie"
-                            : item.tipo === "L"
-                            ? "libro"
-                            : "videojuego"
-                        }/${item.id_api}`}/${item.id_api}`}
-                        key={`${item.id || item.id_api}-${item.tipo}`}
-                        className="block"
-                      >
-                        <CardSearch
-                          id={item.id}
-                          id_api={item.id_api}
-                          tipo={item.tipo}
-                          titulo={item.titulo}
-                          estado={item.estado}
-                          autor={item.autor}
-                          genero={item.genero}
-                          imagen={item.imagen}
-                        />
-                      </Link>
-                    ))
-                  ) : (
-                    <div className="col-span-2 flex flex-col items-center justify-center py-12">
-                      <div className="flex flex-col items-center">
-                        <Library className="h-12 w-12 text-muted-foreground mb-4" />
-                        <p className="text-muted-foreground">
-                          Tu lista de pendientes está vacía
-                        </p>
-                        <p className="text-sm text-muted-foreground mb-4">
-                          Añade contenido a tu lista para verlo más tarde
-                        </p>
-                        <Button className="cursor-pointer">
-                          <Plus className="h-4 w-4 mr-2" />
-                          Añadir contenido
                         </Button>
                       </div>
                     </div>
@@ -708,9 +680,6 @@ export default function Home() {
                     <Users className="h-5 w-5" />
                     <span>Gente a la que sigues</span>
                   </div>
-                  {/*                   <Button variant="ghost" size="sm" className="cursor-pointer">
-                    <MoreHorizontal className="h-4 w-4" />
-                  </Button> */}
                 </CardTitle>
                 <CardDescription>Descubre qué están viendo</CardDescription>
               </CardHeader>
@@ -772,6 +741,18 @@ export default function Home() {
                               fill
                               className="object-cover rounded-sm"
                             />
+                            
+                            {/* Botón de estado en miniatura */}
+                            <div className="absolute bottom-0 right-0 m-1" onClick={(e) => e.stopPropagation()}>
+                              <EstadoContenidoButton
+                                id_api={item.id_api}
+                                tipo={item.tipo}
+                                estadoInicial={item.estado || ""}
+                                variant="icon"
+                                compact={true}
+                                stopPropagation={true}
+                              />
+                            </div>
                           </div>
                           <div>
                             <h4 className="font-medium text-sm">
@@ -811,14 +792,8 @@ export default function Home() {
             </Card>
           </div>
         </div>
+        </div>
       </div>
-
-      {/* Modal de autenticación */}
-      <AuthModal
-        showModal={showAuthModal}
-        setShowModal={setShowAuthModal}
-        initialView="login"
-      />
-    </div>
   );
 }
+

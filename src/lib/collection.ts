@@ -1,110 +1,71 @@
 // src/lib/collection.ts
 import api from "@/lib/axios";
 import { authService } from "@/lib/auth";
-import { CollectionFilter, Contenido } from "@/lib/types";
+import { ContenidoColeccion } from "@/lib/types";
 
+interface ResponseAdd{
+  id: number,
+  message: string
+}
 
 export const collectionService = {
-
-  async getUserCollection(filters?: CollectionFilter): Promise<Contenido[]> {
+  async addToCollection(
+    id_api: string,
+    tipo: string,
+    estado: string
+  ): Promise<ResponseAdd> {
+    console.log(id_api, tipo, estado);
+    
     try {
       const token = authService.getToken();
       if (!token) {
         throw new Error("No hay token de autenticación");
+        
       }
-
-      try {
-        let combinedResults: Contenido[] = [];
-        
-        const enProgresoResponse = await api.get("/home/current", {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        combinedResults = [...combinedResults, ...enProgresoResponse.data];
-        
-        const pendientesResponse = await api.get("/home/watchlist", {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        combinedResults = [...combinedResults, ...pendientesResponse.data];
-        
-        if (filters?.tipo && filters.tipo !== "todo") {
-          const tipoMayuscula = filters.tipo.charAt(0).toUpperCase();
-          combinedResults = combinedResults.filter(item => 
-            item.tipo && item.tipo.charAt(0).toUpperCase() === tipoMayuscula
-          );
+      const res = await api.post(
+        "/user-items",
+        {
+          id_api,
+          tipo,
+          estado,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         }
-        
-        if (filters?.estado && filters.estado !== "todo") {
-          combinedResults = combinedResults.filter(item => 
-            item.estado === filters.estado
-          );
-        }
-        
-        if (filters?.ordenar) {
-          combinedResults = sortCollection(combinedResults, filters.ordenar);
-        }
-        
-        return combinedResults;
-      } catch (error) {
-        console.warn("Error al obtener desde API, usando datos locales:", error);
-
-      }
-    } catch (error) {
-      console.error("Error al obtener colección:", error);
-    }
-      return []
-  },
-
-  async addToCollection(id_api: string, tipo: string, estado: string): Promise<any> {
-    try {
-      const token = authService.getToken();
-      if (!token) {
-        throw new Error("No hay token de autenticación");
-      }
-
-      // Este endpoint sí existe en el backend
-      const response = await api.post("/estado", {
-        id_api,
-        tipo,
-        estado
-      }, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
-      
-      return response.data;
+      );      
+      return res.data
     } catch (error) {
       console.error("Error al añadir a la colección:", error);
       throw error;
     }
   },
 
-  async updateItem(id: string, estado: string): Promise<any> {
+  async updateItem(id: number, estado: string): Promise<void> {
+    
     try {
       const token = authService.getToken();
       if (!token) {
         throw new Error("No hay token de autenticación");
       }
-
       try {
-        const response = await api.put(`/user-items/${id}`, {
-          estado
-        }, {
-          headers: {
-            Authorization: `Bearer ${token}`
+        await api.put(
+          `/user-items/${id}`,
+          {
+            estado,
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
           }
-        });
-        
-        return response.data;
+        );
       } catch (innerError) {
-        console.warn("Error con el endpoint de actualización, usando endpoint alternativo:", innerError);
-        
-        const item = await this.getItemById(id);
-        if (item && item.id_api && item.tipo) {
-          return this.addToCollection(item.id_api, item.tipo, estado);
-        } else {
-          throw new Error("No se pudo obtener información del ítem para actualizarlo");
-        }
+        console.warn(
+          "Ya existe en la colección, hay que actualizar",
+          innerError
+        );
       }
     } catch (error) {
       console.error("Error al actualizar elemento:", error);
@@ -112,34 +73,53 @@ export const collectionService = {
     }
   },
 
-  async removeFromCollection(id: string): Promise<any> {
+  async removeFromCollection(id: number): Promise<void> {
     try {
       const token = authService.getToken();
       if (!token) {
         throw new Error("No hay token de autenticación");
       }
-
-      const response = await api.delete(`/user-items/${id}`, {
+      await api.delete(`/user-items/${id}`, {
         headers: {
-          Authorization: `Bearer ${token}`
-        }
+          Authorization: `Bearer ${token}`,
+        },
       });
-      
-      return response.data;
     } catch (error) {
       console.error("Error al eliminar de la colección:", error);
       throw error;
     }
   },
 
-  async getItemById(id: string): Promise<Contenido | null> {
+  async getItemById(id: string): Promise<ContenidoColeccion | null> {
     try {
-      const collection = await this.getUserCollection();
-      return collection.find(item => item.id === id) || null;
+      const collection = await this.getAllContent();
+      return collection.find((item) => item.id === id) || null;
     } catch (error) {
       console.error("Error al buscar elemento por ID:", error);
       return null;
     }
+  },
+
+  async getAllContent(): Promise<ContenidoColeccion[]> {
+    const token = authService.getToken();
+    if (!token) {
+      return [];
+    }
+    const userId = localStorage.getItem("id_usuario");
+    if (!userId) {
+      return [];
+    }
+
+    const response = await api.get<Contenido[]>(
+      `/user-items/coleccion/${userId}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    return response.data;
   },
 
   async getCollectionStats(): Promise<{
@@ -158,51 +138,64 @@ export const collectionService = {
     };
   }> {
     try {
-      const collection = await this.getUserCollection();
+      const collection = await this.getAllContent();
       const stats = {
         total: collection.length,
         byStatus: {
           C: 0,
           E: 0,
           P: 0,
-          A: 0
+          A: 0,
         },
         byType: {
           P: 0,
           S: 0,
           L: 0,
-          V: 0
-        }
+          V: 0,
+        },
       };
-      
-      collection.forEach(item => {
+
+      collection.forEach((item) => {
         if (item.estado) {
-          if (stats.byStatus[item.estado as keyof typeof stats.byStatus] !== undefined) {
+          if (
+            stats.byStatus[item.estado as keyof typeof stats.byStatus] !==
+            undefined
+          ) {
             stats.byStatus[item.estado as keyof typeof stats.byStatus]++;
           }
         }
-        
+
         if (item.tipo) {
-          const tipoMayuscula = item.tipo.charAt(0).toUpperCase() as 'P' | 'S' | 'L' | 'V';
-          if (stats.byType[tipoMayuscula as keyof typeof stats.byType] !== undefined) {
+          const tipoMayuscula = item.tipo.charAt(0).toUpperCase() as
+            | "P"
+            | "S"
+            | "L"
+            | "V";
+          if (
+            stats.byType[tipoMayuscula as keyof typeof stats.byType] !==
+            undefined
+          ) {
             stats.byType[tipoMayuscula as keyof typeof stats.byType]++;
           }
         }
       });
-      
+
       return stats;
     } catch (error) {
       console.error("Error al obtener estadísticas:", error);
       return {
         total: 0,
         byStatus: { C: 0, E: 0, P: 0, A: 0 },
-        byType: { P: 0, S: 0, L: 0, V: 0 }
+        byType: { P: 0, S: 0, L: 0, V: 0 },
       };
     }
-  }
+  },
 };
 
-function sortCollection(collection: Contenido[], sortBy: string): Contenido[] {
+function sortCollection(
+  collection: ContenidoColeccion[],
+  sortBy: string
+): ContenidoColeccion[] {
   switch (sortBy) {
     case "title_asc":
       return [...collection].sort((a, b) => a.titulo.localeCompare(b.titulo));
@@ -221,7 +214,9 @@ function sortCollection(collection: Contenido[], sortBy: string): Contenido[] {
         return parseInt(yearA) - parseInt(yearB);
       });
     case "rating_desc":
-      return [...collection].sort((a, b) => (b.valoracion || 0) - (a.valoracion || 0));
+      return [...collection].sort(
+        (a, b) => (b.valoracion || 0) - (a.valoracion || 0)
+      );
     default:
       return collection;
   }
