@@ -33,6 +33,7 @@ import { authService } from "@/lib/auth";
 import { CardBasic, ContentItem } from "@/lib/types";
 import CardSearch from "@/components/CardSearch";
 import collectionService from "@/lib/collection";
+import { AddAmigo } from "@/components/AddAmigo";
 
 // Configurar locale español
 moment.locale("es");
@@ -42,13 +43,15 @@ export default function Home() {
   const [userData, setUserData] = useState<any>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [showAuthModal, setShowAuthModal] = useState<boolean>(false);
+  const [showAddAmigo, setShowAddAmigo] = useState<boolean>(false);
+  const [userId, setUserId] = useState<number>(-1)
 
   // Estado para almacenar todos los contenidos
   const [allContent, setAllContent] = useState<CardBasic[]>([]);
   const [loadingContent, setLoadingContent] = useState<boolean>(true);
 
   // Estados para tendencias
-  const [trendingContent, setTrendingContent] = useState<ContentItem[]>([]);
+  const [trendingContent, setTrendingContent] = useState<CardBasic[]>([]);
   const [loadingTrending, setLoadingTrending] = useState<boolean>(true);
 
   // Estado para contenido que se está viendo actualmente
@@ -72,7 +75,9 @@ export default function Home() {
 
     if (authenticated) {
       const userInfo = authService.getUserData();
+      const id = authService.getUserId()
       setUserData(userInfo);
+      setUserId(id)
     } else {
       // Si no está autenticado, limpiar todos los datos personales
       setUserData(null);
@@ -131,12 +136,17 @@ export default function Home() {
     if (isAuthenticated) {
       const loadContent = async () => {
         setLoadingContent(true);
+        setLoadingTrending(true);
 
         try {
           const data = await collectionService.getAllContent();
           setAllContent(data);
+          const tendencias = await collectionService.getTendencias();
+          setTrendingContent(tendencias);
+
         } finally {
           setLoadingContent(false);
+          setLoadingTrending(false)
         }
       };
 
@@ -148,27 +158,6 @@ export default function Home() {
       setLoadingContent(false);
     }
   }, [isAuthenticated]);
-  
-
-  // Cargar tendencias desde la API
-  /* useEffect(() => {
-    if (isAuthenticated) {
-      const loadTrending = async () => {
-        setLoadingTrending(true);
-        try {
-          const data = await homeService.getTrending();
-          setTrendingContent(data);
-        } finally {
-          setLoadingTrending(false);
-        }
-      };
-
-      loadTrending();
-    } else {
-      setTrendingContent([]);
-      setLoadingTrending(false);
-    }
-  }, [isAuthenticated]); */
 
   // Obtener contenido en progreso filtrado del contenido total
   const getEnProgreso = () => {
@@ -198,16 +187,6 @@ export default function Home() {
     return filtered;
   };
 
-  // Función para manejar seguir/dejar de seguir
-  const handleFollowToggle = () => {
-    if (!isAuthenticated) {
-      setShowAuthModal(true);
-      return;
-    }
-
-    // Aquí iría la lógica para seguir/dejar de seguir
-    console.log("Toggle follow");
-  };
 
   // Renderizar icono basado en tipo de contenido
   const renderContentTypeIcon = (tipo: string) => {
@@ -303,8 +282,6 @@ export default function Home() {
   // Obtener contenido filtrado para las tabs
   const currentContent = getEnProgreso();
   const watchlist = getPendientes();
-
-
 
   return (
     <div className="min-h-screen pb-12 pt-4">
@@ -422,7 +399,7 @@ export default function Home() {
                   Por ver
                 </TabsTrigger>
                 <TabsTrigger value="trends" className="cursor-pointer">
-                  Tendencias (de momento repetido por ver)
+                  Tendencias
                 </TabsTrigger>
               </TabsList>
               {/* Filtro de tipos */}
@@ -586,8 +563,8 @@ export default function Home() {
                     <div className="col-span-2 flex justify-center py-12">
                       <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-primary"></div>
                     </div>
-                  ) : watchlist.length > 0 ? (
-                    watchlist.map((item) => (
+                  ) : trendingContent.length > 0 ? (
+                    trendingContent.map((item) => (
                       <Link
                         href={`/${`/${
                           item.tipo === "P"
@@ -687,7 +664,7 @@ export default function Home() {
                 </div>
 
                 <div className="mt-4">
-                  <Link href="/perfil" className="cursor-pointer">
+                  <Link href={`/perfil/`} className="cursor-pointer">
                     <Button
                       variant="outline"
                       size="sm"
@@ -723,7 +700,7 @@ export default function Home() {
                 </div>
 
                 <Button
-                  onClick={handleFollowToggle}
+                  onClick={()=>setShowAddAmigo(true)}
                   className="w-full gap-2 cursor-pointer"
                   variant="outline"
                 >
@@ -818,6 +795,10 @@ export default function Home() {
         showModal={showAuthModal}
         setShowModal={setShowAuthModal}
         initialView="login"
+      />
+      <AddAmigo
+        open={showAddAmigo}
+        cerrarAddAmigo={() => setShowAddAmigo(false)}
       />
     </div>
   );

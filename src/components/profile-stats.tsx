@@ -1,8 +1,12 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { CalendarRange, Film, Tv, BookOpen, Gamepad2, CheckCircle, Clock, ListTodo, Ban, Crown, Star, Zap, TrendingUp } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { CalendarRange, Film, Tv, BookOpen, Gamepad2, CheckCircle, Clock, ListTodo, Ban, Star,RefreshCw } from "lucide-react";
+import { collectionService } from "@/lib/collection";
+import Link from "next/link";
+import { CardBasic } from "@/lib/types";
 
 // Componentes para gráficos
 interface DonutChartData {
@@ -11,7 +15,7 @@ interface DonutChartData {
   color: string;
 }
 
-const DonutChart = ({ data, colors }: { data: DonutChartData[]; colors: string[] }) => {
+const DonutChart = ({ data, colors }: { data: DonutChartData[]; colors: string[]; }) => {
   const total = data.reduce((acc, item) => acc + item.value, 0);
   let cumulativePercent = 0;
   
@@ -63,9 +67,7 @@ const DonutChart = ({ data, colors }: { data: DonutChartData[]; colors: string[]
   );
 };
 
-
-
-const BarChart = ({ data, maxValue, valueKey = "value", labelKey = "label", colorKey = "color" }) => {
+const BarChart = ({ data, maxValue, valueKey = "value", labelKey = "label", colorKey = "color" }: { data: any[]; maxValue?: number; valueKey?: string; labelKey?: string; colorKey?: string; }) => {
   const max = maxValue || Math.max(...data.map(item => item[valueKey]));
   
   return (
@@ -81,7 +83,7 @@ const BarChart = ({ data, maxValue, valueKey = "value", labelKey = "label", colo
             </div>
             <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
               <div
-                className="h-full rounded-full transition-all duration-500 ease-in-out"
+                className="h-full rounded-full transition-all duration-500 ease-in-out cursor-pointer"
                 style={{ width: `${percent}%`, backgroundColor: item[colorKey] }}
               />
             </div>
@@ -92,125 +94,243 @@ const BarChart = ({ data, maxValue, valueKey = "value", labelKey = "label", colo
   );
 };
 
-// Definición de la interfaz para los datos del perfil
-interface ProfileStats {
-  totalContent: number;
-  completed: number;
-  inProgress: number;
-  planned: number;
-  dropped: number;
-  movies: number;
-  series: number;
-  books: number;
-  games: number;
+// Estructura para las estadísticas mensuales
+interface MonthlyStats {
+  month: string;
+  count: number;
 }
 
-interface ProfileData {
-  id: string;
-  name: string;
-  username: string;
-  bio: string;
-  joinDate: string;
-  email: string;
-  avatar: string;
-  stats: ProfileStats;
-  isCurrentUser: boolean;
+// Estructura para las estadísticas de género
+interface GenreStats {
+  genre: string;
+  count: number;
+  color: string;
 }
 
-interface ProfileStatsProps {
-  profileData: ProfileData;
-}
-
-// Datos simulados adicionales
-const mockMonthlyStats = [
-  { month: 'Ene', count: 5 },
-  { month: 'Feb', count: 8 },
-  { month: 'Mar', count: 10 },
-  { month: 'Abr', count: 7 },
-  { month: 'May', count: 12 },
-  { month: 'Jun', count: 9 },
-  { month: 'Jul', count: 15 },
-  { month: 'Ago', count: 11 },
-  { month: 'Sep', count: 13 },
-  { month: 'Oct', count: 8 },
-  { month: 'Nov', count: 6 },
-  { month: 'Dic', count: 10 },
-];
-
-const mockGenreStats = [
-  { genre: 'Drama', count: 18, color: '#6C5CE7' },
-  { genre: 'Sci-Fi', count: 14, color: '#3B82F6' },
-  { genre: 'Acción', count: 12, color: '#EF4444' },
-  { genre: 'Comedia', count: 10, color: '#22C55E' },
-  { genre: 'Fantasía', count: 8, color: '#F59E0B' },
-  { genre: 'Thriller', count: 7, color: '#EC4899' },
-  { genre: 'Romance', count: 5, color: '#FB7185' },
-];
-
-const mockAchievements = [
-  {
-    id: 'marathon',
-    title: 'Maratonista',
-    description: 'Ver 3 temporadas en 1 semana',
-    icon: <Zap className="h-5 w-5" />,
-    unlocked: true,
-    date: '2025-02-15'
-  },
-  {
-    id: 'bookworm',
-    title: 'Ratón de biblioteca',
-    description: 'Leer 10 libros',
-    icon: <BookOpen className="h-5 w-5" />,
-    unlocked: true,
-    date: '2025-01-10'
-  },
-  {
-    id: 'moviebuff',
-    title: 'Cinéfilo',
-    description: 'Ver 30 películas',
-    icon: <Film className="h-5 w-5" />,
-    unlocked: true,
-    date: '2024-12-05'
-  },
-  {
-    id: 'diverse',
-    title: 'Diversificado',
-    description: 'Tener al menos 5 ítems de cada tipo',
-    icon: <TrendingUp className="h-5 w-5" />,
-    unlocked: false,
-    progress: 3,
-    total: 4
-  },
-  {
-    id: 'collector',
-    title: 'Coleccionista',
-    description: 'Tener 100 ítems en tu colección',
-    icon: <Crown className="h-5 w-5" />,
-    unlocked: false,
-    progress: 87,
-    total: 100
-  }
-];
-
-export function ProfileStats({ profileData }: ProfileStatsProps) {
+export function ProfileStats() {
   const [activeTab, setActiveTab] = useState("general");
+  const [monthlyStats, setMonthlyStats] = useState<MonthlyStats[]>([]);
+  const [genreStats, setGenreStats] = useState<GenreStats[]>([]);
+  const [generosPorTipo, setGenerosPorTipo] = useState({
+    P: [] as {genero: string, count: number}[],
+    S: [] as {genero: string, count: number}[],
+    L: [] as {genero: string, count: number}[],
+    V: [] as {genero: string, count: number}[]
+  });
   
-  // Preparar datos para el gráfico de donut
+  // Estados para la colección
+  const [coleccion, setColeccion] = useState<CardBasic[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+  const [stats, setStats] = useState({
+    total: 0 as number,
+    byStatus: { C: 0, E: 0, P: 0, A: 0 },
+    byType: { P: 0, S: 0, L: 0, V: 0 }
+  });
+
+  // Función para cargar la colección
+  const loadCollection = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      // Cargar la colección completa
+      const result = await collectionService.getAllContent();
+      setColeccion(result);
+      
+      // Cargar estadísticas
+      const statsResult = await collectionService.getCollectionStats();
+      setStats(statsResult);
+    } catch (err) {
+      console.error("Error al cargar la colección:", err);
+      setError("No se pudo cargar tu colección. Inténtalo de nuevo más tarde.");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // Cargar datos al montar el componente
+  useEffect(() => {
+    loadCollection();
+  }, [loadCollection]);
+  
+  // Calcular estadísticas de la colección
+  useEffect(() => {
+    if (!coleccion || coleccion.length === 0) return;    
+    
+    // Contar por estado
+    const estadisticas: Record<string, number> = {
+      C: 0, // Completado
+      E: 0, // En progreso
+      P: 0, // Pendiente
+      A: 0, // Abandonado
+    };
+    
+    // Contar por tipo
+    const tipoEstadisticas: Record<string, number> = {
+      P: 0, // Películas
+      S: 0, // Series
+      L: 0, // Libros
+      V: 0, // Videojuegos
+    };
+    
+    // Diccionario para contar géneros
+    const generos: Record<string, number> = {};
+    
+    // Diccionario para contar géneros por tipo
+    const generosTipo = {
+      P: {} as Record<string, number>, 
+      S: {} as Record<string, number>,
+      L: {} as Record<string, number>,
+      V: {} as Record<string, number>
+    };
+    
+    // Procesar cada elemento de la colección
+    coleccion.forEach(item => {
+      // Contar por estado
+      if (item.estado && estadisticas[item.estado as keyof typeof estadisticas] !== undefined) {
+        estadisticas[item.estado as keyof typeof estadisticas]++;
+      }
+      
+      // Contar por tipo
+      if (item.tipo && tipoEstadisticas[item.tipo as keyof typeof tipoEstadisticas] !== undefined) {
+        tipoEstadisticas[item.tipo as keyof typeof tipoEstadisticas]++;
+      }
+      
+      // Contar géneros
+      if (item.genero && Array.isArray(item.genero)) {
+        item.genero.forEach(genre => {
+          // Limpiar y normalizar el nombre del género
+          const normalizedGenre = genre.trim();
+          if (normalizedGenre) {
+            generos[normalizedGenre] = (generos[normalizedGenre] || 0) + 1;
+            
+            // Contar por tipo
+            if (item.tipo && generosTipo[item.tipo as keyof typeof generosTipo]) {
+              generosTipo[item.tipo as keyof typeof generosTipo][normalizedGenre] = 
+                (generosTipo[item.tipo as keyof typeof generosTipo][normalizedGenre] || 0) + 1;
+            }
+          }
+        });
+      }
+    });
+    
+    // Convertir conteo de géneros en array y ordenar
+    const genreArray = Object.entries(generos)
+      .map(([genre, count]) => ({ genre, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 7);
+    
+    // Asignar colores a los géneros
+    const colors = ["#6C5CE7", "#3B82F6", "#EF4444", "#22C55E", "#F59E0B", "#EC4899", "#FB7185"];
+    const genreWithColors: GenreStats[] = genreArray.map((item, index) => ({
+      ...item,
+      color: colors[index % colors.length]
+    }));
+    
+    // Crear datos de distribución por tipo
+    const generosPorTipoArray: Record<string, {genero: string, count: number}[]> = {
+      P: Object.entries(generosTipo.P)
+        .map(([genero, count]) => ({ genero, count }))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 5) as {genero: string, count: number}[],
+      S: Object.entries(generosTipo.S)
+        .map(([genero, count]) => ({ genero, count }))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 5) as {genero: string, count: number}[],
+      L: Object.entries(generosTipo.L)
+        .map(([genero, count]) => ({ genero, count }))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 5) as {genero: string, count: number}[],
+      V: Object.entries(generosTipo.V)
+        .map(([genero, count]) => ({ genero, count }))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 5) as {genero: string, count: number}[]
+    };
+    
+    // Generar datos mensuales (ejemplo simple basado en la fecha actual)
+    const monthNames = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
+    const monthlyData: MonthlyStats[] = monthNames.map((month, index) => {
+      // Distribución aleatoria basada en la cantidad total de la colección
+      const count = Math.floor(Math.random() * Math.max(5, coleccion.length / 4));
+      return { month, count };
+    });
+    
+    // Actualizar estados
+    setMonthlyStats(monthlyData);
+    setGenreStats(genreWithColors);
+    setGenerosPorTipo(generosPorTipoArray as { 
+      P: { genero: string; count: number }[]; 
+      S: { genero: string; count: number }[]; 
+      L: { genero: string; count: number }[]; 
+      V: { genero: string; count: number }[]; 
+    });
+    
+  }, [coleccion]);
+
+
+  // Si está cargando, mostrar indicador
+  if (loading) {
+    return (
+      <Card>
+        <CardContent className="flex flex-col items-center justify-center p-12">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary mb-4"></div>
+          <p className="text-muted-foreground">Cargando estadísticas...</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Si hay error, mostrar mensaje con opción de reintentar
+  if (error) {
+    return (
+      <Card>
+        <CardContent className="flex flex-col items-center justify-center p-12">
+          <p className="text-destructive mb-4">{error}</p>
+          <Button onClick={loadCollection} className="cursor-pointer">
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Reintentar
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
+  
+  // Si no hay datos, mostrar mensaje 
+  if (!coleccion || coleccion.length === 0) {
+    return (
+      <Card>
+        <CardContent className="flex flex-col items-center justify-center p-12">
+          <div className="text-center">
+            <p className="text-muted-foreground mb-4">No hay datos disponibles para mostrar estadísticas.</p>
+            <Link href="/busqueda?busqueda=&tipo=P">
+              <Button className="cursor-pointer">Añadir contenido</Button>
+            </Link>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+  
+  // Contar datos para las gráficas
+  const countByStatus = stats.byStatus;
+  const countByType = stats.byType;
+  
+  // Datos para las gráficas de donut
   const statusData = [
-    { name: "Completados", value: profileData.stats.completed, color: "#22C55E" },
-    { name: "En progreso", value: profileData.stats.inProgress, color: "#3B82F6" },
-    { name: "Pendientes", value: profileData.stats.planned, color: "#FACC15" },
-    { name: "Abandonados", value: profileData.stats.dropped, color: "#EF4444" }
+    { name: "Completados", value: countByStatus.C, color: "#22C55E" },
+    { name: "En progreso", value: countByStatus.E, color: "#3B82F6" },
+    { name: "Pendientes", value: countByStatus.P, color: "#FACC15" },
+    { name: "Abandonados", value: countByStatus.A, color: "#EF4444" }
   ];
   
   const statusColors = statusData.map(item => item.color);
   
-  // Preparar datos para el gráfico de tipo de contenido
   const typeData = [
-    { name: "Películas", value: profileData.stats.movies, color: "#8B5CF6" },
-    { name: "Series", value: profileData.stats.series, color: "#EC4899" },
-    { name: "Libros", value: profileData.stats.books, color: "#F59E0B" },
-    { name: "Juegos", value: profileData.stats.games, color: "#10B981" }
+    { name: "Películas", value: countByType.P, color: "#8B5CF6" },
+    { name: "Series", value: countByType.S, color: "#EC4899" },
+    { name: "Libros", value: countByType.L, color: "#F59E0B" },
+    { name: "Juegos", value: countByType.V, color: "#10B981" }
   ];
   
   const typeColors = typeData.map(item => item.color);
@@ -218,10 +338,9 @@ export function ProfileStats({ profileData }: ProfileStatsProps) {
   return (
     <div className="space-y-6">
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="general">General</TabsTrigger>
-          <TabsTrigger value="genres">Géneros</TabsTrigger>
-          <TabsTrigger value="achievements">Logros</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="general" className="cursor-pointer">General</TabsTrigger>
+          <TabsTrigger value="genres" className="cursor-pointer">Géneros</TabsTrigger>
         </TabsList>
         
         {/* Pestaña general */}
@@ -237,7 +356,7 @@ export function ProfileStats({ profileData }: ProfileStatsProps) {
               </CardHeader>
               <CardContent>
                 <div className="flex flex-col items-center">
-                  <div className="text-3xl font-bold mb-2">{profileData.stats.totalContent}</div>
+                  <div className="text-3xl font-bold mb-2">{stats.total}</div>
                   <div className="text-sm text-muted-foreground mb-6">Elementos totales</div>
                   
                   <div className="grid grid-cols-2 gap-6 w-full text-center">
@@ -245,7 +364,7 @@ export function ProfileStats({ profileData }: ProfileStatsProps) {
                       <div className="bg-muted p-3 rounded-full w-12 h-12 flex items-center justify-center mb-2">
                         <CheckCircle className="h-6 w-6 text-green-500" />
                       </div>
-                      <div className="text-xl font-bold">{profileData.stats.completed}</div>
+                      <div className="text-xl font-bold">{countByStatus.C}</div>
                       <div className="text-xs text-muted-foreground">Completados</div>
                     </div>
                     
@@ -253,7 +372,7 @@ export function ProfileStats({ profileData }: ProfileStatsProps) {
                       <div className="bg-muted p-3 rounded-full w-12 h-12 flex items-center justify-center mb-2">
                         <Clock className="h-6 w-6 text-blue-500" />
                       </div>
-                      <div className="text-xl font-bold">{profileData.stats.inProgress}</div>
+                      <div className="text-xl font-bold">{countByStatus.E}</div>
                       <div className="text-xs text-muted-foreground">En progreso</div>
                     </div>
                     
@@ -261,7 +380,7 @@ export function ProfileStats({ profileData }: ProfileStatsProps) {
                       <div className="bg-muted p-3 rounded-full w-12 h-12 flex items-center justify-center mb-2">
                         <ListTodo className="h-6 w-6 text-yellow-500" />
                       </div>
-                      <div className="text-xl font-bold">{profileData.stats.planned}</div>
+                      <div className="text-xl font-bold">{countByStatus.P}</div>
                       <div className="text-xs text-muted-foreground">Pendientes</div>
                     </div>
                     
@@ -269,7 +388,7 @@ export function ProfileStats({ profileData }: ProfileStatsProps) {
                       <div className="bg-muted p-3 rounded-full w-12 h-12 flex items-center justify-center mb-2">
                         <Ban className="h-6 w-6 text-red-500" />
                       </div>
-                      <div className="text-xl font-bold">{profileData.stats.dropped}</div>
+                      <div className="text-xl font-bold">{countByStatus.A}</div>
                       <div className="text-xs text-muted-foreground">Abandonados</div>
                     </div>
                   </div>
@@ -295,7 +414,7 @@ export function ProfileStats({ profileData }: ProfileStatsProps) {
                         className="w-3 h-3 rounded-full" 
                         style={{ backgroundColor: item.color }}
                       />
-                      <span className="text-sm">{item.name}</span>
+                      <span className="text-sm">{item.name}: {item.value}</span>
                     </div>
                   ))}
                 </div>
@@ -339,10 +458,10 @@ export function ProfileStats({ profileData }: ProfileStatsProps) {
               </CardHeader>
               <CardContent>
                 <div className="h-64 flex items-end justify-between gap-1">
-                  {mockMonthlyStats.map((month, index) => (
+                  {monthlyStats.map((month, index) => (
                     <div key={index} className="flex flex-col items-center">
                       <div 
-                        className="w-6 rounded-t-sm bg-primary transition-all hover:bg-primary/80"
+                        className="w-6 rounded-t-sm bg-primary transition-all hover:bg-primary/80 cursor-pointer"
                         style={{ 
                           height: `${(month.count / 15) * 150}px`,
                           opacity: 0.7 + (month.count / 50)
@@ -368,8 +487,8 @@ export function ProfileStats({ profileData }: ProfileStatsProps) {
             </CardHeader>
             <CardContent>
               <BarChart 
-                data={mockGenreStats}
-                maxValue={20}
+                data={genreStats}
+                maxValue={Math.max(...genreStats.map(item => item.count))}
                 valueKey="count"
                 labelKey="genre"
                 colorKey="color"
@@ -377,7 +496,7 @@ export function ProfileStats({ profileData }: ProfileStatsProps) {
             </CardContent>
             <CardFooter>
               <div className="flex justify-between w-full text-sm text-muted-foreground">
-                <span>Basado en {profileData.stats.totalContent} elementos</span>
+                <span>Basado en {stats.total} elementos</span>
                 <span className="flex items-center">
                   <CalendarRange className="h-4 w-4 mr-1" /> 
                   Último año
@@ -394,63 +513,72 @@ export function ProfileStats({ profileData }: ProfileStatsProps) {
               </CardHeader>
               <CardContent className="space-y-6">
                 {/* Películas */}
-                <div>
-                  <div className="flex items-center gap-2 mb-2">
-                    <Film className="h-4 w-4 text-primary" />
-                    <h3 className="font-medium">Películas</h3>
+                {generosPorTipo.P.length > 0 && (
+                  <div>
+                    <div className="flex items-center gap-2 mb-2">
+                      <Film className="h-4 w-4 text-primary" />
+                      <h3 className="font-medium">Películas</h3>
+                    </div>
+                    <div className="flex flex-wrap gap-1">
+                      {generosPorTipo.P.map((item, index) => (
+                        <Badge key={index} className="bg-[#6C5CE7] cursor-pointer">
+                          {item.genero} ({item.count})
+                        </Badge>
+                      ))}
+                    </div>
                   </div>
-                  <div className="flex flex-wrap gap-1">
-                    <Badge className="bg-[#6C5CE7]">Drama (6)</Badge>
-                    <Badge className="bg-[#3B82F6]">Sci-Fi (5)</Badge>
-                    <Badge className="bg-[#EF4444]">Acción (4)</Badge>
-                    <Badge className="bg-[#22C55E]">Comedia (3)</Badge>
-                    <Badge className="bg-[#F59E0B]">Fantasía (2)</Badge>
-                  </div>
-                </div>
+                )}
                 
                 {/* Series */}
-                <div>
-                  <div className="flex items-center gap-2 mb-2">
-                    <Tv className="h-4 w-4 text-primary" />
-                    <h3 className="font-medium">Series</h3>
+                {generosPorTipo.S.length > 0 && (
+                  <div>
+                    <div className="flex items-center gap-2 mb-2">
+                      <Tv className="h-4 w-4 text-primary" />
+                      <h3 className="font-medium">Series</h3>
+                    </div>
+                    <div className="flex flex-wrap gap-1">
+                      {generosPorTipo.S.map((item, index) => (
+                        <Badge key={index} className="bg-[#EC4899] cursor-pointer">
+                          {item.genero} ({item.count})
+                        </Badge>
+                      ))}
+                    </div>
                   </div>
-                  <div className="flex flex-wrap gap-1">
-                    <Badge className="bg-[#6C5CE7]">Drama (8)</Badge>
-                    <Badge className="bg-[#EC4899]">Thriller (5)</Badge>
-                    <Badge className="bg-[#22C55E]">Comedia (5)</Badge>
-                    <Badge className="bg-[#3B82F6]">Sci-Fi (4)</Badge>
-                    <Badge className="bg-[#FB7185]">Romance (2)</Badge>
-                  </div>
-                </div>
+                )}
                 
                 {/* Libros */}
-                <div>
-                  <div className="flex items-center gap-2 mb-2">
-                    <BookOpen className="h-4 w-4 text-primary" />
-                    <h3 className="font-medium">Libros</h3>
+                {generosPorTipo.L.length > 0 && (
+                  <div>
+                    <div className="flex items-center gap-2 mb-2">
+                      <BookOpen className="h-4 w-4 text-primary" />
+                      <h3 className="font-medium">Libros</h3>
+                    </div>
+                    <div className="flex flex-wrap gap-1">
+                      {generosPorTipo.L.map((item, index) => (
+                        <Badge key={index} className="bg-[#F59E0B] cursor-pointer">
+                          {item.genero} ({item.count})
+                        </Badge>
+                      ))}
+                    </div>
                   </div>
-                  <div className="flex flex-wrap gap-1">
-                    <Badge className="bg-[#F59E0B]">Fantasía (5)</Badge>
-                    <Badge className="bg-[#6C5CE7]">Drama (4)</Badge>
-                    <Badge className="bg-[#3B82F6]">Sci-Fi (3)</Badge>
-                    <Badge className="bg-[#FB7185]">Romance (2)</Badge>
-                    <Badge className="bg-[#22C55E]">Aventura (1)</Badge>
-                  </div>
-                </div>
+                )}
                 
                 {/* Juegos */}
-                <div>
-                  <div className="flex items-center gap-2 mb-2">
-                    <Gamepad2 className="h-4 w-4 text-primary" />
-                    <h3 className="font-medium">Juegos</h3>
+                {generosPorTipo.V.length > 0 && (
+                  <div>
+                    <div className="flex items-center gap-2 mb-2">
+                      <Gamepad2 className="h-4 w-4 text-primary" />
+                      <h3 className="font-medium">Juegos</h3>
+                    </div>
+                    <div className="flex flex-wrap gap-1">
+                      {generosPorTipo.V.map((item, index) => (
+                        <Badge key={index} className="bg-[#22C55E] cursor-pointer">
+                          {item.genero} ({item.count})
+                        </Badge>
+                      ))}
+                    </div>
                   </div>
-                  <div className="flex flex-wrap gap-1">
-                    <Badge className="bg-[#EF4444]">Acción (5)</Badge>
-                    <Badge className="bg-[#F59E0B]">RPG (3)</Badge>
-                    <Badge className="bg-[#3B82F6]">Estrategia (2)</Badge>
-                    <Badge className="bg-[#22C55E]">Aventura (2)</Badge>
-                  </div>
-                </div>
+                )}
               </CardContent>
             </Card>
             
@@ -463,118 +591,31 @@ export function ProfileStats({ profileData }: ProfileStatsProps) {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="p-4 border rounded-lg">
-                  <h3 className="font-medium flex items-center gap-2 mb-2">
-                    <Star className="h-4 w-4 text-yellow-500" />
-                    Thriller psicológico
-                  </h3>
-                  <p className="text-sm text-muted-foreground mb-2">
-                    Basado en tu interés por thrillers y dramas, especialmente en series.
-                  </p>
-                  <div className="flex flex-wrap gap-1">
-                    <Badge variant="outline" className="text-xs">Black Mirror</Badge>
-                    <Badge variant="outline" className="text-xs">Mr. Robot</Badge>
-                    <Badge variant="outline" className="text-xs">Dark</Badge>
+                {genreStats.slice(0, 3).map((genre, index) => (
+                  <div key={index} className="p-4 border rounded-lg">
+                    <h3 className="font-medium flex items-center gap-2 mb-2">
+                      <Star className="h-4 w-4 text-yellow-500" />
+                      {genre.genre}
+                    </h3>
+                    <p className="text-sm text-muted-foreground mb-2">
+                      Este es uno de tus géneros más vistos. Explora más títulos similares.
+                    </p>
+                    <div className="flex flex-wrap gap-1">
+                      {coleccion
+                        .filter(item => item.genero?.includes(genre.genre))
+                        .slice(0, 3)
+                        .map((item, idx) => (
+                          <Badge key={idx} variant="outline" className="text-xs cursor-pointer">
+                            {item.titulo}
+                          </Badge>
+                        ))}
+                    </div>
                   </div>
-                </div>
-                
-                <div className="p-4 border rounded-lg">
-                  <h3 className="font-medium flex items-center gap-2 mb-2">
-                    <Star className="h-4 w-4 text-yellow-500" />
-                    Fantasía histórica
-                  </h3>
-                  <p className="text-sm text-muted-foreground mb-2">
-                    Combina tu amor por la fantasía con elementos históricos.
-                  </p>
-                  <div className="flex flex-wrap gap-1">
-                    <Badge variant="outline" className="text-xs">El nombre del viento</Badge>
-                    <Badge variant="outline" className="text-xs">Juego de Tronos</Badge>
-                    <Badge variant="outline" className="text-xs">The Witcher</Badge>
-                  </div>
-                </div>
-                
-                <div className="p-4 border rounded-lg">
-                  <h3 className="font-medium flex items-center gap-2 mb-2">
-                    <Star className="h-4 w-4 text-yellow-500" />
-                    Ciencia ficción social
-                  </h3>
-                  <p className="text-sm text-muted-foreground mb-2">
-                    Explora temas sociales a través de la ciencia ficción.
-                  </p>
-                  <div className="flex flex-wrap gap-1">
-                    <Badge variant="outline" className="text-xs">The Expanse</Badge>
-                    <Badge variant="outline" className="text-xs">Estación Once</Badge>
-                    <Badge variant="outline" className="text-xs">Arrival</Badge>
-                  </div>
-                </div>
+                ))}
               </CardContent>
             </Card>
           </div>
         </TabsContent>
-        
-        {/* Pestaña de logros */}
-        {/* <TabsContent value="achievements" className="mt-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Logros y recompensas</CardTitle>
-              <CardDescription>
-                Progreso y desbloqueos por tu actividad
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {mockAchievements.map(achievement => (
-                  <div 
-                    key={achievement.id} 
-                    className={`p-4 border rounded-lg transition-all ${achievement.unlocked ? 'bg-muted/30' : 'bg-muted/10'}`}
-                  >
-                    <div className="flex items-start gap-4">
-                      <div className={`p-3 rounded-full ${achievement.unlocked ? 'bg-primary/20 text-primary' : 'bg-muted text-muted-foreground'}`}>
-                        {achievement.icon}
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex items-center justify-between">
-                          <h3 className="font-medium">{achievement.title}</h3>
-                          {achievement.unlocked && (
-                            <Badge variant="outline" className="bg-primary/20 border-primary/30 text-primary">
-                              <Award className="h-3 w-3 mr-1" />
-                              Desbloqueado
-                            </Badge>
-                          )}
-                        </div>
-                        <p className="text-sm text-muted-foreground mt-1">{achievement.description}</p>
-                        
-                        {achievement.unlocked ? (
-                          <p className="text-xs text-muted-foreground mt-2">
-                            Desbloqueado el {new Date(achievement.date).toLocaleDateString()}
-                          </p>
-                        ) : (
-                          <div className="mt-2">
-                            <div className="flex justify-between text-xs text-muted-foreground mb-1">
-                              <span>Progreso</span>
-                              <span>{achievement.progress}/{achievement.total}</span>
-                            </div>
-                            <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
-                              <div
-                                className="h-full bg-primary/50 rounded-full"
-                                style={{ width: `${(achievement.progress / achievement.total) * 100}%` }}
-                              />
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-            <CardFooter>
-              <Button variant="outline" className="w-full">
-                Ver todos los logros
-              </Button>
-            </CardFooter>
-          </Card>
-        </TabsContent> */}
       </Tabs>
     </div>
   );

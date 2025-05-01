@@ -1,4 +1,6 @@
-import { useState, useEffect } from "react";
+"use client";
+
+import { useState, useEffect, useMemo, useCallback } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { 
@@ -24,7 +26,6 @@ import {
   Clock,
   ListTodo,
   Ban,
-  Calendar,
   CircleSlash,
   AlertCircle,
   RefreshCw
@@ -38,7 +39,61 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { collectionService } from "@/lib/collection";
-import { Contenido } from "@/lib/types";
+import { CardBasic } from "@/lib/types";
+
+// Mapeo de tipos de iconos (calculados una sola vez)
+const typeIcons = {
+  "P": <Film className="h-4 w-4" />,
+  "S": <Tv className="h-4 w-4" />,
+  "L": <BookOpen className="h-4 w-4" />,
+  "V": <Gamepad2 className="h-4 w-4" />,
+  "default": <Film className="h-4 w-4" />
+};
+
+// Mapeo de estados a iconos (calculados una sola vez)
+const statusIcons = {
+  "C": <CheckCircle className="h-4 w-4 text-green-500" />,
+  "E": <Clock className="h-4 w-4 text-blue-500" />,
+  "P": <ListTodo className="h-4 w-4 text-yellow-500" />,
+  "A": <Ban className="h-4 w-4 text-red-500" />,
+  "default": <CircleSlash className="h-4 w-4 text-muted-foreground" />
+};
+
+// Mapeo de estados a colores (calculados una sola vez)
+const statusColors = {
+  "C": "text-green-500",
+  "E": "text-blue-500",
+  "P": "text-yellow-500",
+  "A": "text-red-500",
+  "default": "text-muted-foreground"
+};
+
+// Mapeo de estados a nombres (calculados una sola vez)
+const statusNames = {
+  "C": "Completado",
+  "E": "En progreso",
+  "P": "Pendiente",
+  "A": "Abandonado",
+  "default": "Desconocido"
+};
+
+// Mapeo de tipos a nombres (calculados una sola vez)
+const typeNames = {
+  "P": "Película",
+  "S": "Serie",
+  "L": "Libro",
+  "V": "Videojuego",
+  "default": "Contenido"
+};
+
+// Mapeo de tipos a rutas (calculados una sola vez)
+const typeRoutes = {
+  "P": "pelicula",
+  "S": "serie",
+  "L": "libro",
+  "V": "videojuego",
+  "default": "contenido"
+};
 
 interface ProfileCollectionProps {
   userId: string;
@@ -49,8 +104,7 @@ export function ProfileCollection({ userId }: ProfileCollectionProps) {
   const [activeType, setActiveType] = useState<string>("todo");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [sortBy, setSortBy] = useState<string>("title_asc");
-  const [collection, setCollection] = useState<Contenido[]>([]);
-  const [filteredCollection, setFilteredCollection] = useState<Contenido[]>([]);
+  const [collection, setCollection] = useState<CardBasic[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [stats, setStats] = useState({
@@ -60,68 +114,50 @@ export function ProfileCollection({ userId }: ProfileCollectionProps) {
   });
   
   // Cargar colección inicial
-  useEffect(() => {
-    const loadCollection = async () => {
-      setLoading(true);
-      setError(null);
-      
-      try {
-        // Cargar la colección completa
-        const result = await collectionService.getUserCollection();
-        console.log("COLLECTIONRESULT", result);
-        
-        setCollection(result);
-        
-        // Cargar estadísticas
-        const statsResult = await collectionService.getCollectionStats();
-        setStats(statsResult);
-        
-        // Aplicar filtros iniciales
-        filterCollection(result, activeType, activeStatus, searchQuery, sortBy);
-      } catch (err) {
-        console.error("Error al cargar la colección:", err);
-        setError("No se pudo cargar tu colección. Inténtalo de nuevo más tarde.");
-      } finally {
-        setLoading(false);
-      }
-    };
+  const loadCollection = useCallback(async () => {
+    setLoading(true);
+    setError(null);
     
-    loadCollection();
-  }, [userId]);
+    try {
+      // Cargar la colección completa
+      const result = await collectionService.getAllContent();
+      setCollection(result);
+      
+      // Cargar estadísticas
+      const statsResult = await collectionService.getCollectionStats();
+      setStats(statsResult);
+    } catch (err) {
+      console.error("Error al cargar la colección:", err);
+      setError("No se pudo cargar tu colección. Inténtalo de nuevo más tarde.");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
   
-  // Filtrar colección cuando cambian los filtros
   useEffect(() => {
-    filterCollection(collection, activeType, activeStatus, searchQuery, sortBy);
-  }, [activeType, activeStatus, searchQuery, sortBy]);
+    loadCollection();
+  }, [loadCollection, userId]);
   
-  // Función para filtrar la colección
-  const filterCollection = (
-    items: Contenido[], 
-    tipo: string, 
-    estado: string, 
-    query: string,
-    sort: string
-  ) => {
-    let filtered = [...items];
+  // Filtrado memoizado para mejor rendimiento
+  const filteredCollection = useMemo(() => {
+    let filtered = [...collection];
     
     // Filtrar por tipo
-    if (tipo !== "todo") {
-      // Convertir tipo a formato adecuado
+    if (activeType !== "todo") {
       filtered = filtered.filter(item => {
-        const itemTipo = item.tipo?.toLowerCase();
-        return itemTipo === tipo.toLowerCase();
+        const itemTipo = item.tipo?.toUpperCase().charAt(0);
+        return itemTipo === activeType.toUpperCase().charAt(0);
       });
     }
     
     // Filtrar por estado
-    if (estado !== "todo") {
-      // Corrección: Usar el campo estado directamente en la raíz del objeto
-      filtered = filtered.filter(item => item.estado === estado);
+    if (activeStatus !== "todo") {
+      filtered = filtered.filter(item => item.estado === activeStatus);
     }
     
     // Filtrar por búsqueda
-    if (query) {
-      const lowercaseQuery = query.toLowerCase();
+    if (searchQuery) {
+      const lowercaseQuery = searchQuery.toLowerCase();
       filtered = filtered.filter(item => 
         item.titulo.toLowerCase().includes(lowercaseQuery) || 
         (item.autor && item.autor.toLowerCase().includes(lowercaseQuery))
@@ -129,178 +165,141 @@ export function ProfileCollection({ userId }: ProfileCollectionProps) {
     }
     
     // Ordenar según el criterio seleccionado
-    switch (sort) {
-      case "title_asc":
-        filtered.sort((a, b) => a.titulo.localeCompare(b.titulo));
-        break;
-      case "title_desc":
-        filtered.sort((a, b) => b.titulo.localeCompare(a.titulo));
-        break;
-      case "date_desc":
-        filtered.sort((a, b) => {
-          const yearA = a.fechaLanzamiento?.match(/(\d{4})/)?.[1] || "0";
-          const yearB = b.fechaLanzamiento?.match(/(\d{4})/)?.[1] || "0";
-          return parseInt(yearB) - parseInt(yearA);
-        });
-        break;
-      case "date_asc":
-        filtered.sort((a, b) => {
-          const yearA = a.fechaLanzamiento?.match(/(\d{4})/)?.[1] || "0";
-          const yearB = b.fechaLanzamiento?.match(/(\d{4})/)?.[1] || "0";
-          return parseInt(yearA) - parseInt(yearB);
-        });
-        break;
-      case "rating_desc":
-        filtered.sort((a, b) => (b.valoracion || 0) - (a.valoracion || 0));
-        break;
+    if (sortBy === "title_asc") {
+      filtered.sort((a, b) => a.titulo.localeCompare(b.titulo));
+    } else if (sortBy === "title_desc") {
+      filtered.sort((a, b) => b.titulo.localeCompare(a.titulo));
     }
     
-    setFilteredCollection(filtered);
-  };
-  
-  // Recargar datos
-  const reloadCollection = async () => {
-    setLoading(true);
-    setError(null);
-    
-    try {
-      // Cargar la colección completa
-      const result = await collectionService.getUserCollection();
-      setCollection(result);
-      console.log("COLLECTION", result);
-      
-      
-      // Cargar estadísticas
-      const statsResult = await collectionService.getCollectionStats();
-      setStats(statsResult);
-      
-      // Aplicar filtros actuales
-      filterCollection(result, activeType, activeStatus, searchQuery, sortBy);
-    } catch (err) {
-      console.error("Error al recargar la colección:", err);
-      setError("No se pudo recargar tu colección. Inténtalo de nuevo más tarde.");
-    } finally {
-      setLoading(false);
-    }
-  };
+    return filtered;
+  }, [collection, activeType, activeStatus, searchQuery, sortBy]);
   
   // Función para limpiar todos los filtros
-  const clearFilters = () => {
+  const clearFilters = useCallback(() => {
     setActiveType("todo");
     setActiveStatus("todo");
     setSearchQuery("");
     setSortBy("title_asc");
-  };
+  }, []);
   
   // Obtener icono para tipo de contenido
-  const getTypeIcon = (type: string) => {
-    const tipoMayuscula = type.toUpperCase().charAt(0);
-    switch (tipoMayuscula) {
-      case "P":
-        return <Film className="h-4 w-4" />;
-      case "S":
-        return <Tv className="h-4 w-4" />;
-      case "L":
-        return <BookOpen className="h-4 w-4" />;
-      case "V":
-        return <Gamepad2 className="h-4 w-4" />;
-      default:
-        return <Film className="h-4 w-4" />;
-    }
-  };
+  const getTypeIcon = useCallback((type: string) => {
+    const key = type.toUpperCase().charAt(0) as keyof typeof typeIcons;
+    return typeIcons[key] || typeIcons.default;
+  }, []);
   
   // Obtener icono para estado
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case "C":
-        return <CheckCircle className="h-4 w-4 text-green-500" />;
-      case "E":
-        return <Clock className="h-4 w-4 text-blue-500" />;
-      case "P":
-        return <ListTodo className="h-4 w-4 text-yellow-500" />;
-      case "A":
-        return <Ban className="h-4 w-4 text-red-500" />;
-      default:
-        return <CircleSlash className="h-4 w-4 text-muted-foreground" />;
-    }
-  };
+  const getStatusIcon = useCallback((status: string) => {
+    return statusIcons[status as keyof typeof statusIcons] || statusIcons.default;
+  }, []);
   
   // Obtener color para estado
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "C":
-        return "text-green-500";
-      case "E":
-        return "text-blue-500";
-      case "P":
-        return "text-yellow-500";
-      case "A":
-        return "text-red-500";
-      default:
-        return "text-muted-foreground";
-    }
-  };
+  const getStatusColor = useCallback((status: string) => {
+    return statusColors[status as keyof typeof statusColors] || statusColors.default;
+  }, []);
   
   // Obtener nombre para estado
-  const getStatusName = (status: string) => {
-    switch (status) {
-      case "C":
-        return "Completado";
-      case "E":
-        return "En progreso";
-      case "P":
-        return "Pendiente";
-      case "A":
-        return "Abandonado";
-      default:
-        return "Desconocido";
-    }
-  };
+  const getStatusName = useCallback((status: string) => {
+    return statusNames[status as keyof typeof statusNames] || statusNames.default;
+  }, []);
   
   // Obtener nombre para tipo
-  const getTypeName = (type: string) => {
-    const tipoMayuscula = type.toUpperCase().charAt(0);
-    switch (tipoMayuscula) {
-      case "P":
-        return "Película";
-      case "S":
-        return "Serie";
-      case "L":
-        return "Libro";
-      case "V":
-        return "Videojuego";
-      default:
-        return type;
-    }
-  };
+  const getTypeName = useCallback((type: string) => {
+    const key = type.toUpperCase().charAt(0) as keyof typeof typeNames;
+    return typeNames[key] || typeNames.default;
+  }, []);
   
   // Obtener la ruta para el elemento según su tipo
-  const getItemRoute = (item: Contenido) => {
-    const tipoMayuscula = item.tipo?.toUpperCase().charAt(0);
-    let route = "";
-    
-    switch (tipoMayuscula) {
-      case "P":
-        route = "pelicula";
-        break;
-      case "S":
-        route = "serie";
-        break;
-      case "L":
-        route = "libro";
-        break;
-      case "V":
-        route = "videojuego";
-        break;
-      default:
-        route = "contenido";
-    }
-    
+  const getItemRoute = useCallback((item: CardBasic) => {
+    const key = item.tipo?.toUpperCase().charAt(0) as keyof typeof typeRoutes;
+    const route = typeRoutes[key] || typeRoutes.default;
     return `/${route}/${item.id_api}`;
-  };
+  }, []);
   
-  // Renderizar colección
-  const renderCollection = () => {
+  // Renderizar un elemento individual (memoizado para evitar rerenderizados)
+  const renderItem = useCallback((item: CardBasic) => {
+    return (
+      <Link 
+        href={getItemRoute(item)} 
+        key={`${item.id_api}-${item.tipo}`}
+        className="cursor-pointer"
+      >
+        <div className="border rounded-lg overflow-hidden flex flex-col hover:border-primary transition-colors h-full">
+          {/* Imagen */}
+          <div className="relative h-40 w-full">
+            {item.imagen ? (
+              <Image
+                src={item.imagen}
+                alt={item.titulo}
+                fill
+                className="object-cover"
+                loading="lazy" // Lazy loading para mejora de rendimiento
+              />
+            ) : (
+              <div className="bg-muted h-full w-full flex items-center justify-center">
+                {getTypeIcon(item.tipo || "")}
+              </div>
+            )}
+            
+            {/* Badges en la imagen */}
+            <div className="absolute top-2 left-2">
+              <Badge className="flex items-center gap-1">
+                {getTypeIcon(item.tipo || "")}
+                {getTypeName(item.tipo || "")}
+              </Badge>
+            </div>
+            
+            <div className="absolute top-2 right-2">
+              {item.estado && (
+                <Badge 
+                  variant="outline" 
+                  className={`flex items-center gap-1 bg-background/80 backdrop-blur-sm ${getStatusColor(item.estado)}`}
+                >
+                  {getStatusIcon(item.estado)}
+                </Badge>
+              )}
+            </div>
+          </div>
+          
+          {/* Información */}
+          <div className="p-4 flex-1 flex flex-col">
+            <h3 className="font-medium line-clamp-2 mb-1">{item.titulo}</h3>
+            {item.autor && (
+              <div className="text-sm text-muted-foreground line-clamp-1">
+                {item.autor}
+              </div>
+            )}
+            
+            {/* Géneros */}
+            {item.genero && item.genero.length > 0 && (
+              <div className="mt-2 flex flex-wrap gap-1">
+                {item.genero.slice(0, 2).map((genre, idx) => (
+                  <Badge key={idx} variant="secondary" className="text-xs">
+                    {genre}
+                  </Badge>
+                ))}
+                {item.genero.length > 2 && (
+                  <Badge variant="secondary" className="text-xs">
+                    +{item.genero.length - 2}
+                  </Badge>
+                )}
+              </div>
+            )}
+            
+            {/* Estado */}
+            {item.estado && (
+              <div className={`mt-auto pt-4 text-sm ${getStatusColor(item.estado)}`}>
+                {getStatusName(item.estado)}
+              </div>
+            )}
+          </div>
+        </div>
+      </Link>
+    );
+  }, [getTypeIcon, getTypeName, getStatusIcon, getStatusColor, getStatusName, getItemRoute]);
+  
+  // Renderizar la lista de elementos (ahora mucho más eficiente)
+  const renderCollection = useMemo(() => {
     if (loading) {
       return (
         <div className="py-12 text-center">
@@ -315,7 +314,7 @@ export function ProfileCollection({ userId }: ProfileCollectionProps) {
         <div className="py-12 text-center">
           <AlertCircle className="h-12 w-12 text-destructive mx-auto mb-4" />
           <p className="text-destructive mb-4">{error}</p>
-          <Button onClick={reloadCollection} className="cursor-pointer">
+          <Button onClick={loadCollection} className="cursor-pointer">
             <RefreshCw className="h-4 w-4 mr-2" />
             Intentar de nuevo
           </Button>
@@ -350,102 +349,12 @@ export function ProfileCollection({ userId }: ProfileCollectionProps) {
     
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-        {filteredCollection.map((item) => (
-          <Link 
-            href={getItemRoute(item)} 
-            key={`${item.id_api}-${item.tipo}`}
-            className="cursor-pointer"
-          >
-            <div className="border rounded-lg overflow-hidden flex flex-col hover:border-primary transition-colors h-full">
-              {/* Imagen */}
-              <div className="relative h-40 w-full">
-                {item.imagen ? (
-                  <Image
-                    src={item.imagen}
-                    alt={item.titulo}
-                    fill
-                    className="object-cover"
-                  />
-                ) : (
-                  <div className="bg-muted h-full w-full flex items-center justify-center">
-                    {getTypeIcon(item.tipo || "")}
-                  </div>
-                )}
-                
-                {/* Badges en la imagen */}
-                <div className="absolute top-2 left-2">
-                  <Badge className="flex items-center gap-1">
-                    {getTypeIcon(item.tipo || "")}
-                    {getTypeName(item.tipo || "")}
-                  </Badge>
-                </div>
-                
-                <div className="absolute top-2 right-2">
-                  {item.estado && (
-                    <Badge 
-                      variant="outline" 
-                      className={`flex items-center gap-1 bg-background/80 backdrop-blur-sm ${getStatusColor(item.estado)}`}
-                    >
-                      {getStatusIcon(item.estado)}
-                    </Badge>
-                  )}
-                </div>
-                
-                {/* Valoración */}
-                {item.valoracion && (
-                  <div className="absolute bottom-2 right-2">
-                    <Badge className="bg-yellow-500">
-                      {item.valoracion}/10
-                    </Badge>
-                  </div>
-                )}
-              </div>
-              
-              {/* Información */}
-              <div className="p-4 flex-1 flex flex-col">
-                <h3 className="font-medium line-clamp-2 mb-1">{item.titulo}</h3>
-                <div className="text-sm text-muted-foreground">
-                  {item.autor && <div className="line-clamp-1">{item.autor}</div>}
-                  
-                  {item.fechaLanzamiento && (
-                    <div className="flex items-center mt-1">
-                      <Calendar className="h-3 w-3 mr-1" />
-                      {/* Extraer solo el año */}
-                      {item.fechaLanzamiento.match(/(\d{4})/)?.[1] || item.fechaLanzamiento}
-                    </div>
-                  )}
-                </div>
-                
-                {/* Géneros */}
-                {item.genero && item.genero.length > 0 && (
-                  <div className="mt-2 flex flex-wrap gap-1">
-                    {item.genero.slice(0, 2).map((genre, idx) => (
-                      <Badge key={idx} variant="secondary" className="text-xs">
-                        {genre}
-                      </Badge>
-                    ))}
-                    {item.genero.length > 2 && (
-                      <Badge variant="secondary" className="text-xs">
-                        +{item.genero.length - 2}
-                      </Badge>
-                    )}
-                  </div>
-                )}
-                
-                {/* Estado */}
-                {item.estado && (
-                  <div className={`mt-auto pt-4 text-sm ${getStatusColor(item.estado)}`}>
-                    {getStatusName(item.estado)}
-                  </div>
-                )}
-              </div>
-            </div>
-          </Link>
-        ))}
+        {filteredCollection.map(item => renderItem(item))}
       </div>
     );
-  };
+  }, [loading, error, collection.length, filteredCollection, loadCollection, clearFilters, renderItem]);
   
+  // Renderizar la interfaz completa
   return (
     <div className="space-y-6">
       {/* Estadísticas */}
@@ -527,27 +436,6 @@ export function ProfileCollection({ userId }: ProfileCollectionProps) {
                 <div className="w-4 h-4 mr-2">{sortBy === "title_desc" && "✓"}</div>
                 Título (Z-A)
               </DropdownMenuItem>
-              <DropdownMenuItem
-                className="cursor-pointer"
-                onClick={() => setSortBy("date_desc")}
-              >
-                <div className="w-4 h-4 mr-2">{sortBy === "date_desc" && "✓"}</div>
-                Más recientes
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                className="cursor-pointer"
-                onClick={() => setSortBy("date_asc")}
-              >
-                <div className="w-4 h-4 mr-2">{sortBy === "date_asc" && "✓"}</div>
-                Más antiguos
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                className="cursor-pointer"
-                onClick={() => setSortBy("rating_desc")}
-              >
-                <div className="w-4 h-4 mr-2">{sortBy === "rating_desc" && "✓"}</div>
-                Valoración
-              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
           
@@ -599,21 +487,20 @@ export function ProfileCollection({ userId }: ProfileCollectionProps) {
           </TabsTrigger>
         </TabsList>
         
-        {/* Contenido */}
         <TabsContent value="todo" className="mt-6">
-          {renderCollection()}
+          {renderCollection}
         </TabsContent>
         <TabsContent value="C" className="mt-6">
-          {renderCollection()}
+          {renderCollection}
         </TabsContent>
         <TabsContent value="E" className="mt-6">
-          {renderCollection()}
+          {renderCollection}
         </TabsContent>
         <TabsContent value="P" className="mt-6">
-          {renderCollection()}
+          {renderCollection}
         </TabsContent>
         <TabsContent value="A" className="mt-6">
-          {renderCollection()}
+          {renderCollection}
         </TabsContent>
       </Tabs>
     </div>

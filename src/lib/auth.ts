@@ -2,53 +2,55 @@ import api from "@/lib/axios";
 import { LoginResponse, RegisterResponse, UserData } from "./types";
 
 export const authService = {
-
   async login(email: string, password: string): Promise<LoginResponse> {
     try {
       const response = await api.post<LoginResponse>("/auth/login", {
         email,
-        password
+        password,
       });
-      
 
       if (response.data.token) {
         localStorage.setItem("token", response.data.token);
         localStorage.setItem("id_usuario", String(response.data.id));
-        
+
         const userData: UserData = {
-          nombre: response.data.name || email.split('@')[0], 
+          nombre: response.data.name || email.split("@")[0],
           email: email,
-          avatar: localStorage.getItem("user_avatar") || "avatar1"
+          avatar: localStorage.getItem("user_avatar") || "avatar1",
         };
-        
+
         localStorage.setItem("userData", JSON.stringify(userData));
-        
-        window.dispatchEvent(new Event('userDataUpdated'));
-        window.dispatchEvent(new Event('storage'));
+
+        window.dispatchEvent(new Event("userDataUpdated"));
+        window.dispatchEvent(new Event("storage"));
       }
-      
+
       return response.data;
     } catch (error) {
       console.error("Error en inicio de sesión:", error);
       throw error;
     }
   },
-  
-  async register(name: string, email: string, password: string): Promise<RegisterResponse> {
+
+  async register(
+    name: string,
+    email: string,
+    password: string
+  ): Promise<RegisterResponse> {
     try {
       const response = await api.post<RegisterResponse>("/auth/register", {
         name,
         email,
-        password
+        password,
       });
-      
+
       return response.data;
     } catch (error) {
       console.error("Error en registro:", error);
       throw error;
     }
   },
-  
+
   setUserAvatar(avatar: string): void {
     localStorage.setItem("user_avatar", avatar);
 
@@ -58,8 +60,8 @@ export const authService = {
       localStorage.setItem("userData", JSON.stringify(currentUserData));
     }
 
-    window.dispatchEvent(new Event('userDataUpdated'));
-    window.dispatchEvent(new Event('storage'));
+    window.dispatchEvent(new Event("userDataUpdated"));
+    window.dispatchEvent(new Event("storage"));
   },
 
   logout(): void {
@@ -69,21 +71,21 @@ export const authService = {
     localStorage.removeItem("currentContent");
     localStorage.removeItem("watchlist");
     localStorage.removeItem("trendingContent");
-  
+
     console.log("Sesión cerrada correctamente");
-    
-    window.dispatchEvent(new Event('userDataUpdated'));
-    window.dispatchEvent(new Event('storage'));
+
+    window.dispatchEvent(new Event("userDataUpdated"));
+    window.dispatchEvent(new Event("storage"));
   },
-  
+
   isAuthenticated(): boolean {
     return !!localStorage.getItem("token");
   },
-  
+
   getToken(): string | null {
     return localStorage.getItem("token");
   },
-  
+
   getUserData(): UserData | null {
     const userData = localStorage.getItem("userData");
     if (userData) {
@@ -99,7 +101,12 @@ export const authService = {
       }
     }
     return null;
-  }
+  },
+
+  getUserId(): number {
+    const id_usuario = Number(localStorage.getItem("id_usuario"));
+    return id_usuario;
+  },
 };
 
 export default authService;

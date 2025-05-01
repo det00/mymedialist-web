@@ -1,11 +1,11 @@
 // src/lib/collection.ts
 import api from "@/lib/axios";
 import { authService } from "@/lib/auth";
-import { ContenidoColeccion } from "@/lib/types";
+import { CardBasic } from "@/lib/types";
 
-interface ResponseAdd{
-  id: number,
-  message: string
+interface ResponseAdd {
+  id: number;
+  message: string;
 }
 
 export const collectionService = {
@@ -15,12 +15,11 @@ export const collectionService = {
     estado: string
   ): Promise<ResponseAdd> {
     console.log(id_api, tipo, estado);
-    
+
     try {
       const token = authService.getToken();
       if (!token) {
         throw new Error("No hay token de autenticación");
-        
       }
       const res = await api.post(
         "/user-items",
@@ -34,8 +33,8 @@ export const collectionService = {
             Authorization: `Bearer ${token}`,
           },
         }
-      );      
-      return res.data
+      );
+      return res.data;
     } catch (error) {
       console.error("Error al añadir a la colección:", error);
       throw error;
@@ -43,7 +42,6 @@ export const collectionService = {
   },
 
   async updateItem(id: number, estado: string): Promise<void> {
-    
     try {
       const token = authService.getToken();
       if (!token) {
@@ -90,7 +88,7 @@ export const collectionService = {
     }
   },
 
-  async getItemById(id: string): Promise<ContenidoColeccion | null> {
+  /*   async getItemById(id: string): Promise<ContenidoColeccion | null> {
     try {
       const collection = await this.getAllContent();
       return collection.find((item) => item.id === id) || null;
@@ -98,9 +96,9 @@ export const collectionService = {
       console.error("Error al buscar elemento por ID:", error);
       return null;
     }
-  },
+  }, */
 
-  async getAllContent(): Promise<ContenidoColeccion[]> {
+  async getAllContent(): Promise<CardBasic[]> {
     const token = authService.getToken();
     if (!token) {
       return [];
@@ -110,7 +108,7 @@ export const collectionService = {
       return [];
     }
 
-    const response = await api.get<Contenido[]>(
+    const response = await api.get<CardBasic[]>(
       `/user-items/coleccion/${userId}`,
       {
         headers: {
@@ -190,9 +188,27 @@ export const collectionService = {
       };
     }
   },
+
+  async getTendencias(): Promise<CardBasic[]> {
+    try {
+      const token = authService.getToken();
+      if (!token) {
+        throw new Error("No hay token de autenticación");
+      }
+      const response = await api.get<CardBasic[]>("/home/trending", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      return response.data;
+    } catch (error) {
+      console.error("Error al obtener tendencias:", error);
+      return [];
+    }
+  },
 };
 
-function sortCollection(
+/* function sortCollection(
   collection: ContenidoColeccion[],
   sortBy: string
 ): ContenidoColeccion[] {
@@ -220,6 +236,6 @@ function sortCollection(
     default:
       return collection;
   }
-}
+} */
 
 export default collectionService;

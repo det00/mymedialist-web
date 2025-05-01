@@ -1,22 +1,67 @@
 // src/lib/types.ts
 export interface CardBuscar {
-  autor: string,
-  descripcion: string,
-  fechaLanzamiento: string,
-  genero: string[],
-  id_api: string,
-  imagen: string,
+  autor: string;
+  descripcion: string;
+  fechaLanzamiento: string;
+  genero: string[];
+  id_api: string;
+  imagen: string;
   item?: {
-    id: number,
-    estado: string
-  },
-  numAmigos: number,
-  paginas?: number,
-  tipo: string,
-  titulo: string,
-  plataformas?: string[]
+    id: number;
+    estado: string;
+  };
+  numAmigos: number;
+  paginas?: number;
+  tipo: string;
+  titulo: string;
+  plataformas?: string[];
 }
 
+export interface Usuario {
+  id: number;
+  nombre: string;
+  username: string;
+  avatar: string;
+}
+
+export interface Seguidor {
+  id: number;
+  nombre: string;
+  username: string;
+  avatar: string;
+  ultimaActividad: {
+    tipo: string;
+    titulo: string;
+    fecha: string;
+    estado: string;
+  };
+  contenidosTotales: number;
+  contenidosCompartidos: number;
+}
+
+export interface Perfil {
+  id: string;
+  nombre: string;
+  username: string;
+  fechaRegistro: string;
+  bio: string;
+  totalContenidos: number;
+  totalSeguidores: string;
+  totalSeguidos: string;
+  avatar: string;
+  esMiPerfil: boolean;
+  siguiendo: boolean;
+  estadisticas: {
+    completados: number;
+    enProgreso: number;
+    pendiente: number;
+    abandonado: number;
+    peliculas: number;
+    series: number;
+    libros: number;
+    juegos: number;
+  };
+}
 
 
 
