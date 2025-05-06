@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useMemo, useCallback, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { 
@@ -28,7 +28,8 @@ import {
   Ban,
   CircleSlash,
   AlertCircle,
-  RefreshCw
+  RefreshCw,
+  ListFilter
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -38,8 +39,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { collectionService } from "@/lib/collection";
-import { CardBasic } from "@/lib/types";
+import { CardBasic, SortOption } from "@/lib/types";
+import { useCollection } from "@/hooks/useCollection";
 
 // Mapeo de tipos de iconos (calculados una sola vez)
 const typeIcons = {
@@ -100,87 +101,24 @@ interface ProfileCollectionProps {
 }
 
 export function ProfileCollection({ userId }: ProfileCollectionProps) {
-  const [activeStatus, setActiveStatus] = useState<string>("todo");
-  const [activeType, setActiveType] = useState<string>("todo");
-  const [searchQuery, setSearchQuery] = useState<string>("");
-  const [sortBy, setSortBy] = useState<string>("title_asc");
-  const [collection, setCollection] = useState<CardBasic[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
-  const [stats, setStats] = useState({
-    total: 0,
-    byStatus: { C: 0, E: 0, P: 0, A: 0 },
-    byType: { P: 0, S: 0, L: 0, V: 0 }
+  // Usar el hook useCollection
+  const {
+    filteredCollection,
+    loading,
+    error,
+    filters,
+    sortOption,
+    stats,
+    loadCollection,
+    updateFilters,
+    updateSort,
+    clearFilters
+  } = useCollection({
+    userId: parseInt(userId)
   });
   
-  // Cargar colección inicial
-  const loadCollection = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    
-    try {
-      // Cargar la colección completa
-      const result = await collectionService.getAllContent();
-      setCollection(result);
-      
-      // Cargar estadísticas
-      const statsResult = await collectionService.getCollectionStats();
-      setStats(statsResult);
-    } catch (err) {
-      console.error("Error al cargar la colección:", err);
-      setError("No se pudo cargar tu colección. Inténtalo de nuevo más tarde.");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-  
-  useEffect(() => {
-    loadCollection();
-  }, [loadCollection, userId]);
-  
-  // Filtrado memoizado para mejor rendimiento
-  const filteredCollection = useMemo(() => {
-    let filtered = [...collection];
-    
-    // Filtrar por tipo
-    if (activeType !== "todo") {
-      filtered = filtered.filter(item => {
-        const itemTipo = item.tipo?.toUpperCase().charAt(0);
-        return itemTipo === activeType.toUpperCase().charAt(0);
-      });
-    }
-    
-    // Filtrar por estado
-    if (activeStatus !== "todo") {
-      filtered = filtered.filter(item => item.estado === activeStatus);
-    }
-    
-    // Filtrar por búsqueda
-    if (searchQuery) {
-      const lowercaseQuery = searchQuery.toLowerCase();
-      filtered = filtered.filter(item => 
-        item.titulo.toLowerCase().includes(lowercaseQuery) || 
-        (item.autor && item.autor.toLowerCase().includes(lowercaseQuery))
-      );
-    }
-    
-    // Ordenar según el criterio seleccionado
-    if (sortBy === "title_asc") {
-      filtered.sort((a, b) => a.titulo.localeCompare(b.titulo));
-    } else if (sortBy === "title_desc") {
-      filtered.sort((a, b) => b.titulo.localeCompare(a.titulo));
-    }
-    
-    return filtered;
-  }, [collection, activeType, activeStatus, searchQuery, sortBy]);
-  
-  // Función para limpiar todos los filtros
-  const clearFilters = useCallback(() => {
-    setActiveType("todo");
-    setActiveStatus("todo");
-    setSearchQuery("");
-    setSortBy("title_asc");
-  }, []);
+  // Estados locales solo para búsqueda local
+  const [searchQuery, setSearchQuery] = useState<string>("");
   
   // Obtener icono para tipo de contenido
   const getTypeIcon = useCallback((type: string) => {
@@ -216,6 +154,22 @@ export function ProfileCollection({ userId }: ProfileCollectionProps) {
     return `/${route}/${item.id_api}`;
   }, []);
   
+  // Filtrar por búsqueda local después de los filtros del hook
+  const localFilteredCollection = useMemo(() => {
+    let filtered = [...filteredCollection];
+    
+    // Filtrar por búsqueda
+    if (searchQuery) {
+      const lowercaseQuery = searchQuery.toLowerCase();
+      filtered = filtered.filter(item => 
+        item.titulo.toLowerCase().includes(lowercaseQuery) || 
+        (item.autor && item.autor.toLowerCase().includes(lowercaseQuery))
+      );
+    }
+    
+    return filtered;
+  }, [filteredCollection, searchQuery]);
+  
   // Renderizar un elemento individual (memoizado para evitar rerenderizados)
   const renderItem = useCallback((item: CardBasic) => {
     return (
@@ -232,6 +186,7 @@ export function ProfileCollection({ userId }: ProfileCollectionProps) {
                 src={item.imagen}
                 alt={item.titulo}
                 fill
+                sizes={item.imagen}
                 className="object-cover"
                 loading="lazy" // Lazy loading para mejora de rendimiento
               />
@@ -314,24 +269,10 @@ export function ProfileCollection({ userId }: ProfileCollectionProps) {
         <div className="py-12 text-center">
           <AlertCircle className="h-12 w-12 text-destructive mx-auto mb-4" />
           <p className="text-destructive mb-4">{error}</p>
-          <Button onClick={loadCollection} className="cursor-pointer">
+          <Button onClick={() => loadCollection(parseInt(userId))} className="cursor-pointer">
             <RefreshCw className="h-4 w-4 mr-2" />
             Intentar de nuevo
           </Button>
-        </div>
-      );
-    }
-    
-    if (collection.length === 0) {
-      return (
-        <div className="py-12 text-center">
-          <p className="text-muted-foreground mb-4">Aún no has añadido contenido a tu colección.</p>
-          <Link href="/busqueda?busqueda=&tipo=P">
-            <Button className="cursor-pointer">
-              <Plus className="h-4 w-4 mr-2" />
-              Añadir contenido
-            </Button>
-          </Link>
         </div>
       );
     }
@@ -349,11 +290,23 @@ export function ProfileCollection({ userId }: ProfileCollectionProps) {
     
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-        {filteredCollection.map(item => renderItem(item))}
+        {localFilteredCollection.map(item => renderItem(item))}
       </div>
     );
-  }, [loading, error, collection.length, filteredCollection, loadCollection, clearFilters, renderItem]);
+  }, [loading, error, localFilteredCollection, userId, clearFilters, renderItem]);
   
+  const handleStateFilterChange = (estado: string) => {
+    updateFilters({ 
+      estado: estado === "todo" ? undefined : estado,
+      tipo: filters.tipo
+    });
+  };
+  
+  const handleClearFilters = () => {
+    clearFilters();
+    setSearchQuery("");
+  };
+
   // Renderizar la interfaz completa
   return (
     <div className="space-y-6">
@@ -407,8 +360,82 @@ export function ProfileCollection({ userId }: ProfileCollectionProps) {
           />
         </div>
         
-        {/* Filtros y ordenación */}
+        {/* Filtros */}
         <div className="flex gap-2 w-full sm:w-auto">
+          {/* Filtro por tipo */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button 
+                variant="outline" 
+                className="flex-1 sm:flex-none cursor-pointer"
+              >
+                {filters.tipo === "pelicula" ? <Film className="h-4 w-4 mr-2" /> :
+                 filters.tipo === "serie" ? <Tv className="h-4 w-4 mr-2" /> :
+                 filters.tipo === "libro" ? <BookOpen className="h-4 w-4 mr-2" /> :
+                 filters.tipo === "videojuego" ? <Gamepad2 className="h-4 w-4 mr-2" /> :
+                 <ListFilter className="h-4 w-4 mr-2" />}
+                {filters.tipo 
+                  ? typeNames[filters.tipo.charAt(0).toUpperCase() as keyof typeof typeNames] 
+                  : "Tipo"}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-40">
+              <DropdownMenuLabel>Tipo de contenido</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                className="cursor-pointer"
+                onClick={() => updateFilters({ tipo: undefined, estado: filters.estado })}
+              >
+                <div className="flex items-center gap-2 w-full">
+                  <ListFilter className="h-4 w-4" />
+                  Todo
+                  {!filters.tipo && <span className="ml-auto">✓</span>}
+                </div>
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                className="cursor-pointer"
+                onClick={() => updateFilters({ tipo: "pelicula", estado: filters.estado })}
+              >
+                <div className="flex items-center gap-2 w-full">
+                  <Film className="h-4 w-4" />
+                  Películas
+                  {filters.tipo === "pelicula" && <span className="ml-auto">✓</span>}
+                </div>
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                className="cursor-pointer"
+                onClick={() => updateFilters({ tipo: "serie", estado: filters.estado })}
+              >
+                <div className="flex items-center gap-2 w-full">
+                  <Tv className="h-4 w-4" />
+                  Series
+                  {filters.tipo === "serie" && <span className="ml-auto">✓</span>}
+                </div>
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                className="cursor-pointer"
+                onClick={() => updateFilters({ tipo: "libro", estado: filters.estado })}
+              >
+                <div className="flex items-center gap-2 w-full">
+                  <BookOpen className="h-4 w-4" />
+                  Libros
+                  {filters.tipo === "libro" && <span className="ml-auto">✓</span>}
+                </div>
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                className="cursor-pointer"
+                onClick={() => updateFilters({ tipo: "videojuego", estado: filters.estado })}
+              >
+                <div className="flex items-center gap-2 w-full">
+                  <Gamepad2 className="h-4 w-4" />
+                  Videojuegos
+                  {filters.tipo === "videojuego" && <span className="ml-auto">✓</span>}
+                </div>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          
+          {/* Ordenación */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button 
@@ -416,28 +443,43 @@ export function ProfileCollection({ userId }: ProfileCollectionProps) {
                 className="flex-1 sm:flex-none cursor-pointer"
               >
                 <Filter className="h-4 w-4 mr-2" />
-                Filtrar
+                Ordenar
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
+            <DropdownMenuContent align="end" className="w-40">
               <DropdownMenuLabel>Ordenar por</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 className="cursor-pointer"
-                onClick={() => setSortBy("title_asc")}
+                onClick={() => updateSort("title_asc" as SortOption)}
               >
-                <div className="w-4 h-4 mr-2">{sortBy === "title_asc" && "✓"}</div>
-                Título (A-Z)
+                <div className="flex items-center justify-between w-full">
+                  Título (A-Z)
+                  {sortOption === "title_asc" && <span className="ml-auto">✓</span>}
+                </div>
               </DropdownMenuItem>
               <DropdownMenuItem
                 className="cursor-pointer"
-                onClick={() => setSortBy("title_desc")}
+                onClick={() => updateSort("title_desc" as SortOption)}
               >
-                <div className="w-4 h-4 mr-2">{sortBy === "title_desc" && "✓"}</div>
-                Título (Z-A)
+                <div className="flex items-center justify-between w-full">
+                  Título (Z-A)
+                  {sortOption === "title_desc" && <span className="ml-auto">✓</span>}
+                </div>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+          
+          {/* Botón Limpiar Filtros */}
+          {/* {(filters.tipo || filters.estado || searchQuery) && (
+            <Button 
+              variant="ghost" 
+              className="cursor-pointer"
+              onClick={handleClearFilters}
+            >
+              Limpiar
+            </Button>
+          )} */}
           
           <Link href="/busqueda?busqueda=&tipo=P">
             <Button className="cursor-pointer">
@@ -449,7 +491,7 @@ export function ProfileCollection({ userId }: ProfileCollectionProps) {
       </div>
       
       {/* Tabs de estado */}
-      <Tabs value={activeStatus} onValueChange={setActiveStatus}>
+      <Tabs value={filters.estado || "todo"} onValueChange={handleStateFilterChange}>
         <TabsList className="grid grid-cols-3 sm:grid-cols-5">
           <TabsTrigger value="todo" className="flex items-center gap-1 cursor-pointer">
             Todo

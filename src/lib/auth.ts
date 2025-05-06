@@ -13,10 +13,17 @@ export const authService = {
         localStorage.setItem("token", response.data.token);
         localStorage.setItem("id_usuario", String(response.data.id));
 
+        // Si el avatar viene en la respuesta del servidor, usarlo
+        const serverAvatar = response.data.avatar || response.data.avatar_id;
+        const avatarToUse = serverAvatar || localStorage.getItem("user_avatar") || "avatar1";
+        
+        // Guardar el avatar en localStorage
+        localStorage.setItem("user_avatar", avatarToUse);
+        
         const userData: UserData = {
           nombre: response.data.name || email.split("@")[0],
           email: email,
-          avatar: localStorage.getItem("user_avatar") || "avatar1",
+          avatar: avatarToUse,
         };
 
         localStorage.setItem("userData", JSON.stringify(userData));
@@ -33,15 +40,21 @@ export const authService = {
   },
 
   async register(
+    username: string,
     name: string,
     email: string,
-    password: string
+    password: string,
+    bio: string,
+    avatar: string
   ): Promise<RegisterResponse> {
     try {
       const response = await api.post<RegisterResponse>("/auth/register", {
+        username,
         name,
         email,
         password,
+        bio,
+        avatar_id: avatar
       });
 
       return response.data;
@@ -106,6 +119,43 @@ export const authService = {
   getUserId(): number {
     const id_usuario = Number(localStorage.getItem("id_usuario"));
     return id_usuario;
+  },
+
+  async deleteAccount(password: string): Promise<void> {
+    try {
+      const token = this.getToken();
+      if (!token) {
+        throw new Error("No hay token de autenticación");
+      }
+
+      // Realizar la solicitud DELETE al endpoint con la contraseña
+      const response = await api.delete("/auth/delete-account", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json"
+        },
+        data: { password } // Para peticiones DELETE, se usa 'data' en axios en lugar de 'body'
+      });
+      
+      console.log("Cuenta eliminada correctamente");
+      
+      // Limpiar todos los datos locales
+      localStorage.removeItem("token");
+      localStorage.removeItem("id_usuario");
+      localStorage.removeItem("userData");
+      localStorage.removeItem("currentContent");
+      localStorage.removeItem("watchlist");
+      localStorage.removeItem("trendingContent");
+      
+      // Disparar eventos para notificar los cambios
+      window.dispatchEvent(new Event("userDataUpdated"));
+      window.dispatchEvent(new Event("storage"));
+      
+      return Promise.resolve();
+    } catch (error) {
+      console.error("Error al eliminar la cuenta:", error);
+      throw error; // Propagar el error para que pueda ser manejado por el componente
+    }
   },
 };
 

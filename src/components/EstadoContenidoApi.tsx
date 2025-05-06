@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Tag } from "lucide-react";
 import { Button } from "./ui/button";
 import {
@@ -100,7 +100,6 @@ const EstadoContenidoApi: React.FC<EstadoContenidoApiProps> = ({
     setEstadoLocal(nuevoEstado);
 
     if (nuevoEstado === "") {
-      console.log("ITEMIDLOCAL", itemIdLocal);
       await collectionService.removeFromCollection(itemIdLocal);
       setItemIdLocal(-1);
     } else if (estadoLocal !== "" && itemIdLocal !== -1) {
@@ -115,6 +114,17 @@ const EstadoContenidoApi: React.FC<EstadoContenidoApiProps> = ({
     }
     setLoading(false);
     setSuccess(true);
+    
+    // Emitir evento de actualización de estado
+    const event = new CustomEvent('contentStateUpdated', {
+      detail: {
+        id_api: id_api,
+        tipo: tipo,
+        estado: nuevoEstado
+      }
+    });
+    window.dispatchEvent(event);
+    
     if (onUpdateSuccess) {
       onUpdateSuccess();
     }

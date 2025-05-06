@@ -1,9 +1,16 @@
 // src/hooks/useProfile.ts
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { profileService } from "@/lib/profile";
-import { authService } from "@/lib/auth";
-import { Perfil } from "@/lib/types";
+import {useEffect, useState} from "react";
+import {useRouter} from "next/navigation";
+import {profileService} from "@/lib/profile";
+import {authService} from "@/lib/auth";
+import {Perfil, Seguidor} from "@/lib/types";
+import amigosService from "@/lib/amigos";
+
+export interface PutPerfilRequest {
+  name: string;
+  bio: string;
+  avatar_id: string;
+}
 
 export function useProfile(idUsuario: number) {
   const [datosPerfil, setDatosPerfil] = useState<Perfil | null>(null);
@@ -11,11 +18,9 @@ export function useProfile(idUsuario: number) {
   const [error, setError] = useState<string | null>(null);
   const [isEditMode, setIsEditMode] = useState<boolean>(false);
   const [previewMode, setPreviewMode] = useState<boolean>(false);
+  const [seguidos, setSeguidos] = useState<Seguidor[]>([]);
+  const [seguidores, setSeguidores] = useState<Seguidor[]>([]);
   const router = useRouter();
-
-  useEffect(() => {
-    console.log("ID", idUsuario);
-  }, [idUsuario]);
 
   // Cargar datos del perfil
   const loadProfileData = async (idUsuario: number) => {
@@ -40,20 +45,58 @@ export function useProfile(idUsuario: number) {
     }
   };
 
+  const deleteAccount = async () => {
+    try {
+      setLoading(true);
+      await authService.deleteAccount();
+      router.push("/");
+    } catch (err) {
+      console.error("Error al eliminar la cuenta:", err);
+      setError("No se pudo eliminar la cuenta");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Cargar seguidores
+  const getSeguidores = async (idUsuario: number) => {
+    try {
+      setLoading(true);
+      const response = await amigosService.getSeguidores(idUsuario)
+      setSeguidores(response)
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+
+  }
+  //Cargar seguidos
+  const getSeguidos = async (idUsuario: number) => {
+    setLoading(true);
+    try {
+      const response = await amigosService.getSeguidos(idUsuario);
+      setSeguidos(response)
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  }
   // Guardar cambios del perfil
-  const saveProfile = async (updatedData: Partial<Perfil>) => {
+  const saveProfile = async (updatedData: Partial<PutPerfilRequest>) => {
     try {
       if (!datosPerfil) {
         throw new Error("No hay datos de perfil para actualizar");
       }
 
-      // Actualizar los datos locales
       setDatosPerfil({
         ...datosPerfil,
         ...updatedData,
       });
 
-      // Salir del modo edición
+      await profileService.updateProfile(updatedData);
+
       setIsEditMode(false);
 
       return true;
@@ -111,11 +154,17 @@ export function useProfile(idUsuario: number) {
 
   // Cargar datos al montar el componente
   useEffect(() => {
-    loadProfileData(idUsuario);
+    if (idUsuario !== -1) {
+      loadProfileData(idUsuario);
+      getSeguidos(idUsuario);
+      getSeguidores(idUsuario);
+    }
   }, [idUsuario]);
 
   return {
     datosPerfil,
+    seguidores,
+    seguidos,
     loading,
     error,
     isEditMode,

@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { X } from "lucide-react";
 import { AvatarSelector } from "@/components/AvatarSelector";
 import { authService } from "@/lib/auth";
@@ -15,14 +16,16 @@ interface RegisterFormProps {
 }
 
 export function RegisterForm({ showRegistro, showLogin }: RegisterFormProps) {
-  const [nombre, setNombre] = useState<string>("");
+  const [username, setUsername] = useState<string>("");
+  const [name, setName] = useState<string>("");
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [confirmPassword, setConfirmPassword] = useState<string>("");
+  const [bio, setBio] = useState<string>("");
   const [avatar, setAvatar] = useState<string>("avatar1");
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-  const [step, setStep] = useState<number>(1); // 1: datos básicos, 2: selección de avatar
+  const [step, setStep] = useState<number>(1); // 1: datos básicos, 2: datos personales, 3: avatar
 
   // Registrar usuario con el backend
   const registrarUsuario = async (): Promise<boolean> => {
@@ -31,7 +34,14 @@ export function RegisterForm({ showRegistro, showLogin }: RegisterFormProps) {
     
     try {
       // Registrar usuario con el servicio de autenticación
-      const response = await authService.register(nombre, email, password);
+      const response = await authService.register(
+        username,
+        name,
+        email,
+        password,
+        bio,
+        avatar
+      );
       
       // Verificar si hubo errores específicos
       if (response.message === "email") {
@@ -39,7 +49,7 @@ export function RegisterForm({ showRegistro, showLogin }: RegisterFormProps) {
         return false;
       }
       
-      if (response.message === "user") {
+      if (response.message === "username") {
         setError("El nombre de usuario ya está en uso");
         return false;
       }
@@ -87,36 +97,44 @@ export function RegisterForm({ showRegistro, showLogin }: RegisterFormProps) {
   };
 
   const handleNextStep = () => {
-    // Validaciones del paso 1
-    if (!nombre || !email || !password || !confirmPassword) {
-      setError("Por favor, completa todos los campos");
-      return;
+    if (step === 1) {
+      // Validaciones del paso 1
+      if (!username || !email || !password || !confirmPassword) {
+        setError("Por favor, completa todos los campos obligatorios");
+        return;
+      }
+      
+      if (password !== confirmPassword) {
+        setError("Las contraseñas no coinciden");
+        return;
+      }
+      
+      if (password.length < 6) {
+        setError("La contraseña debe tener al menos 6 caracteres");
+        return;
+      }
+      
+      // Validación simple de email
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        setError("Por favor, introduce un email válido");
+        return;
+      }
+      
+      // Validación de username
+      if (username.length < 3) {
+        setError("El nombre de usuario debe tener al menos 3 caracteres");
+        return;
+      }
     }
     
-    if (password !== confirmPassword) {
-      setError("Las contraseñas no coinciden");
-      return;
-    }
-    
-    if (password.length < 6) {
-      setError("La contraseña debe tener al menos 6 caracteres");
-      return;
-    }
-    
-    // Validación simple de email
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      setError("Por favor, introduce un email válido");
-      return;
-    }
-    
-    // Si todas las validaciones pasan, avanzar al paso 2
+    // Si todas las validaciones pasan, avanzar al siguiente paso
     setError(null);
-    setStep(2);
+    setStep(step + 1);
   };
 
   const handlePreviousStep = () => {
-    setStep(1);
+    setStep(step - 1);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -157,28 +175,30 @@ export function RegisterForm({ showRegistro, showLogin }: RegisterFormProps) {
         <CardTitle className="text-2xl text-center">Crear cuenta</CardTitle>
         <CardDescription className="text-center">
           {step === 1 
-            ? "Regístrate para comenzar a usar MyMediaList" 
-            : "Personaliza tu perfil"}
+            ? "Crea tu cuenta en MyMediaList" 
+            : step === 2
+            ? "Completa tu perfil"
+            : "Elige tu avatar"}
         </CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           {step === 1 ? (
-            // Paso 1: Información básica del usuario
+            // Paso 1: Información básica de cuenta
             <>
               <div className="space-y-2">
-                <Label htmlFor="nombre">Nombre</Label>
+                <Label htmlFor="username">Nombre de usuario *</Label>
                 <Input
-                  id="nombre"
-                  placeholder="Tu nombre"
-                  value={nombre}
-                  onChange={(e) => setNombre(e.target.value)}
+                  id="username"
+                  placeholder="ej: usuario123"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
                   disabled={loading}
                   required
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email">Email *</Label>
                 <Input
                   id="email"
                   type="email"
@@ -190,7 +210,7 @@ export function RegisterForm({ showRegistro, showLogin }: RegisterFormProps) {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="password">Contraseña</Label>
+                <Label htmlFor="password">Contraseña *</Label>
                 <Input
                   id="password"
                   type="password"
@@ -202,7 +222,7 @@ export function RegisterForm({ showRegistro, showLogin }: RegisterFormProps) {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="confirmPassword">Confirmar Contraseña</Label>
+                <Label htmlFor="confirmPassword">Confirmar Contraseña *</Label>
                 <Input
                   id="confirmPassword"
                   type="password"
@@ -229,8 +249,59 @@ export function RegisterForm({ showRegistro, showLogin }: RegisterFormProps) {
                 Continuar
               </Button>
             </>
+          ) : step === 2 ? (
+            // Paso 2: Información personal
+            <>
+              <div className="space-y-2">
+                <Label htmlFor="name">Nombre completo</Label>
+                <Input
+                  id="name"
+                  placeholder="Nombre Completo"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  disabled={loading}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="bio">Biografía</Label>
+                <Textarea
+                  id="bio"
+                  placeholder="Cuéntanos sobre ti... (ej: Me gusta el cine y los videojuegos)"
+                  value={bio}
+                  onChange={(e) => setBio(e.target.value)}
+                  disabled={loading}
+                  className="min-h-[80px]"
+                />
+              </div>
+              
+              {error && (
+                <div className="p-3 bg-destructive/10 text-destructive text-sm rounded-md">
+                  {error}
+                </div>
+              )}
+              
+              <div className="flex space-x-2 pt-2">
+                <Button 
+                  type="button" 
+                  variant="outline"
+                  className="w-1/2" 
+                  disabled={loading}
+                  onClick={handlePreviousStep}
+                >
+                  Atrás
+                </Button>
+                <Button 
+                  type="button" 
+                  className="w-1/2" 
+                  disabled={loading}
+                  onClick={handleNextStep}
+                >
+                  Continuar
+                </Button>
+              </div>
+            </>
           ) : (
-            // Paso 2: Selección de avatar
+            // Paso 3: Selección de avatar
             <>
               <AvatarSelector 
                 selectedAvatar={avatar} 

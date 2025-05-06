@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface AvatarSelectorProps {
-  selectedAvatar: string;
+  selectedAvatar?: string;
   onSelectAvatar: (avatar: string) => void;
 }
 
@@ -36,20 +36,23 @@ const avatarColors = [
   { id: "lightpink", value: "#FD79A8", name: "Rosa claro" },
 ];
 
-export function AvatarSelector({ selectedAvatar, onSelectAvatar }: AvatarSelectorProps) {
+export function AvatarSelector({ selectedAvatar = "avatar1", onSelectAvatar }: AvatarSelectorProps) {
+  // Asegurarnos de que selectedAvatar tiene un valor
+  const safeAvatar = selectedAvatar || "avatar1";
+  
   // Determinar el tipo de avatar inicialmente seleccionado
-  const initialTab = selectedAvatar.startsWith("initial_") ? "initials" : "predefined";
+  const initialTab = safeAvatar.startsWith("initial_") ? "initials" : "predefined";
   
   // Estado para controlar qué tipo de avatar está seleccionado actualmente
   const [activeTab, setActiveTab] = useState<string>(initialTab);
   
   // Extraer información del avatar de iniciales si está seleccionado
-  const initials = selectedAvatar.startsWith("initial_") 
-    ? selectedAvatar.split("_")[2] || "US" 
+  const initials = safeAvatar.startsWith("initial_") 
+    ? safeAvatar.split("_")[2] || "US" 
     : "US";
   
-  const initialColor = selectedAvatar.startsWith("initial_") 
-    ? selectedAvatar.split("_")[1] || avatarColors[0].value 
+  const initialColor = safeAvatar.startsWith("initial_") 
+    ? safeAvatar.split("_")[1] || avatarColors[0].value 
     : avatarColors[0].value;
 
   // Estados para manejar las iniciales y el color seleccionado
@@ -80,7 +83,7 @@ export function AvatarSelector({ selectedAvatar, onSelectAvatar }: AvatarSelecto
     setActiveTab(value);
     if (value === "predefined") {
       // Si cambia a avatares predefinidos y no hay uno seleccionado, seleccionar el primero
-      if (!predefinedAvatars.some(avatar => avatar.id === selectedAvatar)) {
+      if (!predefinedAvatars.some(avatar => avatar.id === safeAvatar)) {
         handleSelectPredefined(predefinedAvatars[0].id);
       }
     } else {
@@ -104,7 +107,7 @@ export function AvatarSelector({ selectedAvatar, onSelectAvatar }: AvatarSelecto
               <div
                 key={avatar.id}
                 className={`cursor-pointer p-2 rounded-md transition-all flex flex-col items-center ${
-                  selectedAvatar === avatar.id
+                  safeAvatar === avatar.id
                     ? "bg-primary/20 scale-105"
                     : "hover:bg-muted"
                 }`}

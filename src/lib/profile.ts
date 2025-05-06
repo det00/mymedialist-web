@@ -2,6 +2,7 @@
 import api from "@/lib/axios";
 import { authService } from "@/lib/auth";
 import { Perfil } from "./types";
+import { PutPerfilRequest } from "@/hooks/useProfile";
 
 
 export const profileService = {
@@ -66,5 +67,28 @@ export const profileService = {
     }
   },
   
+  async updateProfile(updatedData: Partial<PutPerfilRequest>): Promise<Perfil> {
+    try {
+      const token = authService.getToken();
+      if (!token) {
+        throw new Error("No hay token de autenticación");
+      }
+
+      const response = await api.put<Perfil>(
+        `/perfil`,
+        updatedData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      );
+      
+      return response.data;
+    } catch (error) {
+      console.error(`Error al actualizar el perfil del usuario ${updatedData.id}:`, error);
+      throw error;
+    }
+  },
 
 }

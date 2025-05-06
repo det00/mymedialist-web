@@ -25,15 +25,45 @@ import {
   ACTION_TYPE_FILTERS, 
   TIME_FILTERS 
 } from "@/lib/constants";
+import {JSX} from "react";
 
 // Configurar locale español para fechas
 moment.locale("es");
 
-interface ProfileActivityProps {
-  userId: string;
-}
+// Mapear estado a tipo de acción para los iconos
+const getActionTypeFromStatus = (status: string) => {
+  const actionTypeMap: Record<string, string> = {
+    "E": "started",
+    "C": "finished", 
+    "P": "added",
+    "A": "dropped"
+  };
+  return actionTypeMap[status] || "added";
+};
 
-export function ProfileActivity({ userId }: ProfileActivityProps) {
+// Obtener descripción de la acción basada en el estado
+const getActionDescription = (status: string) => {
+  const actionDescriptions: Record<string, string> = {
+    "E": "En progreso",
+    "C": "Completado", 
+    "P": "Pendiente",
+    "A": "Abandonado"
+  };
+  return actionDescriptions[status] || "";
+};
+
+// Obtener descripción de la acción para oraciones
+const getActionDescriptionForSentence = (status: string) => {
+  const actionDescriptions: Record<string, string> = {
+    "E": "ha empezado",
+    "C": "ha completado", 
+    "P": "ha añadido",
+    "A": "ha abandonado"
+  };
+  return actionDescriptions[status] || "ha actualizado";
+};
+
+export function ProfileActivity({ userId }: {userId: string | number}): JSX.Element {
   const { 
     activities, 
     loading, 
@@ -128,16 +158,17 @@ export function ProfileActivity({ userId }: ProfileActivityProps) {
             <div className="flex p-4">
               {/* Imagen */}
               <div className="relative h-24 w-16 flex-shrink-0 mr-4">
-                {item.contentImage ? (
+                {item.imagen ? (
                   <Image
-                    src={item.contentImage}
-                    alt={item.contentTitle}
+                    src={item.imagen}
+                    alt={item.titulo}
                     fill
+                    sizes={item.imagen}
                     className="object-cover rounded-md"
                   />
                 ) : (
                   <div className="bg-muted h-full w-full rounded-md flex items-center justify-center">
-                    {getContentIcon(item.contentType)}
+                    {getContentIcon(item.tipo)}
                   </div>
                 )}
               </div>
@@ -148,30 +179,30 @@ export function ProfileActivity({ userId }: ProfileActivityProps) {
                   <div>
                     <div className="flex items-center gap-1 mb-1">
                       <Badge variant="outline" className="flex items-center gap-1">
-                        {getContentIcon(item.contentType)}
-                        {activityService.getContentTypeName(item.contentType)}
+                        {getContentIcon(item.tipo)}
+                        {activityService.getContentTypeName(item.tipo)}
                       </Badge>
-                      <Badge className="ml-2 flex items-center gap-1">
-                        {getActivityIcon(item.actionType)}
-                        {item.actionType === "started" && item.status === "E" ? "En progreso" : ""}
+                      <Badge className="ml-2 flex items-center gap-1" variant="secondary">
+                        {getActivityIcon(getActionTypeFromStatus(item.estado))}
+                        {getActionDescription(item.estado)}
                       </Badge>
                     </div>
                     
                     <Link 
-                      href={`/${activityService.getContentTypeUrl(item.contentType)}/${item.contentApiId}`}
+                      href={`/${activityService.getContentTypeUrl(item.tipo)}/${item.id_api}`}
                       className="hover:underline"
                     >
-                      <h3 className="font-medium">{item.contentTitle}</h3>
+                      <h3 className="font-medium">{item.titulo}</h3>
                     </Link>
                     
                     <p className="text-sm mt-1">
-                      {activityService.getActionDescription(item.actionType)} {activityService.getContentTypeName(item.contentType).toLowerCase()}
+                      {getActionDescriptionForSentence(item.estado)} {activityService.getContentTypeName(item.tipo).toLowerCase()}
                     </p>
                   </div>
                   
                   <div className="text-xs text-muted-foreground flex items-center whitespace-nowrap">
                     <CalendarDays className="h-3 w-3 mr-1" />
-                    {formatRelativeTime(item.timestamp)}
+                    {formatRelativeTime(item.created_at)}
                   </div>
                 </div>
               </div>

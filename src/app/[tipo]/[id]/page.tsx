@@ -52,6 +52,7 @@ const ContenidoPage = () => {
     if (data) {
       setContenido(data);
       setEstado(data.item?.estado || "");
+      console.log("Contenido cargado:", data); // Debug log
     }
     
     setLoading(false);
@@ -93,11 +94,11 @@ const ContenidoPage = () => {
     };
   }, [id, tipo]);
 
-  // Función para refrescar datos después de actualizar el estado
-  const handleUpdateSuccess = () => {
-    // No es necesario refrescar los datos completos con el enfoque optimista
-    // fetchContenido();
-  };
+  // Función para manejar la actualización exitosa del estado
+  const handleUpdateSuccess = useCallback(() => {
+    // Si los datos necesitan refrescarse, descomentar la siguiente línea
+    fetchContenido();
+  }, [fetchContenido]);
 
   // Si está cargando, mostrar indicador
   if (loading) {
@@ -202,7 +203,8 @@ const ContenidoPage = () => {
                 <EstadoContenidoApi
                   id_api={id}
                   tipo={tipoMayuscula}
-                  estadoInicial={estado}
+                  estado={estado}
+                  itemId={contenido.item?.id ? parseInt(contenido.item.id) : -1}
                   onUpdateSuccess={handleUpdateSuccess}
                 />
               </div>

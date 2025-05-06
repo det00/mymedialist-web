@@ -1,5 +1,11 @@
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,14 +32,16 @@ import {
 } from "@/components/ui/alert-dialog";
 import api from "@/lib/axios";
 import { authService } from "@/lib/auth";
-import { UserData } from "@/lib/types";
+import { ProfileData } from "@/lib/types";
 
-interface ProfileSettingsProps {
-  userId: string;
+interface EditProfileDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  profileData: ProfileData;
+  onUpdateSuccess: () => void;
 }
 
-export function ProfileSettings({ userId }: ProfileSettingsProps) {
-  const [activeTab, setActiveTab] = useState<string>("profile");
+export function EditProfileDialog({ open, onOpenChange, profileData, onUpdateSuccess }: EditProfileDialogProps) {
   const [currentPassword, setCurrentPassword] = useState<string>("");
   const [newPassword, setNewPassword] = useState<string>("");
   const [confirmPassword, setConfirmPassword] = useState<string>("");
@@ -48,47 +56,30 @@ export function ProfileSettings({ userId }: ProfileSettingsProps) {
   const [profileBio, setProfileBio] = useState<string>("");
   const [avatarId, setAvatarId] = useState<string>("avatar1");
   const [savingProfile, setSavingProfile] = useState<boolean>(false);
-  const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   
-  // Cargar datos del perfil al montar
+  // Cargar datos del perfil cuando cambie
   useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        const token = authService.getToken();
-        if (!token) {
-          setError("No hay token de autenticación");
-          setLoading(false);
-          return;
-        }
-
-        const response = await api.get(`/perfil/${userId}`, {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        });
-        
-        if (response.data) {
-          setProfileName(response.data.nombre);
-          setProfileBio(response.data.email); // Como bio no está en UserData, usamos email temporalmente
-        }
-      } catch (err) {
-        console.error("Error al obtener datos del usuario:", err);
-        setError("Error al cargar los datos del perfil");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchUserData();
-  }, []);
+    if (profileData) {
+      setProfileName(profileData.nombre);
+      setProfileBio(profileData.bio || "");
+      setAvatarId(profileData.avatar || "avatar1");
+    }
+  }, [profileData]);
+  
+  // Limpiar mensajes cuando se abre/cierra el diálogo
+  useEffect(() => {
+    if (!open) {
+      setError(null);
+      setSuccess(null);
+    }
+  }, [open]);
   
   // Manejar cambio de contraseña
   const handlePasswordChange = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validación básica
     if (!currentPassword) {
       setError("Por favor, introduce tu contraseña actual");
       return;
@@ -119,7 +110,6 @@ export function ProfileSettings({ userId }: ProfileSettingsProps) {
         }
       });
       
-      // Éxito - limpiar el formulario
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
@@ -137,6 +127,7 @@ export function ProfileSettings({ userId }: ProfileSettingsProps) {
     e.preventDefault();
     setSavingProfile(true);
     setError(null);
+    setSuccess(null);
     
     try {
       const token = authService.getToken();
@@ -151,18 +142,7 @@ export function ProfileSettings({ userId }: ProfileSettingsProps) {
       });
       
       setSuccess("Perfil actualizado correctamente");
-      
-      // Recargar los datos del perfil
-      const response = await api.get(`/perfil/${userId}`, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
-      
-      if (response.data) {
-        setProfileName(response.data.nombre);
-        setProfileBio(response.data.email);
-      }
+      onUpdateSuccess();
       
     } catch (err: any) {
       setError(err.response?.data?.message || "Error al actualizar el perfil");
@@ -192,7 +172,6 @@ export function ProfileSettings({ userId }: ProfileSettingsProps) {
         }
       });
       
-      // Cerrar sesión y redirigir
       authService.logout();
       window.location.href = "/";
       
@@ -202,54 +181,47 @@ export function ProfileSettings({ userId }: ProfileSettingsProps) {
     }
   };
   
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-primary"></div>
-      </div>
-    );
-  }
-  
   return (
-    <div className="space-y-6">
-      {error && (
-        <div className="bg-destructive/10 text-destructive p-3 rounded-md mb-4">
-          {error}
-        </div>
-      )}
-      
-      {success && (
-        <div className="bg-green-500/10 text-green-500 p-3 rounded-md mb-4">
-          {success}
-        </div>
-      )}
-      
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid grid-cols-3 w-full">
-          <TabsTrigger value="profile" className="flex items-center gap-2">
-            <User className="h-4 w-4" />
-            Perfil
-          </TabsTrigger>
-          <TabsTrigger value="appearance" className="flex items-center gap-2">
-            <Paintbrush className="h-4 w-4" />
-            Apariencia
-          </TabsTrigger>
-          <TabsTrigger value="account" className="flex items-center gap-2">
-            <KeyRound className="h-4 w-4" />
-            Cuenta
-          </TabsTrigger>
-        </TabsList>
-        
-        {/* Configuración de perfil */}
-        <TabsContent value="profile" className="mt-6 space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Información del perfil</CardTitle>
-              <CardDescription>
-                Actualiza tu información pública
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
+    <>
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Configuración del perfil</DialogTitle>
+            <DialogDescription>
+              Actualiza tus datos personales, cambia tu contraseña o elimina tu cuenta
+            </DialogDescription>
+          </DialogHeader>
+          
+          {error && (
+            <div className="bg-destructive/10 text-destructive p-3 rounded-md mb-4">
+              {error}
+            </div>
+          )}
+          
+          {success && (
+            <div className="bg-green-500/10 text-green-500 p-3 rounded-md mb-4">
+              {success}
+            </div>
+          )}
+          
+          <Tabs defaultValue="profile" className="w-full">
+            <TabsList className="grid grid-cols-3 w-full">
+              <TabsTrigger value="profile" className="flex items-center gap-2">
+                <User className="h-4 w-4" />
+                Perfil
+              </TabsTrigger>
+              <TabsTrigger value="appearance" className="flex items-center gap-2">
+                <Paintbrush className="h-4 w-4" />
+                Apariencia
+              </TabsTrigger>
+              <TabsTrigger value="account" className="flex items-center gap-2">
+                <KeyRound className="h-4 w-4" />
+                Cuenta
+              </TabsTrigger>
+            </TabsList>
+            
+            {/* Configuración de perfil */}
+            <TabsContent value="profile" className="space-y-4">
               <form onSubmit={handleProfileUpdate} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="name">Nombre</Label>
@@ -293,29 +265,14 @@ export function ProfileSettings({ userId }: ProfileSettingsProps) {
                   </Select>
                 </div>
                 
-                <Button 
-                  type="submit" 
-                  disabled={savingProfile}
-                  className="w-full sm:w-auto"
-                >
+                <Button type="submit" disabled={savingProfile} className="w-full">
                   {savingProfile ? "Guardando..." : "Guardar cambios"}
                 </Button>
               </form>
-            </CardContent>
-          </Card>
-        </TabsContent>
-        
-        {/* Configuración de apariencia */}
-        <TabsContent value="appearance" className="mt-6 space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Apariencia</CardTitle>
-              <CardDescription>
-                Personaliza cómo se ve la aplicación
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {/* Idioma */}
+            </TabsContent>
+            
+            {/* Configuración de apariencia */}
+            <TabsContent value="appearance" className="space-y-6">
               <div className="space-y-4">
                 <div className="flex items-center gap-2">
                   <Languages className="h-5 w-5" />
@@ -339,7 +296,6 @@ export function ProfileSettings({ userId }: ProfileSettingsProps) {
                 </div>
               </div>
               
-              {/* Tema */}
               <div className="space-y-4">
                 <div className="flex items-center gap-2">
                   <Paintbrush className="h-5 w-5" />
@@ -351,107 +307,87 @@ export function ProfileSettings({ userId }: ProfileSettingsProps) {
                   <ThemeSwitch />
                 </div>
               </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-        
-        {/* Configuración de cuenta */}
-        <TabsContent value="account" className="mt-6 space-y-6">
-          {/* Cambiar contraseña */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <KeyRound className="h-5 w-5" />
-                Cambiar contraseña
-              </CardTitle>
-              <CardDescription>
-                Actualiza tu contraseña para mantener tu cuenta segura
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handlePasswordChange} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="current-password">Contraseña actual</Label>
-                  <Input
-                    id="current-password"
-                    type="password"
-                    value={currentPassword}
-                    onChange={(e) => setCurrentPassword(e.target.value)}
-                    placeholder="••••••••"
-                  />
+            </TabsContent>
+            
+            {/* Configuración de cuenta */}
+            <TabsContent value="account" className="space-y-6">
+              {/* Cambiar contraseña */}
+              <div className="space-y-4">
+                <div className="flex items-center gap-2">
+                  <KeyRound className="h-5 w-5" />
+                  <h3 className="text-lg font-medium">Cambiar contraseña</h3>
                 </div>
                 
-                <div className="space-y-2">
-                  <Label htmlFor="new-password">Nueva contraseña</Label>
-                  <Input
-                    id="new-password"
-                    type="password"
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    placeholder="••••••••"
-                  />
+                <form onSubmit={handlePasswordChange} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="current-password">Contraseña actual</Label>
+                    <Input
+                      id="current-password"
+                      type="password"
+                      value={currentPassword}
+                      onChange={(e) => setCurrentPassword(e.target.value)}
+                      placeholder="••••••••"
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="new-password">Nueva contraseña</Label>
+                    <Input
+                      id="new-password"
+                      type="password"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      placeholder="••••••••"
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="confirm-password">Confirmar nueva contraseña</Label>
+                    <Input
+                      id="confirm-password"
+                      type="password"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      placeholder="••••••••"
+                    />
+                  </div>
+                  
+                  <Button type="submit" disabled={savingPassword} className="w-full">
+                    {savingPassword ? "Actualizando..." : "Actualizar contraseña"}
+                  </Button>
+                </form>
+              </div>
+              
+              {/* Eliminar cuenta */}
+              <div className="space-y-4 border-t pt-6">
+                <div className="flex items-center gap-2">
+                  <UserX className="h-5 w-5 text-destructive" />
+                  <h3 className="text-lg font-medium text-destructive">Eliminar cuenta</h3>
                 </div>
                 
-                <div className="space-y-2">
-                  <Label htmlFor="confirm-password">Confirmar nueva contraseña</Label>
-                  <Input
-                    id="confirm-password"
-                    type="password"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    placeholder="••••••••"
-                  />
+                <div className="text-sm space-y-2">
+                  <p>Esta acción eliminará permanentemente tu cuenta, incluyendo:</p>
+                  <ul className="list-disc pl-6 space-y-1">
+                    <li>Tu perfil y datos personales</li>
+                    <li>Tu colección completa</li>
+                    <li>Todas tus reseñas y valoraciones</li>
+                    <li>Tus conexiones de amistad</li>
+                  </ul>
+                  <p className="font-medium mt-4">Esta acción no se puede deshacer.</p>
                 </div>
                 
                 <Button 
-                  type="submit" 
-                  disabled={savingPassword}
-                  className="w-full sm:w-auto"
+                  variant="destructive" 
+                  onClick={() => setShowDeleteAccountDialog(true)}
+                  className="w-full"
                 >
-                  {savingPassword ? "Actualizando..." : "Actualizar contraseña"}
+                  Eliminar mi cuenta
                 </Button>
-              </form>
-            </CardContent>
-          </Card>
-          
-          {/* Eliminar cuenta */}
-          <Card className="border-destructive">
-            <CardHeader>
-              <CardTitle className="text-destructive flex items-center gap-2">
-                <UserX className="h-5 w-5" />
-                Eliminar cuenta
-              </CardTitle>
-              <CardDescription>
-                Eliminar permanentemente tu cuenta y todos tus datos
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                <p className="text-sm">
-                  Esta acción eliminará permanentemente tu cuenta, incluyendo:
-                </p>
-                <ul className="list-disc ml-6 text-sm space-y-1">
-                  <li>Tu perfil y datos personales</li>
-                  <li>Tu colección completa</li>
-                  <li>Todas tus reseñas y valoraciones</li>
-                  <li>Tus conexiones de amistad</li>
-                </ul>
-                <p className="text-sm font-medium mt-4">
-                  Esta acción no se puede deshacer.
-                </p>
               </div>
-            </CardContent>
-            <CardContent>
-              <Button 
-                variant="destructive" 
-                onClick={() => setShowDeleteAccountDialog(true)}
-              >
-                Eliminar mi cuenta
-              </Button>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+            </TabsContent>
+          </Tabs>
+        </DialogContent>
+      </Dialog>
       
       {/* Diálogo de confirmación para eliminar cuenta */}
       <AlertDialog open={showDeleteAccountDialog} onOpenChange={setShowDeleteAccountDialog}>
@@ -487,6 +423,6 @@ export function ProfileSettings({ userId }: ProfileSettingsProps) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
+    </>
   );
 }

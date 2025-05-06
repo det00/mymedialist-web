@@ -3,7 +3,7 @@
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
 interface UserAvatarProps {
-  avatarData: string;
+  avatarData?: string;
   size?: "sm" | "md" | "lg" | "xl";
   className?: string;
 }

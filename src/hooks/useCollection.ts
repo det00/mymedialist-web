@@ -1,36 +1,112 @@
-import { useState, useEffect } from 'react';
-import { CollectionFilter, Contenido, SortOption, UseCollectionOptions } from "@/lib/types";
-import { homeService } from "@/lib/home";
+import { useState, useEffect, useMemo, useCallback } from 'react';
+import { CardBasic, CollectionFilter, SortOption, UseCollectionOptions } from "@/lib/types";
 import { authService } from "@/lib/auth";
+import collectionService from "@/lib/collection";
 
-export function useCollection(options: UseCollectionOptions = {}) {
+export function useCollection(options: UseCollectionOptions) {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
-  const [collection, setCollection] = useState<Contenido[]>([]);
-  const [filteredCollection, setFilteredCollection] = useState<Contenido[]>([]);
+  const [collection, setCollection] = useState<CardBasic[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [filters, setFilters] = useState<CollectionFilter>(options.initialFilters || {});
   const [sortOption, setSortOption] = useState<SortOption>(options.initialSort || "title_asc");
   const [stats, setStats] = useState({
     total: 0,
-    byStatus: { C: 0, E: 0, P: 0, A: 0 },
-    byType: { P: 0, S: 0, L: 0, V: 0 }
+    byStatus: {C: 0, E: 0, P: 0, A: 0},
+    byType: {P: 0, S: 0, L: 0, V: 0}
   });
+
+  // Función para ordenar la colección (definida antes de usarse)
+  const sortCollection = useCallback((data: CardBasic[], sort: SortOption): CardBasic[] => {
+    const sortedData = [...data];
+
+    switch (sort) {
+      case "title_asc":
+        return sortedData.sort((a, b) => a.titulo.localeCompare(b.titulo));
+      case "title_desc":
+        return sortedData.sort((a, b) => b.titulo.localeCompare(a.titulo));
+      default:
+        return sortedData;
+    }
+  }, []);
 
   // Verificar autenticación
   useEffect(() => {
     setIsAuthenticated(authService.isAuthenticated());
   }, []);
 
-  // Cargar colección cuando cambia el estado de autenticación o los filtros
+  // Cargar colección una sola vez al inicio
   useEffect(() => {
     if (options.autoLoad !== false && isAuthenticated) {
-      loadCollection();
+      loadCollection(options.userId);
     }
-  }, [isAuthenticated, filters.tipo, filters.estado]);
+  }, [isAuthenticated]); // Solo cuando cambia la autenticación
+
+  // Filtrado y ordenado en memoria
+  const filteredCollection = useMemo(() => {
+    let filtered = [...collection];
+
+    // Filtrar por tipo
+    if (filters.tipo && filters.tipo !== "todo") {
+      const tipoMayuscula = filters.tipo.charAt(0).toUpperCase();
+      filtered = filtered.filter(item =>
+        item.tipo && item.tipo.charAt(0).toUpperCase() === tipoMayuscula
+      );
+    }
+
+    // Filtrar por estado
+    if (filters.estado && filters.estado !== "todo") {
+      filtered = filtered.filter(item => item.estado === filters.estado);
+    }
+
+    // Ordenar
+    const sorted = sortCollection(filtered, sortOption);
+    return sorted;
+  }, [collection, filters.tipo, filters.estado, sortOption, sortCollection]);
+
+  // Estados derivados para compatibilidad
+  const enProgreso = useMemo(() => 
+    collection.filter(item => item.estado === "E"), 
+    [collection]
+  );
+  
+  const completado = useMemo(() => 
+    collection.filter(item => item.estado === "C"), 
+    [collection]
+  );
+  
+  const pendiente = useMemo(() => 
+    collection.filter(item => item.estado === "P"), 
+    [collection]
+  );
+  
+  const abandonado = useMemo(() => 
+    collection.filter(item => item.estado === "A"), 
+    [collection]
+  );
+  
+  const pelicula = useMemo(() => 
+    collection.filter(item => item.tipo === "P"), 
+    [collection]
+  );
+  
+  const serie = useMemo(() => 
+    collection.filter(item => item.tipo === "S"), 
+    [collection]
+  );
+  
+  const libro = useMemo(() => 
+    collection.filter(item => item.tipo === "L"), 
+    [collection]
+  );
+  
+  const juego = useMemo(() => 
+    collection.filter(item => item.tipo === "V"), 
+    [collection]
+  );
 
   // Función para cargar la colección
-  const loadCollection = async (forceRefresh: boolean = false) => {
+  const loadCollection = async (userID?: number) => {
     if (!isAuthenticated) {
       setError("No has iniciado sesión");
       return;
@@ -40,23 +116,7 @@ export function useCollection(options: UseCollectionOptions = {}) {
     setError(null);
 
     try {
-      // Usar homeService para obtener todo el contenido
-      const data = await homeService.getAllContent();
-      
-      // Aplicar filtros
-      let filteredData = [...data];
-      
-      if (filters.tipo && filters.tipo !== "todo") {
-        const tipoMayuscula = filters.tipo.charAt(0).toUpperCase();
-        filteredData = filteredData.filter(item => 
-          item.tipo && item.tipo.charAt(0).toUpperCase() === tipoMayuscula
-        );
-      }
-      
-      if (filters.estado && filters.estado !== "todo") {
-        filteredData = filteredData.filter(item => item.estado === filters.estado);
-      }
-
+      const data = await collectionService.getAllContent(userID);
       setCollection(data);
 
       // Calcular estadísticas
@@ -76,10 +136,6 @@ export function useCollection(options: UseCollectionOptions = {}) {
         }
       };
       setStats(statsData);
-
-      // Aplicar ordenación
-      const sorted = sortCollection(filteredData, sortOption);
-      setFilteredCollection(sorted);
     } catch (err) {
       console.error("Error al cargar la colección:", err);
       setError("No se pudo cargar la colección");
@@ -99,128 +155,6 @@ export function useCollection(options: UseCollectionOptions = {}) {
   // Función para actualizar el orden
   const updateSort = (newSort: SortOption) => {
     setSortOption(newSort);
-    
-    // Reordenar la colección actual
-    const sorted = sortCollection(collection, newSort);
-    setFilteredCollection(sorted);
-  };
-
-  // Función para ordenar la colección
-  const sortCollection = (data: Contenido[], sort: SortOption): Contenido[] => {
-    const sortedData = [...data];
-    
-    switch (sort) {
-      case "title_asc":
-        return sortedData.sort((a, b) => a.titulo.localeCompare(b.titulo));
-      case "title_desc":
-        return sortedData.sort((a, b) => b.titulo.localeCompare(a.titulo));
-      case "date_desc":
-        return sortedData.sort((a, b) => {
-          const yearA = a.fechaLanzamiento?.match(/(\d{4})/)?.[1] || "0";
-          const yearB = b.fechaLanzamiento?.match(/(\d{4})/)?.[1] || "0";
-          return parseInt(yearB) - parseInt(yearA);
-        });
-      case "date_asc":
-        return sortedData.sort((a, b) => {
-          const yearA = a.fechaLanzamiento?.match(/(\d{4})/)?.[1] || "0";
-          const yearB = b.fechaLanzamiento?.match(/(\d{4})/)?.[1] || "0";
-          return parseInt(yearA) - parseInt(yearB);
-        });
-      case "rating_desc":
-        return sortedData.sort((a, b) => (b.valoracion || 0) - (a.valoracion || 0));
-      default:
-        return sortedData;
-    }
-  };
-
-  // Función para añadir un ítem a la colección
-  const addToCollection = async (id_api: string, tipo: string, estado: string) => {
-    if (!isAuthenticated) {
-      setError("No has iniciado sesión");
-      return null;
-    }
-
-    try {
-      // Usar homeService para actualizar estado
-      const result = await homeService.updateItemState(id_api, tipo, estado);
-      
-      // Recargar la colección para reflejar los cambios
-      await loadCollection(true);
-      
-      return result;
-    } catch (err) {
-      console.error("Error al añadir a la colección:", err);
-      setError("No se pudo añadir a la colección");
-      return null;
-    }
-  };
-
-  // Función para actualizar un ítem de la colección
-  const updateItem = async (id: string, estado: string) => {
-    if (!isAuthenticated) {
-      setError("No has iniciado sesión");
-      return null;
-    }
-
-    try {
-      // Buscar el item en la colección actual para obtener id_api y tipo
-      const itemToUpdate = collection.find(item => item.id === id);
-      
-      if (!itemToUpdate) {
-        setError("No se encontró el elemento");
-        return null;
-      }
-
-      // Usar homeService para actualizar estado
-      const result = await homeService.updateItemState(
-        itemToUpdate.id_api, 
-        itemToUpdate.tipo, 
-        estado
-      );
-      
-      // Recargar la colección para reflejar los cambios
-      await loadCollection(true);
-      
-      return result;
-    } catch (err) {
-      console.error("Error al actualizar elemento:", err);
-      setError("No se pudo actualizar el elemento");
-      return null;
-    }
-  };
-
-  // Función para eliminar un ítem de la colección
-  const removeFromCollection = async (id: string) => {
-    if (!isAuthenticated) {
-      setError("No has iniciado sesión");
-      return null;
-    }
-
-    try {
-      // Buscar el item en la colección actual para obtener id_api y tipo
-      const itemToRemove = collection.find(item => item.id === id);
-      
-      if (!itemToRemove) {
-        setError("No se encontró el elemento");
-        return null;
-      }
-
-      // Usar homeService para actualizar estado a vacío (desmarcar)
-      const result = await homeService.updateItemState(
-        itemToRemove.id_api, 
-        itemToRemove.tipo, 
-        ""
-      );
-      
-      // Recargar la colección para reflejar los cambios
-      await loadCollection(true);
-      
-      return result;
-    } catch (err) {
-      console.error("Error al eliminar de la colección:", err);
-      setError("No se pudo eliminar de la colección");
-      return null;
-    }
   };
 
   // Función para limpiar todos los filtros
@@ -231,6 +165,14 @@ export function useCollection(options: UseCollectionOptions = {}) {
   return {
     isAuthenticated,
     collection,
+    completado,
+    enProgreso,
+    pendiente,
+    abandonado,
+    pelicula,
+    libro,
+    serie,
+    juego,
     filteredCollection,
     loading,
     error,
@@ -240,9 +182,6 @@ export function useCollection(options: UseCollectionOptions = {}) {
     loadCollection,
     updateFilters,
     updateSort,
-    addToCollection,
-    updateItem,
-    removeFromCollection,
     clearFilters
   };
 }

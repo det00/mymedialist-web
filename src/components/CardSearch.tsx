@@ -6,6 +6,7 @@ import EstadoContenidoApi from "@/components/EstadoContenidoApi";
 import { Badge } from "./ui/badge";
 import { Film, Gamepad2, Library, Tv } from "lucide-react";
 import type { CardBasic } from "@/lib/types";
+import React from "react";
 
 const CardSearch: React.FC<CardBasic> = ({
   id,
@@ -44,8 +45,8 @@ const CardSearch: React.FC<CardBasic> = ({
         <Image
           src={imageUrl}
           alt={titulo}
-          width={80}
-          height={120}
+          fill={true}
+          sizes={imagen}
           className="object-cover"
           priority
         />

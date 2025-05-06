@@ -5,15 +5,14 @@ import type { ActivityItem } from "./types";
 
 
 export const activityService = {
-
-  async getActividad(page: number = 1, limit: number = 10): Promise<ActivityItem[]> {
+  async getUserActivity(userId: number, page: number = 1, limit: number = 10): Promise<ActivityItem[]> {
     try {
       const token = authService.getToken();
       if (!token) {
         throw new Error("No hay token de autenticación");
       }
 
-      const response = await api.get<ActivityItem[]>("/actividad", {
+      const response = await api.get<ActivityItem[]>(`/user-items/coleccion/${userId}`, {
         headers: {
           Authorization: `Bearer ${token}`
         },
@@ -22,30 +21,9 @@ export const activityService = {
           limite: limit
         }
       });
+
+      console.log("response", response);
       
-      return response.data;
-    } catch (error) {
-      console.error("Error al obtener actividad del usuario:", error);
-      return [];
-    }
-  },
-  
-  async getUserActivity(userId: string, page: number = 1, limit: number = 10): Promise<ActivityItem[]> {
-    try {
-      const token = authService.getToken();
-      if (!token) {
-        throw new Error("No hay token de autenticación");
-      }
-
-      const response = await api.get<ActivityItem[]>(`/actividad/${userId}`, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        },
-        params: {
-          pagina: page,
-          limite: limit
-        }
-      });
       
       return response.data;
     } catch (error) {
@@ -86,13 +64,13 @@ export const activityService = {
   
   getActionDescription(actionType: string): string {
     switch (actionType) {
-      case "added":
+      case "E":
         return "ha añadido";
-      case "started":
+      case "P":
         return "ha empezado";
-      case "finished":
+      case "C":
         return "ha completado";
-      case "dropped":
+      case "A":
         return "ha abandonado";
       default:
         return "ha actualizado";

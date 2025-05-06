@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { DeleteAccountDialog } from "@/components/DeleteAccountDialog";
 import {
   Card,
   CardContent,
@@ -36,11 +37,12 @@ import { ProfileFriends } from "@/components/ProfileFriends";
 import { ProfilePublicView } from "@/components/ProfilePublicView";
 import { useProfile } from "@/hooks/useProfile";
 import authService from "@/lib/auth";
+import { EditProfileDialog } from "@/components/EditProfileDialog";
 
 export function ProfilePage() {
   const userId = authService.getUserId();
-  const [previewMode, setPreviewMode] = useState(false);
-
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [activeTab, setActiveTab] = useState("profile");
 
   const {
@@ -48,6 +50,7 @@ export function ProfilePage() {
     loading,
     error,
     isEditMode,
+    previewMode,
     saveProfile,
     toggleFollow,
     logout,
@@ -103,7 +106,7 @@ export function ProfilePage() {
           </Button>
         </div>
 
-        <ProfilePublicView profileData={datosPerfil} />
+        <ProfilePublicView idUsuario={userId} />
       </div>
     );
   }
@@ -119,11 +122,11 @@ export function ProfilePage() {
             <CardContent className="pt-6">
               <div className="flex flex-col items-center text-center">
                 <UserAvatar
-                  avatarData={datosPerfil.avatar}
+                  avatarData={datosPerfil.avatar_id || datosPerfil.avatar}
                   size="xl"
                   className="mb-4"
                 />
-                <h2 className="text-xl font-bold">{datosPerfil.nombre}</h2>
+                <h2 className="text-xl font-bold">{datosPerfil.name || datosPerfil.nombre}</h2>
                 <p className="text-muted-foreground text-sm">
                   @{datosPerfil.username}
                 </p>
@@ -152,7 +155,7 @@ export function ProfilePage() {
                   <Separator orientation="vertical" className="h-10" />
                   <div className="text-center">
                     <p className="font-bold">{datosPerfil.totalSeguidos}</p>
-                    <p className="text-xs text-muted-foreground">Seguidos</p>
+                    <p className="text-xs text-muted-foreground">Siguiendo</p>
                   </div>
                 </div>
               </div>
@@ -161,23 +164,23 @@ export function ProfilePage() {
             <CardFooter className="flex justify-center gap-2 pt-0 pb-6">
               {datosPerfil.esMiPerfil ? (
                 <>
-                  <Button
-                    variant={isEditMode ? "default" : "outline"}
+                  {/* <Button
+                    variant="outline"
                     size="sm"
-                    onClick={toggleEditMode}
+                    onClick={() => setShowEditDialog(true)}
                     className="cursor-pointer"
                   >
                     <Edit className="h-4 w-4 mr-1" />
-                    {isEditMode ? "Editando" : "Editar"}
-                  </Button>
+                    Editar
+                  </Button> */}
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={()=>setPreviewMode(true)}
+                    onClick={togglePreviewMode}
                     className="cursor-pointer"
                   >
                     <Eye className="h-4 w-4 mr-1" />
-                    Vista previa
+                    Perfil público
                   </Button>
                 </>
               ) : (
@@ -238,7 +241,7 @@ export function ProfilePage() {
                     <Users className="h-4 w-4 mr-2" />
                     Amigos
                   </Button>
-                  <Button
+{/*                   <Button
                     variant={activeTab === "settings" ? "secondary" : "ghost"}
                     className="w-full justify-start cursor-pointer"
                     onClick={() => setActiveTab("settings")}
@@ -246,7 +249,7 @@ export function ProfilePage() {
                     <Settings className="h-4 w-4 mr-2" />
                     Configuración
                   </Button>
-                  <Separator className="my-2" />
+                  <Separator className="my-2" /> */}
                   <Button
                     variant="ghost"
                     className="w-full justify-start text-destructive hover:text-destructive cursor-pointer"
@@ -387,13 +390,21 @@ export function ProfilePage() {
                     </div>
                   </CardContent>
                   {datosPerfil.esMiPerfil && (
-                    <CardFooter>
+                    <CardFooter className="flex justify-end gap-2">
                       <Button
                         onClick={toggleEditMode}
                         className="cursor-pointer"
                       >
                         <Edit className="h-4 w-4 mr-2" />
                         Editar perfil
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        className="cursor-pointer"
+                        onClick={() => setShowDeleteDialog(true)}
+                      >
+                        <LogOut className="h-4 w-4 mr-2" />
+                        Eliminar cuenta
                       </Button>
                     </CardFooter>
                   )}
@@ -410,15 +421,29 @@ export function ProfilePage() {
                   )}
                   {activeTab === "stats" && <ProfileStats />}
                   {activeTab === "friends" && <ProfileFriends />}
-                  {activeTab === "settings" && (
-                    <ProfileSettings userId={datosPerfil.id} />
-                  )}
                 </>
               )}
             </>
           )}
         </div>
+        
+        
       </div>
+
+      {/* Diálogos */}
+      {showEditDialog && (
+        <EditProfileDialog
+          open={showEditDialog}
+          onOpenChange={setShowEditDialog}
+          profileData={datosPerfil}
+          onSave={saveProfile}
+        />
+      )}
+      <DeleteAccountDialog
+        open={showDeleteDialog}
+        onOpenChange={setShowDeleteDialog}
+        onSuccess={logout}
+      />
     </div>
   );
 }

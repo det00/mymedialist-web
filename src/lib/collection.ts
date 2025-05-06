@@ -14,8 +14,6 @@ export const collectionService = {
     tipo: string,
     estado: string
   ): Promise<ResponseAdd> {
-    console.log(id_api, tipo, estado);
-
     try {
       const token = authService.getToken();
       if (!token) {
@@ -88,28 +86,15 @@ export const collectionService = {
     }
   },
 
-  /*   async getItemById(id: string): Promise<ContenidoColeccion | null> {
-    try {
-      const collection = await this.getAllContent();
-      return collection.find((item) => item.id === id) || null;
-    } catch (error) {
-      console.error("Error al buscar elemento por ID:", error);
-      return null;
-    }
-  }, */
-
-  async getAllContent(): Promise<CardBasic[]> {
+  async getAllContent(userId?: number): Promise<CardBasic[]> {
     const token = authService.getToken();
     if (!token) {
       return [];
     }
-    const userId = localStorage.getItem("id_usuario");
-    if (!userId) {
-      return [];
-    }
+    const localUserId = localStorage.getItem("id_usuario");
 
     const response = await api.get<CardBasic[]>(
-      `/user-items/coleccion/${userId}`,
+      `/user-items/coleccion/${userId ? userId : localUserId}`,
       {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -207,35 +192,5 @@ export const collectionService = {
     }
   },
 };
-
-/* function sortCollection(
-  collection: ContenidoColeccion[],
-  sortBy: string
-): ContenidoColeccion[] {
-  switch (sortBy) {
-    case "title_asc":
-      return [...collection].sort((a, b) => a.titulo.localeCompare(b.titulo));
-    case "title_desc":
-      return [...collection].sort((a, b) => b.titulo.localeCompare(a.titulo));
-    case "date_desc":
-      return [...collection].sort((a, b) => {
-        const yearA = a.fechaLanzamiento?.match(/(\d{4})/)?.[1] || "0";
-        const yearB = b.fechaLanzamiento?.match(/(\d{4})/)?.[1] || "0";
-        return parseInt(yearB) - parseInt(yearA);
-      });
-    case "date_asc":
-      return [...collection].sort((a, b) => {
-        const yearA = a.fechaLanzamiento?.match(/(\d{4})/)?.[1] || "0";
-        const yearB = b.fechaLanzamiento?.match(/(\d{4})/)?.[1] || "0";
-        return parseInt(yearA) - parseInt(yearB);
-      });
-    case "rating_desc":
-      return [...collection].sort(
-        (a, b) => (b.valoracion || 0) - (a.valoracion || 0)
-      );
-    default:
-      return collection;
-  }
-} */
 
 export default collectionService;

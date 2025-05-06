@@ -41,14 +41,16 @@ export interface Seguidor {
 
 export interface Perfil {
   id: string;
-  nombre: string;
+  name: string;
+  nombre?: string; // Para compatibilidad con código existente
   username: string;
   fechaRegistro: string;
   bio: string;
   totalContenidos: number;
   totalSeguidores: string;
   totalSeguidos: string;
-  avatar: string;
+  avatar_id: string;
+  avatar?: string; // Para compatibilidad con código existente
   esMiPerfil: boolean;
   siguiendo: boolean;
   estadisticas: {
@@ -77,22 +79,21 @@ export interface CardBasic {
   estado: string;
 }
 
-export interface BuscarPageProps {
-  searchParams: { busqueda: string; tipo: string };
+export interface ActivityItem {
+  autor: string;
+  created_at: string;
+  estado: "P" | "E" | "C" | "A";
+  genero: string[];
+  id: number;
+  id_api: string;
+  userId: number;
+  imagen: string | null;
+  tipo: "P" | "S" | "L" | "V";
+  titulo: string;
+  updated_at: string;
 }
 
-export interface ActivityItem {
-  id: number;
-  userId: number;
-  contentTitle: string;
-  contentId: number;
-  contentApiId: string;
-  contentType: "P" | "S" | "L" | "V";
-  contentImage: string | null;
-  actionType: "added" | "started" | "finished" | "dropped";
-  timestamp: string;
-  status: string;
-}
+
 
 export type SortOption =
   | "title_asc"
@@ -108,6 +109,7 @@ export interface UseCollectionOptions {
   };
   initialSort?: SortOption;
   autoLoad?: boolean;
+  userId: number;
 }
 
 export interface ProfileData {
@@ -139,6 +141,8 @@ export interface LoginResponse {
   token: string;
   id: number;
   name?: string;
+  avatar?: string;
+  avatar_id?: string;
 }
 
 export interface RegisterResponse {

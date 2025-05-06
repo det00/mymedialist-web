@@ -7,21 +7,31 @@ import { AvatarSelector } from "@/components/AvatarSelector";
 import { UserAvatar } from "@/components/UserAvatar";
 import { Separator } from "@/components/ui/separator";
 import { Save, X } from "lucide-react";
-import { ProfileData } from "@/lib/profile";
+
+// Import from types
+import { Perfil } from "@/lib/types";
+import { PutPerfilRequest } from "@/hooks/useProfile";
+
+type datosPerfil = {
+  name: string;
+  bio: string;
+  avatar_id: string;
+  // Add other profile fields as needed
+};
+
+interface ProfileData extends PutPerfilRequest {}
 
 interface ProfileFormProps {
-  profileData: ProfileData;
-  onSave: (data: Partial<ProfileData>) => Promise<boolean> | void;
+  profileData: Partial<Perfil>;
+  onSave: (data: Partial<PutPerfilRequest>) => Promise<boolean> | void;
   onCancel: () => void;
 }
 
 export function ProfileForm({ profileData, onSave, onCancel }: ProfileFormProps) {
   const [formData, setFormData] = useState({
-    nombre: profileData.nombre,
-    username: profileData.username,
-    email: profileData.email || "",
-    bio: profileData.bio || "",
-    avatar: profileData.avatar
+    name: profileData?.name || profileData?.nombre || "",
+    bio: profileData?.bio || "",
+    avatar_id: profileData?.avatar_id || profileData?.avatar || "avatar1"
   });
   
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -40,7 +50,7 @@ export function ProfileForm({ profileData, onSave, onCancel }: ProfileFormProps)
   
   // Manejar selección de avatar
   const handleAvatarSelect = (avatarId: string) => {
-    setFormData(prev => ({ ...prev, avatar: avatarId }));
+    setFormData(prev => ({ ...prev, avatar_id: avatarId }));
   };
 
   // Validar y enviar el formulario
@@ -50,18 +60,8 @@ export function ProfileForm({ profileData, onSave, onCancel }: ProfileFormProps)
     // Validación básica
     const newErrors: Record<string, string> = {};
     
-    if (!formData.nombre.trim()) {
-      newErrors.nombre = "El nombre es obligatorio";
-    }
-    
-    if (!formData.username.trim()) {
-      newErrors.username = "El nombre de usuario es obligatorio";
-    } else if (!/^[a-z0-9_]+$/.test(formData.username)) {
-      newErrors.username = "Solo letras minúsculas, números y guiones bajos";
-    }
-    
-    if (formData.email && !/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = "Email inválido";
+    if (!formData.name || !formData.name.trim()) {
+      newErrors.name = "El nombre es obligatorio";
     }
     
     // Si hay errores, actualizar estado y cancelar envío
@@ -75,11 +75,9 @@ export function ProfileForm({ profileData, onSave, onCancel }: ProfileFormProps)
     
     try {
       const success = await onSave({
-        nombre: formData.nombre,
-        username: formData.username,
-        email: formData.email,
+        name: formData.name,
         bio: formData.bio,
-        avatar: formData.avatar
+        avatar_id: formData.avatar_id
       });
       
       if (!success) {
@@ -99,9 +97,9 @@ export function ProfileForm({ profileData, onSave, onCancel }: ProfileFormProps)
       <div className="space-y-2">
         <Label>Avatar</Label>
         <div className="flex flex-col sm:flex-row gap-4 items-center">
-          <UserAvatar avatarData={formData.avatar} size="xl" />
+          <UserAvatar avatarData={formData.avatar_id} size="xl" />
           <div className="flex-1">
-            <AvatarSelector selectedAvatar={formData.avatar} onSelectAvatar={handleAvatarSelect} />
+            <AvatarSelector selectedAvatar={formData.avatar_id} onSelectAvatar={handleAvatarSelect} />
           </div>
         </div>
       </div>
@@ -114,20 +112,20 @@ export function ProfileForm({ profileData, onSave, onCancel }: ProfileFormProps)
         
         {/* Nombre */}
         <div className="space-y-2">
-          <Label htmlFor="nombre">Nombre completo</Label>
+          <Label htmlFor="name">Nombre completo</Label>
           <Input
-            id="nombre"
-            name="nombre"
-            value={formData.nombre}
+            id="name"
+            name="name"
+            value={formData.name}
             onChange={handleChange}
             placeholder="Tu nombre"
-            className={errors.nombre ? "border-destructive" : ""}
+            className={errors.name ? "border-destructive" : ""}
           />
-          {errors.nombre && <p className="text-sm text-destructive">{errors.nombre}</p>}
+          {errors.name && <p className="text-sm text-destructive">{errors.name}</p>}
         </div>
         
         {/* Nombre de usuario */}
-        <div className="space-y-2">
+        {/* <div className="space-y-2">
           <Label htmlFor="username">Nombre de usuario</Label>
           <div className="flex">
             <span className="flex items-center px-3 bg-muted border border-r-0 rounded-l-md">
@@ -144,10 +142,10 @@ export function ProfileForm({ profileData, onSave, onCancel }: ProfileFormProps)
           </div>
           {errors.username && <p className="text-sm text-destructive">{errors.username}</p>}
           <p className="text-xs text-muted-foreground">Este nombre será visible para otros usuarios.</p>
-        </div>
+        </div> */}
         
         {/* Email */}
-        <div className="space-y-2">
+        {/* <div className="space-y-2">
           <Label htmlFor="email">Email</Label>
           <Input
             id="email"
@@ -160,7 +158,7 @@ export function ProfileForm({ profileData, onSave, onCancel }: ProfileFormProps)
           />
           {errors.email && <p className="text-sm text-destructive">{errors.email}</p>}
           <p className="text-xs text-muted-foreground">No compartiremos tu email con otros usuarios.</p>
-        </div>
+        </div> */}
         
         {/* Bio */}
         <div className="space-y-2">

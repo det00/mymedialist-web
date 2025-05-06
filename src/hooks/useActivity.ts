@@ -1,7 +1,9 @@
-import { useState, useEffect } from "react";
-import { activityService, ActivityItem } from "@/lib/activity";
+import { useState, useEffect, useMemo } from "react";
+import { activityService } from "@/lib/activity";
+import { ActivityItem } from "@/lib/types";
+import moment from "moment";
 
-export function useActivity(userId?: string) {
+export function useActivity(userId: string | number) {
   const [activities, setActivities] = useState<ActivityItem[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -16,27 +18,23 @@ export function useActivity(userId?: string) {
   const loadActivity = async (resetPage: boolean = false) => {
     try {
       setLoading(true);
-      
-      // Si se resetea la página, volver a la primera
+
       const currentPage = resetPage ? 1 : page;
+
+      // Obtener datos del servidor sin filtros
+      const data = await activityService.getUserActivity(
+        typeof userId === 'string' ? parseInt(userId) : userId,
+        currentPage,
+        ITEMS_PER_PAGE
+      );
       
-      // Obtener actividad según si es para un usuario específico o el usuario actual
-      let data: ActivityItem[];
-      if (userId) {
-        data = await activityService.getUserActivity(userId, currentPage, ITEMS_PER_PAGE);
-      } else {
-        data = await activityService.getMyActivity(currentPage, ITEMS_PER_PAGE);
-      }
-      
-      // Actualizar estado
       if (resetPage) {
         setActivities(data);
         setPage(1);
       } else {
         setActivities(prevActivities => [...prevActivities, ...data]);
       }
-      
-      // Verificar si hay más páginas
+
       setHasMore(data.length >= ITEMS_PER_PAGE);
       
       setError(null);
@@ -48,6 +46,49 @@ export function useActivity(userId?: string) {
     }
   };
 
+  // Filtrar actividades localmente
+  const filteredActivities = useMemo(() => {
+    let filtered = [...activities];
+
+    // Filtrar por tipo de contenido
+    if (contentType !== "all") {
+      filtered = filtered.filter(item => item.tipo === contentType);
+    }
+
+    // Filtrar por tipo de actividad
+    if (activityType !== "all") {
+      // El tipo de actividad debe basarse en el estado
+      const actionTypeMap: Record<string, string> = {
+        "E": "started",   // En progreso = started
+        "C": "finished",  // Completado = finished
+        "P": "added",     // Pendiente = added
+        "A": "dropped"    // Abandonado = dropped
+      };
+      filtered = filtered.filter(item => actionTypeMap[item.estado] === activityType);
+    }
+
+    // Filtrar por tiempo
+    if (timeFilter !== "all") {
+      const now = moment();
+      filtered = filtered.filter(item => {
+        const itemDate = moment(item.created_at);
+        
+        switch (timeFilter) {
+          case "today":
+            return itemDate.isSame(now, 'day');
+          case "week":
+            return itemDate.isAfter(now.clone().subtract(7, 'days'));
+          case "month":
+            return itemDate.isAfter(now.clone().subtract(1, 'month'));
+          default:
+            return true;
+        }
+      });
+    }
+
+    return filtered;
+  }, [activities, contentType, activityType, timeFilter]);
+
   // Cargar más actividad (paginación)
   const loadMore = () => {
     if (!loading && hasMore) {
@@ -58,25 +99,16 @@ export function useActivity(userId?: string) {
   // Filtrar actividad por tipo de contenido
   const filterByContentType = (type: string) => {
     setContentType(type);
-    
-    // Resetear la carga cuando se cambia el filtro
-    loadActivity(true);
   };
 
   // Filtrar actividad por tipo de acción
   const filterByActivityType = (type: string) => {
     setActivityType(type);
-    
-    // Resetear la carga cuando se cambia el filtro
-    loadActivity(true);
   };
 
   // Filtrar actividad por tiempo
   const filterByTime = (timeRange: string) => {
     setTimeFilter(timeRange);
-    
-    // Resetear la carga cuando se cambia el filtro
-    loadActivity(true);
   };
 
   // Cargar actividad cuando cambia el usuario o la página
@@ -84,13 +116,13 @@ export function useActivity(userId?: string) {
     loadActivity();
   }, [userId, page]);
 
-  // Cargar actividad cuando cambian los filtros
+  // No necesitamos recargar cuando cambian los filtros, solo aplicarlos
   useEffect(() => {
-    loadActivity(true);
+    // Solo resetear si necesitamos cargar desde el servidor
   }, [timeFilter, contentType, activityType]);
 
   return {
-    activities,
+    activities: filteredActivities,
     loading,
     error,
     hasMore,
