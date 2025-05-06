@@ -97,6 +97,11 @@ export function useProfile(idUsuario: number) {
 
       await profileService.updateProfile(updatedData);
 
+      // Actualizar también el avatar en localStorage para que se refleje en la navbar
+      if (updatedData.avatar_id) {
+        authService.setUserAvatar(updatedData.avatar_id);
+      }
+
       setIsEditMode(false);
 
       return true;

@@ -141,6 +141,9 @@ export function EditProfileDialog({ open, onOpenChange, profileData, onUpdateSuc
         }
       });
       
+      // Actualizar también el avatar en localStorage para que se refleje en la navbar
+      authService.setUserAvatar(avatarId);
+      
       setSuccess("Perfil actualizado correctamente");
       onUpdateSuccess();
       
