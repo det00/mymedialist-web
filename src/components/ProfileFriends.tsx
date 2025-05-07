@@ -34,7 +34,7 @@ import amigosService from "@/lib/amigos";
 import Link from "next/link";
 
 export function ProfileFriends() {
-  const [activeTab, setActiveTab] = useState("seguidores");
+  const [activeTab, setActiveTab] = useState("seguidos");
   const [querySeguidores, setQuerySeguidores] = useState("");
   const [querySeguidos, setQuerySeguidos] = useState("");
 
@@ -152,11 +152,11 @@ export function ProfileFriends() {
     <div className="space-y-6">
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="seguidores" className="cursor-pointer">
-            Seguidores
-          </TabsTrigger>
           <TabsTrigger value="seguidos" className="cursor-pointer">
             Seguidos
+          </TabsTrigger>
+          <TabsTrigger value="seguidores" className="cursor-pointer">
+            Seguidores
           </TabsTrigger>
         </TabsList>
 
@@ -188,7 +188,7 @@ export function ProfileFriends() {
                     className="pl-8"
                   />
                 </div>
-                <Select
+                {/* <Select
                   value={selectedSortOption}
                   onValueChange={setSelectedSortOption}
                 >
@@ -200,7 +200,7 @@ export function ProfileFriends() {
                     <SelectItem value="name">Nombre</SelectItem>
                     <SelectItem value="mutual">Amigos en común</SelectItem>
                   </SelectContent>
-                </Select>
+                </Select> */}
               </div>
 
               {/* Lista de seguidores */}
@@ -209,7 +209,7 @@ export function ProfileFriends() {
                   {seguidoresOrdenados.map((friend) => (
                     <Link href={`/perfil/${friend.id}`} key={friend.id}>
                       <div
-                        className="border rounded-lg p-4 hover:border-primary transition-colors cursor-pointer">
+                        className="border rounded-lg p-4 hover:border-primary transition-colors cursor-pointer mb-2">
                         <div className="flex items-start gap-4">
                           {/* Avatar e información básica */}
                           <div className="relative">
@@ -282,7 +282,7 @@ export function ProfileFriends() {
             </CardContent>
             <CardFooter>
               {busquedaSeguidores.length > 0 && (
-                <Button variant="outline" className="w-full">
+                <Button variant="outline" className="w-full cursor-pointer">
                   Ver todos los amigos
                 </Button>
               )}
@@ -318,7 +318,7 @@ export function ProfileFriends() {
                     className="pl-8"
                   />
                 </div>
-                <Select
+                {/* <Select
                   value={selectedSortOption}
                   onValueChange={setSelectedSortOption}
                 >
@@ -330,10 +330,10 @@ export function ProfileFriends() {
                     <SelectItem value="name">Nombre</SelectItem>
                     <SelectItem value="mutual">Amigos en común</SelectItem>
                   </SelectContent>
-                </Select>
+                </Select> */}
               </div>
 
-              {/* Lista de amigos */}
+              {/* Lista de seguidos */}
               {seguidosOrdenados.length > 0 ? (
                 <div className="space-y-3">
                   {seguidosOrdenados.map((friend) => (
@@ -343,7 +343,7 @@ export function ProfileFriends() {
                     >
                       <div
                         key={friend.id}
-                        className="border rounded-lg p-4 hover:border-primary transition-colors"
+                        className="border rounded-lg p-4 hover:border-primary transition-colors mb-2"
                       >
                         <div className="flex items-start gap-4">
                           {/* Avatar e información básica */}
@@ -417,7 +417,7 @@ export function ProfileFriends() {
             </CardContent>
             <CardFooter>
               {busquedaSeguidos.length > 0 && (
-                <Button variant="outline" className="w-full">
+                <Button variant="outline" className="w-full cursor-pointer">
                   Ver todos los amigos
                 </Button>
               )}

@@ -39,11 +39,16 @@ import { useProfile } from "@/hooks/useProfile";
 import authService from "@/lib/auth";
 import { EditProfileDialog } from "@/components/EditProfileDialog";
 
+import { useSearchParams } from 'next/navigation';
+
 export function ProfilePage() {
+  const searchParams = useSearchParams();
+  const tabActionParam = searchParams.get('tabAction');
+  
   const userId = authService.getUserId();
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [activeTab, setActiveTab] = useState("profile");
+  const [activeTab, setActiveTab] = useState(tabActionParam || 'collection');
   const [avatarUpdateKey, setAvatarUpdateKey] = useState(Date.now());
 
   const {
@@ -223,6 +228,14 @@ export function ProfilePage() {
               <CardContent className="p-4">
                 <nav className="space-y-1">
                   <Button
+                    variant={activeTab === "collection" ? "secondary" : "ghost"}
+                    className="w-full justify-start cursor-pointer"
+                    onClick={() => setActiveTab("collection")}
+                  >
+                    <Film className="h-4 w-4 mr-2" />
+                    Colección
+                  </Button>
+                  <Button
                     variant={activeTab === "profile" ? "secondary" : "ghost"}
                     className="w-full justify-start cursor-pointer"
                     onClick={() => setActiveTab("profile")}
@@ -237,14 +250,6 @@ export function ProfilePage() {
                   >
                     <Bell className="h-4 w-4 mr-2" />
                     Actividad
-                  </Button>
-                  <Button
-                    variant={activeTab === "collection" ? "secondary" : "ghost"}
-                    className="w-full justify-start cursor-pointer"
-                    onClick={() => setActiveTab("collection")}
-                  >
-                    <Film className="h-4 w-4 mr-2" />
-                    Colección
                   </Button>
                   <Button
                     variant={activeTab === "stats" ? "secondary" : "ghost"}

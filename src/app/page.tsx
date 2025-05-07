@@ -1,9 +1,9 @@
 "use client";
 
-import {useState, useEffect} from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import {Tabs, TabsContent, TabsList, TabsTrigger} from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Card,
   CardContent,
@@ -11,9 +11,9 @@ import {
   CardTitle,
   CardDescription,
 } from "@/components/ui/card";
-import {Button} from "@/components/ui/button";
-import {Badge} from "@/components/ui/badge";
-import {UserAvatar} from "@/components/UserAvatar";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { UserAvatar } from "@/components/UserAvatar";
 import moment from "moment";
 import {
   Clock,
@@ -28,14 +28,15 @@ import {
   UserPlus,
   Users,
 } from "lucide-react";
-import {AuthModal} from "@/components/ui/auth-modal";
-import {authService} from "@/lib/auth";
-import {CardBasic, ContentItem, UserData} from "@/lib/types";
+import { AuthModal } from "@/components/ui/auth-modal";
+import { authService } from "@/lib/auth";
+import { CardBasic, ContentItem, UserData } from "@/lib/types";
 import CardSearch from "@/components/CardSearch";
 import collectionService from "@/lib/collection";
-import {AddAmigo} from "@/components/AddAmigo";
-import {useProfile} from "@/hooks/useProfile";
+import { AddAmigo } from "@/components/AddAmigo";
+import { useProfile } from "@/hooks/useProfile";
 import CardSeguidores from "@/components/CardSeguidores";
+import { useRouter } from "next/navigation";
 
 // Configurar locale español
 moment.locale("es");
@@ -47,7 +48,8 @@ export default function Home() {
   const [showAuthModal, setShowAuthModal] = useState<boolean>(false);
   const [showAddAmigo, setShowAddAmigo] = useState<boolean>(false);
   const [userId, setUserId] = useState<number>(-1)
-  const {seguidos, datosPerfil} = useProfile(userId)
+  const { seguidos, datosPerfil } = useProfile(userId)
+  const router = useRouter()
 
   // Estado para almacenar todos los contenidos
   const [allContent, setAllContent] = useState<CardBasic[]>([]);
@@ -65,10 +67,10 @@ export default function Home() {
 
   // Mapeo de tipo a nombre completo e icono
   const tipoInfo = {
-    P: {nombre: "Película", icon: Film},
-    S: {nombre: "Serie", icon: Tv},
-    L: {nombre: "Libro", icon: Library},
-    V: {nombre: "Videojuego", icon: Gamepad2},
+    P: { nombre: "Película", icon: Film },
+    S: { nombre: "Serie", icon: Tv },
+    L: { nombre: "Libro", icon: Library },
+    V: { nombre: "Videojuego", icon: Gamepad2 },
   };
 
   // Función para verificar la autenticación y cargar datos del usuario
@@ -103,13 +105,13 @@ export default function Home() {
 
     // Listener para actualizaciones de estado de contenido
     const handleContentUpdate = (event: CustomEvent) => {
-      const {id_api, tipo, estado} = event.detail;
+      const { id_api, tipo, estado } = event.detail;
 
       // Actualización optimista del estado local
       setAllContent((prevContent) =>
         prevContent.map((item) => {
           if (item.id_api === id_api && item.tipo === tipo) {
-            return {...item, estado};
+            return { ...item, estado };
           }
           return item;
         })
@@ -194,7 +196,7 @@ export default function Home() {
   // Renderizar icono basado en tipo de contenido
   const renderContentTypeIcon = (tipo: string) => {
     const Icon = tipoInfo[tipo as keyof typeof tipoInfo]?.icon || Film;
-    return <Icon className="h-4 w-4"/>;
+    return <Icon className="h-4 w-4" />;
   };
 
   // Si está cargando, mostrar indicador
@@ -351,7 +353,7 @@ export default function Home() {
                               {
                                 tipoInfo[
                                   isWatchingNow.tipo as keyof typeof tipoInfo
-                                  ]?.nombre
+                                ]?.nombre
                               }
                             </span>
                           </Badge>
@@ -359,7 +361,7 @@ export default function Home() {
                             variant="outline"
                             className="bg-background/20 text-white border-none"
                           >
-                            <Clock className="h-3 w-3 mr-1"/>
+                            <Clock className="h-3 w-3 mr-1" />
                             <span>Actualizado recientemente</span>
                           </Badge>
                         </div>
@@ -385,7 +387,7 @@ export default function Home() {
                     <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
                       <div
                         className="bg-blue-500 h-full"
-                        style={{width: "35%"}}
+                        style={{ width: "35%" }}
                       ></div>
                     </div>
                     <span className="text-sm font-medium">35%</span>
@@ -415,7 +417,7 @@ export default function Home() {
                   onClick={() => setContentTypeFilter("all")}
                   size="sm"
                 >
-                  <ListFilter className="h-4 w-4 mr-1"/> Todo
+                  <ListFilter className="h-4 w-4 mr-1" /> Todo
                 </Button>
                 <Button
                   variant={contentTypeFilter === "P" ? "default" : "outline"}
@@ -423,7 +425,7 @@ export default function Home() {
                   onClick={() => setContentTypeFilter("P")}
                   size="sm"
                 >
-                  <Film className="h-4 w-4 mr-1"/> Películas
+                  <Film className="h-4 w-4 mr-1" /> Películas
                 </Button>
                 <Button
                   variant={contentTypeFilter === "S" ? "default" : "outline"}
@@ -431,7 +433,7 @@ export default function Home() {
                   onClick={() => setContentTypeFilter("S")}
                   size="sm"
                 >
-                  <Tv className="h-4 w-4 mr-1"/> Series
+                  <Tv className="h-4 w-4 mr-1" /> Series
                 </Button>
                 <Button
                   variant={contentTypeFilter === "L" ? "default" : "outline"}
@@ -439,7 +441,7 @@ export default function Home() {
                   onClick={() => setContentTypeFilter("L")}
                   size="sm"
                 >
-                  <Library className="h-4 w-4 mr-1"/> Libros
+                  <Library className="h-4 w-4 mr-1" /> Libros
                 </Button>
                 <Button
                   variant={contentTypeFilter === "V" ? "default" : "outline"}
@@ -447,7 +449,7 @@ export default function Home() {
                   onClick={() => setContentTypeFilter("V")}
                   size="sm"
                 >
-                  <Gamepad2 className="h-4 w-4 mr-1"/> Juegos
+                  <Gamepad2 className="h-4 w-4 mr-1" /> Juegos
                 </Button>
               </div>
               {/* Contenido en progreso */}
@@ -464,15 +466,14 @@ export default function Home() {
                     // Mostrar contenido filtrado
                     currentContent.map((item) => (
                       <Link
-                        href={`/${
-                          item.tipo === "P"
-                            ? "pelicula"
-                            : item.tipo === "S"
-                              ? "serie"
-                              : item.tipo === "L"
-                                ? "libro"
-                                : "videojuego"
-                        }/${item.id_api}`}
+                        href={`/${item.tipo === "P"
+                          ? "pelicula"
+                          : item.tipo === "S"
+                            ? "serie"
+                            : item.tipo === "L"
+                              ? "libro"
+                              : "videojuego"
+                          }/${item.id_api}`}
                         key={`${item.id || item.id_api}-${item.tipo}`}
                         className="cursor-pointer"
                       >
@@ -492,7 +493,7 @@ export default function Home() {
                     // Mensaje cuando no hay datos
                     <div className="col-span-2 flex flex-col items-center justify-center py-12">
                       <div className="flex flex-col items-center">
-                        <TrendingUp className="h-12 w-12 text-muted-foreground mb-4"/>
+                        <TrendingUp className="h-12 w-12 text-muted-foreground mb-4" />
                         <p className="text-muted-foreground">
                           No hay tendencias entre tus amigos aún
                         </p>
@@ -500,7 +501,7 @@ export default function Home() {
                           Añade amigos para ver qué contenido es popular
                         </p>
                         <Button className="cursor-pointer">
-                          <UserPlus className="h-4 w-4 mr-2"/>
+                          <UserPlus className="h-4 w-4 mr-2" />
                           Añadir amigos
                         </Button>
                       </div>
@@ -520,15 +521,14 @@ export default function Home() {
                   ) : watchlist.length > 0 ? (
                     watchlist.map((item) => (
                       <Link
-                        href={`/${`/${
-                          item.tipo === "P"
-                            ? "pelicula"
-                            : item.tipo === "S"
-                              ? "serie"
-                              : item.tipo === "L"
-                                ? "libro"
-                                : "videojuego"
-                        }/${item.id_api}`}/${item.id_api}`}
+                        href={`/${`/${item.tipo === "P"
+                          ? "pelicula"
+                          : item.tipo === "S"
+                            ? "serie"
+                            : item.tipo === "L"
+                              ? "libro"
+                              : "videojuego"
+                          }/${item.id_api}`}/${item.id_api}`}
                         key={`${item.id || item.id_api}-${item.tipo}`}
                         className="block"
                       >
@@ -547,7 +547,7 @@ export default function Home() {
                   ) : (
                     <div className="col-span-2 flex flex-col items-center justify-center py-12">
                       <div className="flex flex-col items-center">
-                        <Library className="h-12 w-12 text-muted-foreground mb-4"/>
+                        <Library className="h-12 w-12 text-muted-foreground mb-4" />
                         <p className="text-muted-foreground">
                           Tu lista de pendientes está vacía
                         </p>
@@ -555,7 +555,7 @@ export default function Home() {
                           Añade contenido a tu lista para verlo más tarde
                         </p>
                         <Button className="cursor-pointer">
-                          <Plus className="h-4 w-4 mr-2"/>
+                          <Plus className="h-4 w-4 mr-2" />
                           Añadir contenido
                         </Button>
                       </div>
@@ -574,15 +574,14 @@ export default function Home() {
                   ) : trendingContent.length > 0 ? (
                     trendingContent.map((item) => (
                       <Link
-                        href={`/${`/${
-                          item.tipo === "P"
-                            ? "pelicula"
-                            : item.tipo === "S"
-                              ? "serie"
-                              : item.tipo === "L"
-                                ? "libro"
-                                : "videojuego"
-                        }/${item.id_api}`}/${item.id_api}`}
+                        href={`/${`/${item.tipo === "P"
+                          ? "pelicula"
+                          : item.tipo === "S"
+                            ? "serie"
+                            : item.tipo === "L"
+                              ? "libro"
+                              : "videojuego"
+                          }/${item.id_api}`}/${item.id_api}`}
                         key={`${item.id || item.id_api}-${item.tipo}`}
                         className="block"
                       >
@@ -601,7 +600,7 @@ export default function Home() {
                   ) : (
                     <div className="col-span-2 flex flex-col items-center justify-center py-12">
                       <div className="flex flex-col items-center">
-                        <Library className="h-12 w-12 text-muted-foreground mb-4"/>
+                        <Library className="h-12 w-12 text-muted-foreground mb-4" />
                         <p className="text-muted-foreground">
                           Tu lista de pendientes está vacía
                         </p>
@@ -609,7 +608,7 @@ export default function Home() {
                           Añade contenido a tu lista para verlo más tarde
                         </p>
                         <Button className="cursor-pointer">
-                          <Plus className="h-4 w-4 mr-2"/>
+                          <Plus className="h-4 w-4 mr-2" />
                           Añadir contenido
                         </Button>
                       </div>
@@ -628,7 +627,7 @@ export default function Home() {
                 <CardTitle className="flex justify-between items-center">
                   <span>Mi perfil</span>
                   <Button variant="ghost" size="sm" className="cursor-pointer">
-                    <MoreHorizontal className="h-4 w-4"/>
+                    <MoreHorizontal className="h-4 w-4" />
                   </Button>
                 </CardTitle>
               </CardHeader>
@@ -678,7 +677,7 @@ export default function Home() {
                       size="sm"
                       className="w-full cursor-pointer"
                     >
-                      Ver perfil completo
+                      Acceder a mi colección
                     </Button>
                   </Link>
                 </div>
@@ -690,27 +689,37 @@ export default function Home() {
               <CardHeader className="pb-2">
                 <CardTitle className="flex justify-between items-center">
                   <div className="flex items-center gap-2">
-                    <Users className="h-5 w-5"/>
+                    <Users className="h-5 w-5" />
                     <span>Gente a la que sigues</span>
                   </div>
                 </CardTitle>
                 <CardDescription>Descubre qué están viendo</CardDescription>
               </CardHeader>
               <CardContent className="pt-0 space-y-3">
-                <CardSeguidores seguidoresOrdenados={seguidos}/>
-                <Button
-                  onClick={() => setShowAddAmigo(true)}
-                  className="w-full gap-2 cursor-pointer"
-                  variant="outline"
-                >
-                  <UserPlus className="h-4 w-4"/>
-                  Buscar personas
-                </Button>
+                <CardSeguidores seguidoresOrdenados={seguidos} />
+                <div className="flex flex-row gap-2 w-full">
+                  <Button
+                    onClick={() => setShowAddAmigo(true)}
+                    className="flex-1 gap-2 cursor-pointer"
+                    variant="outline"
+                  >
+                    <UserPlus className="h-4 w-full" />
+                    Buscar personas
+                  </Button>
+                  <Button
+                    onClick={() => router.push('/perfil?tabAction=friends')}
+                    className="flex-1 gap-2 cursor-pointer"
+                    variant="outline"
+                  >
+                    <Users className="h-4 w-4" />
+                    Social
+                  </Button>
+                </div>
               </CardContent>
             </Card>
 
             {/* Sección de tendencias */}
-            <Card>
+            {/* <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="flex items-center gap-2">
                   <TrendingUp className="h-5 w-5"/>
@@ -758,9 +767,7 @@ export default function Home() {
                             <p className="text-xs text-muted-foreground">
                               {item.autor}
                             </p>
-                            {/*<Badge variant="secondary" className="mt-2 text-xs">
-                              {item.numAmigos} amigos
-                            </Badge>*/}
+                            
                           </div>
                         </div>
                       </Link>
@@ -787,7 +794,7 @@ export default function Home() {
                   Ver más tendencias
                 </Button>
               </CardContent>
-            </Card>
+            </Card> */}
           </div>
         </div>
       </div>

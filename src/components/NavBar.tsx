@@ -10,11 +10,13 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useRouter } from "next/navigation";
 import { AuthModal } from "./ui/auth-modal";
-import { Search, Film, Tv, BookOpen, Gamepad2 } from "lucide-react";
+import { Search, Film, Tv, BookOpen, Gamepad2, Menu, X } from "lucide-react";
 import { ThemeSwitch } from "./theme-switch";
 import { UserAvatar } from "./UserAvatar";
 import { authService } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
+import { useProfile } from "@/hooks/useProfile";
+import Link from "next/link";
 
 interface UserData {
   nombre: string;
@@ -31,6 +33,7 @@ export function Navbar() {
   const [showInicioSesion, setShowInicioSesion] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
   const [showTipoDropdown, setShowTipoDropdown] = useState<boolean>(false);
+  const { datosPerfil } = useProfile(authService.getUserId());
 
   // Tipos de contenido con sus iconos
   const tiposContenido = [
@@ -118,17 +121,29 @@ export function Navbar() {
     router.push("/");
   };
 
+  const [mobileMenuOpen, setMobileMenuOpen] = useState<boolean>(false);
+
   return (
     <header className="w-full border-b bg-background px-4 py-2 shadow-sm text-foreground">
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-4">
+        {/* Logo siempre visible */}
         <div
-          className="text-xl font-bold text-primary w-32 cursor-pointer"
+          className="text-xl font-bold text-primary cursor-pointer"
           onClick={() => router.push("/")}
         >
           MyMediaList
         </div>
 
-        <div className="relative justify-center w-2xl mx-auto flex items-center">
+        {/* Botón del menú móvil - sólo visible en móviles */}
+        <button
+          className="lg:hidden ml-auto mr-2 p-1"
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+        >
+          {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+        </button>
+
+        {/* Barra de búsqueda - oculta en móviles, visible en desktop */}
+        <div className="hidden lg:flex relative justify-center w-2xl mx-auto items-center">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-5 w-5" />
             <Input
@@ -180,68 +195,143 @@ export function Navbar() {
             <Search className="h-5 w-5" />
           </Button>
         </div>
-        <div className="w-auto flex items-center gap-4 justify-end">
+
+        {/* Iconos de usuario y tema - visibles en desktop, ocultos en móvil */}
+        <div className="hidden lg:flex w-auto items-center gap-4 justify-end">
           <ThemeSwitch />
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <div className="cursor-pointer">
-                {loading ? (
-                  <div className="h-10 w-10 rounded-full bg-muted animate-pulse"></div>
-                ) : isAuthenticated && userData ? (
+          <Link href={`/perfil?tabAction=profile`}>
+            <UserAvatar
+              key={`nav-avatar-${datosPerfil?.avatar}`}
+              avatarData={datosPerfil?.avatar || "avatar1"}
+              size="md"
+              tabAction="profile"
+            />
+          </Link>
+        </div>
+      </div>
+
+      {/* Menú móvil desplegable - visible sólo cuando está abierto en móviles */}
+      {mobileMenuOpen && (
+        <div className="lg:hidden mt-4 py-2 space-y-4 border-t">
+          {/* Barra de búsqueda para móvil */}
+          <div className="relative flex items-center mt-2">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-5 w-5" />
+            <Input
+              type="text"
+              placeholder="Buscar series, pelis, libros..."
+              value={busqueda}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                setBusqueda(e.target.value)
+              }
+              onKeyDown={handleEnter}
+              className={"rounded-2xl pl-10 pr-24 w-full"}
+            />
+            <div className="absolute right-12 top-1/2 -translate-y-1/2">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 gap-1 text-xs"
+                  >
+                    <IconoActual className="h-4 w-4" />
+                    {tipoActual.nombre}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  {tiposContenido.map((tipoItem) => (
+                    <DropdownMenuItem
+                      key={tipoItem.id}
+                      onClick={() => handleTipoChange(tipoItem.id)}
+                      className="cursor-pointer gap-2"
+                    >
+                      <tipoItem.icon className="h-4 w-4" />
+                      {tipoItem.nombre}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+            <Button
+              size="icon"
+              variant="ghost"
+              className="absolute right-1"
+              onClick={handleSearch}
+            >
+              <Search className="h-5 w-5" />
+            </Button>
+          </div>
+
+          {/* Opciones de usuario en móvil */}
+          <div className="flex items-center justify-between p-2">
+            <ThemeSwitch />
+            <div className="flex items-center gap-2">
+              {loading ? (
+                <div className="h-10 w-10 rounded-full bg-muted animate-pulse"></div>
+              ) : isAuthenticated && userData ? (
+                <div className="flex items-center gap-2">
                   <UserAvatar
-                    key={`nav-avatar-${userData.avatar}`}
+                    key={`nav-avatar-mobile-${userData.avatar}`}
                     avatarData={userData.avatar || "avatar1"}
                     size="md"
                   />
-                ) : (
-                  <UserAvatar avatarData="initial_#6C5CE7_US" />
-                )}
-              </div>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              {isAuthenticated ? (
-                <>
-                  <DropdownMenuItem
-                    onClick={() => {
-                      const userId = localStorage.getItem("id_usuario");
-                      if (userId) {
-                        router.push(`/perfil?id=${userId}`);
-                      } else {
-                        router.push("/perfil");
-                      }
-                    }}
-                    className="cursor-pointer"
-                  >
-                    Mi perfil
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() => router.push("/coleccion")}
-                    className="cursor-pointer"
-                  >
-                    Mi colección
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={cerrarSesion}
-                    className="text-destructive cursor-pointer"
-                  >
-                    Cerrar sesión
-                  </DropdownMenuItem>
-                </>
+                  <div className="flex flex-col">
+                    <span className="text-sm font-medium">{userData.nombre}</span>
+                    <Button
+                      variant="link"
+                      size="sm"
+                      className="h-auto p-0 text-xs text-muted-foreground"
+                      onClick={cerrarSesion}
+                    >
+                      Cerrar sesión
+                    </Button>
+                  </div>
+                </div>
               ) : (
-                <DropdownMenuItem
+                <Button
                   onClick={() => {
-                    console.log("Abriendo modal de inicio de sesión");
                     setShowInicioSesion(true);
+                    setMobileMenuOpen(false);
                   }}
-                  className="cursor-pointer"
+                  variant="outline"
+                  size="sm"
                 >
                   Iniciar sesión
-                </DropdownMenuItem>
+                </Button>
               )}
-            </DropdownMenuContent>
-          </DropdownMenu>
+            </div>
+          </div>
+
+          {/* Enlaces rápidos para móvil */}
+          {isAuthenticated && (
+            <div className="flex justify-between px-2">
+              <Button
+                variant="ghost"
+                onClick={() => {
+                  const userId = localStorage.getItem("id_usuario");
+                  if (userId) {
+                    router.push(`/perfil?id=${userId}`);
+                  } else {
+                    router.push("/perfil");
+                  }
+                  setMobileMenuOpen(false);
+                }}
+              >
+                Mi perfil
+              </Button>
+              <Button
+                variant="ghost"
+                onClick={() => {
+                  router.push("/coleccion");
+                  setMobileMenuOpen(false);
+                }}
+              >
+                Mi colección
+              </Button>
+            </div>
+          )}
         </div>
-      </div>
+      )}
 
       <AuthModal
         showModal={showInicioSesion}

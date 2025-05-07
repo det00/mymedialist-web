@@ -20,12 +20,13 @@ import {
 import { useActivity } from "@/hooks/useActivity";
 import { activityService } from "@/lib/activity";
 import moment from "moment";
-import { 
-  CONTENT_TYPE_FILTERS, 
-  ACTION_TYPE_FILTERS, 
-  TIME_FILTERS 
+import {
+  CONTENT_TYPE_FILTERS,
+  ACTION_TYPE_FILTERS,
+  TIME_FILTERS
 } from "@/lib/constants";
-import {JSX} from "react";
+import { JSX } from "react";
+import 'moment/locale/es';
 
 // Configurar locale español para fechas
 moment.locale("es");
@@ -34,7 +35,7 @@ moment.locale("es");
 const getActionTypeFromStatus = (status: string) => {
   const actionTypeMap: Record<string, string> = {
     "E": "started",
-    "C": "finished", 
+    "C": "finished",
     "P": "added",
     "A": "dropped"
   };
@@ -45,7 +46,7 @@ const getActionTypeFromStatus = (status: string) => {
 const getActionDescription = (status: string) => {
   const actionDescriptions: Record<string, string> = {
     "E": "En progreso",
-    "C": "Completado", 
+    "C": "Completado",
     "P": "Pendiente",
     "A": "Abandonado"
   };
@@ -56,21 +57,21 @@ const getActionDescription = (status: string) => {
 const getActionDescriptionForSentence = (status: string) => {
   const actionDescriptions: Record<string, string> = {
     "E": "ha empezado",
-    "C": "ha completado", 
+    "C": "ha completado",
     "P": "ha añadido",
     "A": "ha abandonado"
   };
   return actionDescriptions[status] || "ha actualizado";
 };
 
-export function ProfileActivity({ userId }: {userId: string | number}): JSX.Element {
-  const { 
-    activities, 
-    loading, 
-    error, 
-    hasMore, 
-    timeFilter, 
-    contentType, 
+export function ProfileActivity({ userId }: { userId: string | number }): JSX.Element {
+  const {
+    activities,
+    loading,
+    error,
+    hasMore,
+    timeFilter,
+    contentType,
     activityType,
     filterByContentType,
     filterByActivityType,
@@ -94,7 +95,7 @@ export function ProfileActivity({ userId }: {userId: string | number}): JSX.Elem
         return <Film className="h-4 w-4" />;
     }
   };
-  
+
   // Obtener icono por tipo de actividad
   const getActivityIcon = (type: string) => {
     switch (type) {
@@ -110,12 +111,12 @@ export function ProfileActivity({ userId }: {userId: string | number}): JSX.Elem
         return <Eye className="h-4 w-4" />;
     }
   };
-  
-  // Formatear fecha relativa
-  const formatRelativeTime = (dateString: string) => {
-    return moment(dateString).fromNow();
+
+  const formatRelativeTime = (dateString: string): string => {
+    moment.locale('es');
+    return moment.utc(dateString).fromNow();
   };
-  
+
   // Renderizar actividad
   const renderActivityItems = () => {
     if (loading && activities.length === 0) {
@@ -126,12 +127,12 @@ export function ProfileActivity({ userId }: {userId: string | number}): JSX.Elem
         </div>
       );
     }
-    
+
     if (error) {
       return (
         <div className="py-12 text-center">
           <p className="text-destructive mb-2">{error}</p>
-          <Button 
+          <Button
             onClick={refreshActivity}
             variant="outline"
             className="cursor-pointer"
@@ -142,7 +143,7 @@ export function ProfileActivity({ userId }: {userId: string | number}): JSX.Elem
         </div>
       );
     }
-    
+
     if (activities.length === 0) {
       return (
         <div className="py-12 text-center">
@@ -150,7 +151,7 @@ export function ProfileActivity({ userId }: {userId: string | number}): JSX.Elem
         </div>
       );
     }
-    
+
     return (
       <div className="space-y-4">
         {activities.map((item, index) => (
@@ -172,7 +173,7 @@ export function ProfileActivity({ userId }: {userId: string | number}): JSX.Elem
                   </div>
                 )}
               </div>
-              
+
               {/* Contenido */}
               <div className="flex-1">
                 <div className="flex items-start justify-between">
@@ -187,19 +188,19 @@ export function ProfileActivity({ userId }: {userId: string | number}): JSX.Elem
                         {getActionDescription(item.estado)}
                       </Badge>
                     </div>
-                    
-                    <Link 
+
+                    <Link
                       href={`/${activityService.getContentTypeUrl(item.tipo)}/${item.id_api}`}
                       className="hover:underline"
                     >
                       <h3 className="font-medium">{item.titulo}</h3>
                     </Link>
-                    
+
                     <p className="text-sm mt-1">
                       {getActionDescriptionForSentence(item.estado)} {activityService.getContentTypeName(item.tipo).toLowerCase()}
                     </p>
                   </div>
-                  
+
                   <div className="text-xs text-muted-foreground flex items-center whitespace-nowrap">
                     <CalendarDays className="h-3 w-3 mr-1" />
                     {formatRelativeTime(item.created_at)}
@@ -209,12 +210,12 @@ export function ProfileActivity({ userId }: {userId: string | number}): JSX.Elem
             </div>
           </div>
         ))}
-        
+
         {/* Botón para cargar más */}
         {hasMore && (
           <div className="text-center pt-4">
-            <Button 
-              onClick={loadMore} 
+            <Button
+              onClick={loadMore}
               disabled={loading}
               variant="outline"
               className="cursor-pointer"
@@ -233,7 +234,7 @@ export function ProfileActivity({ userId }: {userId: string | number}): JSX.Elem
       </div>
     );
   };
-  
+
   return (
     <div className="space-y-6">
       <Card>
@@ -243,13 +244,13 @@ export function ProfileActivity({ userId }: {userId: string | number}): JSX.Elem
             Lo que has estado viendo, leyendo y jugando
           </CardDescription>
         </CardHeader>
-        
+
         <CardContent className="space-y-6">
           {/* Filtros */}
           <div className="flex flex-col sm:flex-row gap-4">
             {/* Filtro por tipo de contenido */}
-            <Select 
-              value={contentType} 
+            <Select
+              value={contentType}
               onValueChange={filterByContentType}
             >
               <SelectTrigger className="w-full sm:w-[180px]">
@@ -263,10 +264,10 @@ export function ProfileActivity({ userId }: {userId: string | number}): JSX.Elem
                 ))}
               </SelectContent>
             </Select>
-            
+
             {/* Filtro por tipo de actividad */}
-            <Select 
-              value={activityType} 
+            <Select
+              value={activityType}
               onValueChange={filterByActivityType}
             >
               <SelectTrigger className="w-full sm:w-[180px]">
@@ -280,10 +281,10 @@ export function ProfileActivity({ userId }: {userId: string | number}): JSX.Elem
                 ))}
               </SelectContent>
             </Select>
-            
+
             {/* Filtro por tiempo */}
-            <Select 
-              value={timeFilter} 
+            <Select
+              value={timeFilter}
               onValueChange={filterByTime}
             >
               <SelectTrigger className="w-full sm:w-[180px]">
@@ -298,7 +299,7 @@ export function ProfileActivity({ userId }: {userId: string | number}): JSX.Elem
               </SelectContent>
             </Select>
           </div>
-          
+
           {/* Lista de actividad */}
           {renderActivityItems()}
         </CardContent>

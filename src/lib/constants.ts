@@ -68,8 +68,8 @@ export const CONTENT_TYPE_NAMES: Record<string, string> = {
   // Filtros de acción para actividad
   export const ACTION_TYPE_FILTERS = [
     { id: "all", name: "Todas las acciones" },
-    { id: "added", name: "Añadidos" },
-    { id: "started", name: "Comenzados" },
+    { id: "added", name: "Pendientes" },
+    { id: "started", name: "En progreso" },
     { id: "finished", name: "Completados" },
     { id: "dropped", name: "Abandonados" },
   ];

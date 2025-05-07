@@ -1,14 +1,26 @@
 "use client";
 
+import React from "react";
+import { useRouter } from "next/navigation";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
 interface UserAvatarProps {
   avatarData?: string;
   size?: "sm" | "md" | "lg" | "xl";
   className?: string;
+  onClick?: () => void;
+  tabAction?: string;
 }
 
-export function UserAvatar({ avatarData, size = "md", className = "" }: UserAvatarProps) {
+export const UserAvatar: React.FC<UserAvatarProps> = ({
+  avatarData,
+  size = "md",
+  className,
+  onClick,
+  tabAction
+}) => {
+  const router = useRouter();
+
   // Valores por defecto
   if (!avatarData) {
     avatarData = "avatar1";
@@ -62,7 +74,14 @@ export function UserAvatar({ avatarData, size = "md", className = "" }: UserAvat
     : "";
   
   return (
-    <Avatar className={`${sizeClass} ${className}`}>
+    <Avatar className={`${sizeClass} ${className}`} onClick={() => {
+        if (tabAction === "profile") {
+          router.push("/perfil");
+        }
+        if (onClick) {
+          onClick();
+        }
+      }}>
       {isPredefined ? (
         <>
           <AvatarImage 

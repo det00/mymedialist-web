@@ -43,14 +43,14 @@ export function ProfilePublicView({ idUsuario }: { idUsuario: number }) {
   const [isFollowing, setIsFollowing] = useState(false);
   const { datosPerfil, loading, seguidos, seguidores } = useProfile(idUsuario);
   const { activities } = useActivity(idUsuario);
-  const { 
-    enProgreso, 
-    completado, 
-    pendiente, 
-    abandonado, 
-    pelicula, 
-    serie, 
-    libro, 
+  const {
+    enProgreso,
+    completado,
+    pendiente,
+    abandonado,
+    pelicula,
+    serie,
+    libro,
     juego,
     loading: loadingCollection
   } = useCollection({ userId: idUsuario, autoLoad: true });
@@ -141,6 +141,21 @@ export function ProfilePublicView({ idUsuario }: { idUsuario: number }) {
         return "Videojuego";
       default:
         return "Contenido";
+    }
+  };
+
+  const getContentTypeRoute = (tipo: string) => {
+    switch (tipo) {
+      case "P":
+        return "pelicula";
+      case "S":
+        return "serie";
+      case "L":
+        return "libro";
+      case "V":
+        return "videojuego";
+      default:
+        return "contenido";
     }
   };
 
@@ -348,47 +363,49 @@ export function ProfilePublicView({ idUsuario }: { idUsuario: number }) {
                         return true;
                       })
                       .map((activity) => (
-                        <div key={activity.id} className="flex gap-4 p-4 border rounded-lg">
-                          <div className="relative w-16 h-24 flex-shrink-0">
-                            {activity.imagen ? (
-                              <Image
-                                src={activity.imagen}
-                                alt={activity.titulo}
-                                fill
-                                className="object-cover rounded-md"
-                              />
-                            ) : (
-                              <div className="w-full h-full bg-muted flex items-center justify-center rounded-md">
-                                {renderContentTypeIcon(activity.tipo)}
-                              </div>
-                            )}
-                          </div>
-                          <div className="flex-1 space-y-2">
-                            <div>
-                              <Badge className="mb-1">
-                                {renderContentTypeIcon(activity.tipo)}
-                                <span className="ml-1">
-                                  {getContentTypeName(activity.tipo)}
-                                </span>
-                              </Badge>
-                              <h3 className="text-lg font-medium">{activity.titulo}</h3>
+                        <Link href={`/${getContentTypeRoute(activity.tipo).toLocaleLowerCase()}/${activity.id_api}`} key={activity.id}>
+                          <div className="flex gap-4 p-4 border rounded-lg hover:bg-accent cursor-pointer mb-2">
+                            <div className="relative w-16 h-24 flex-shrink-0">
+                              {activity.imagen ? (
+                                <Image
+                                  src={activity.imagen}
+                                  alt={activity.titulo}
+                                  fill
+                                  className="object-cover rounded-md"
+                                />
+                              ) : (
+                                <div className="w-full h-full bg-muted flex items-center justify-center rounded-md">
+                                  {renderContentTypeIcon(activity.tipo)}
+                                </div>
+                              )}
                             </div>
-                            <p className="text-sm text-muted-foreground">
-                              {(datosPerfil?.name || datosPerfil?.nombre)} {renderActivityType(activity.estado)} este{" "}
-                              {getContentTypeName(activity.tipo).toLowerCase()}
-                            </p>
-                            <p className="text-xs text-muted-foreground">
-                              {formatDate(activity.created_at || activity.updated_at)}
-                            </p>
+                            <div className="flex-1 space-y-2">
+                              <div>
+                                <Badge className="mb-1">
+                                  {renderContentTypeIcon(activity.tipo)}
+                                  <span className="ml-1">
+                                    {getContentTypeName(activity.tipo)}
+                                  </span>
+                                </Badge>
+                                <h3 className="text-lg font-medium">{activity.titulo}</h3>
+                              </div>
+                              <p className="text-sm text-muted-foreground">
+                                {(datosPerfil?.name || datosPerfil?.nombre)} {renderActivityType(activity.estado)} este{" "}
+                                {getContentTypeName(activity.tipo).toLowerCase()}
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                {formatDate(activity.created_at || activity.updated_at)}
+                              </p>
+                            </div>
                           </div>
-                        </div>
+                        </Link>
                       ));
-                  })()} 
+                  })()}
                 </div>
 
               </CardContent>
               <CardFooter>
-                <Button variant="outline" className="w-full">
+                <Button variant="outline" className="w-full cursor-pointer">
                   Cargar más
                 </Button>
               </CardFooter>
@@ -408,8 +425,8 @@ export function ProfilePublicView({ idUsuario }: { idUsuario: number }) {
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {enProgreso && enProgreso.length > 0 ? enProgreso.map((item) => (
+                    <Link href={`/${getContentTypeRoute(item.tipo).toLocaleLowerCase()}/${item.id_api}`} key={item.id}>
                     <div
-                      key={item.id}
                       className="border rounded-lg overflow-hidden group cursor-pointer hover:border-primary transition-colors"
                     >
                       <div className="relative h-40 w-full">
@@ -447,6 +464,7 @@ export function ProfilePublicView({ idUsuario }: { idUsuario: number }) {
                         </h3>
                       </div>
                     </div>
+                    </Link>
                   )) : (
                     <div className="col-span-3 text-center py-8">
                       <p className="text-muted-foreground">No hay contenido en progreso</p>
@@ -467,8 +485,8 @@ export function ProfilePublicView({ idUsuario }: { idUsuario: number }) {
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {completado && completado.length > 0 ? completado.map((item) => (
+                    <Link href={`/${getContentTypeRoute(item.tipo).toLocaleLowerCase()}/${item.id_api}`} key={item.id}>
                     <div
-                      key={item.id}
                       className="border rounded-lg overflow-hidden group cursor-pointer hover:border-primary transition-colors"
                     >
                       <div className="relative h-40 w-full">
@@ -504,6 +522,7 @@ export function ProfilePublicView({ idUsuario }: { idUsuario: number }) {
                         </h3>
                       </div>
                     </div>
+                    </Link>
                   )) : (
                     <div className="col-span-3 text-center py-8">
                       <p className="text-muted-foreground">No hay contenido completado</p>
@@ -524,8 +543,8 @@ export function ProfilePublicView({ idUsuario }: { idUsuario: number }) {
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {pendiente && pendiente.length > 0 ? pendiente.map((item) => (
+                    <Link href={`/${getContentTypeRoute(item.tipo).toLocaleLowerCase()}/${item.id_api}`} key={item.id}>
                     <div
-                      key={item.id}
                       className="border rounded-lg overflow-hidden group cursor-pointer hover:border-primary transition-colors"
                     >
                       <div className="relative h-40 w-full">
@@ -561,6 +580,63 @@ export function ProfilePublicView({ idUsuario }: { idUsuario: number }) {
                         </h3>
                       </div>
                     </div>
+                    </Link>
+                  )) : (
+                    <div className="col-span-3 text-center py-8">
+                      <p className="text-muted-foreground">No hay contenido pendiente</p>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="flex items-center">
+                  <div className="h-3 w-3 rounded-full bg-red-500 mr-2"></div>
+                  Abandonados
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {abandonado && abandonado.length > 0 ? abandonado.map((item) => (
+                    <Link href={`/${getContentTypeRoute(item.tipo).toLocaleLowerCase()}/${item.id_api}`} key={item.id}>
+                    <div
+                      className="border rounded-lg overflow-hidden group cursor-pointer hover:border-primary transition-colors"
+                    >
+                      <div className="relative h-40 w-full">
+                        {item.imagen ? (
+                          <Image
+                            src={item.imagen}
+                            alt={item.titulo}
+                            fill
+                            className="object-cover"
+                          />
+                        ) : (
+                          <div className="h-40 w-full bg-muted flex items-center justify-center">
+                            {renderContentTypeIcon(item.tipo)}
+                          </div>
+                        )}
+                        <div className="absolute top-2 right-2">
+                          <Badge
+                            variant="secondary"
+                            className="bg-background/80 backdrop-blur-sm"
+                          >
+                            {renderContentTypeIcon(item.tipo)}
+                          </Badge>
+                        </div>
+                        <div className="absolute bottom-2 right-2">
+                          <Badge className="bg-red-500">
+                            Abandonado
+                          </Badge>
+                        </div>
+                      </div>
+                      <div className="p-2">
+                        <h3 className="font-medium text-sm truncate">
+                          {item.titulo}
+                        </h3>
+                      </div>
+                    </div>
+                    </Link>
                   )) : (
                     <div className="col-span-3 text-center py-8">
                       <p className="text-muted-foreground">No hay contenido pendiente</p>

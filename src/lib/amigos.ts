@@ -32,7 +32,7 @@ const amigosService = {
         throw new Error("No hay token de autenticación");
       }
       const res = await api.post<ResponseSeguir>(
-        `/perfil/usuario/toggle-follow/${id}`,
+        `/perfil/toggle-follow/${id}`,
         {},
         {
           headers: { Authorization: `Bearer ${token}` },

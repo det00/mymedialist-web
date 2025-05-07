@@ -481,12 +481,12 @@ export function ProfileCollection({ userId }: ProfileCollectionProps) {
             </Button>
           )} */}
           
-          <Link href="/busqueda?busqueda=&tipo=P">
+          {/* <Link href="/busqueda?busqueda=&tipo=P">
             <Button className="cursor-pointer">
               <Plus className="h-4 w-4 mr-2" />
               Añadir
             </Button>
-          </Link>
+          </Link> */}
         </div>
       </div>
       
