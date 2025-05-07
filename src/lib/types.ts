@@ -22,6 +22,7 @@ export interface Usuario {
   nombre: string;
   username: string;
   avatar: string;
+  siguiendo: boolean;
 }
 
 export interface Seguidor {

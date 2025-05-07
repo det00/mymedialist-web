@@ -1,15 +1,29 @@
 import Link from "next/link";
 import {UserAvatar} from "@/components/UserAvatar";
 import {Badge} from "@/components/ui/badge";
-import {BookOpenIcon, FilmIcon, Gamepad2Icon, TvIcon} from "lucide-react";
+import {Button} from "@/components/ui/button";
+import {BookOpenIcon, FilmIcon, Gamepad2Icon, TvIcon, UserMinus} from "lucide-react";
 import React from "react";
 import {Seguidor} from "@/lib/types";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { profileService } from "@/lib/profile";
 
 interface CardSeguidoresProp {
   seguidoresOrdenados: Seguidor[];
 }
 
 const CardSeguidores = ({seguidoresOrdenados}: CardSeguidoresProp) => {
+  const queryClient = useQueryClient();
+
+  const dejarSeguirMutation = useMutation({
+    mutationFn: (idSeguido: number) => profileService.toggleFollow(idSeguido.toString()),
+    onSuccess: () => {
+      // Invalidar y refrescar consultas relevantes
+      queryClient.invalidateQueries({ queryKey: ["seguidos"] });
+      queryClient.invalidateQueries({ queryKey: ["seguidores"] });
+      queryClient.invalidateQueries({ queryKey: ["perfil"] });
+    },
+  });
 
   const getContentTypeIcon = (type: string) => {
     switch (type) {
@@ -64,6 +78,18 @@ const CardSeguidores = ({seguidoresOrdenados}: CardSeguidoresProp) => {
                         @{friend.username}
                       </p>
                     </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="cursor-pointer"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        dejarSeguirMutation.mutate(friend.id);
+                      }}
+                    >
+                      <UserMinus className="h-4 w-4 mr-2" />
+                      Dejar de seguir
+                    </Button>
                   </div>
 
                   {/* Información adicional */}

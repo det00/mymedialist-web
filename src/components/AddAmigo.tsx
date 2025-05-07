@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Dialog, DialogClose, DialogContent, DialogTitle } from "./ui/dialog";
 import { DialogFooter, DialogHeader } from "./ui/dialog";
 import { Input } from "./ui/input";
@@ -17,27 +18,32 @@ interface AddAmigoProps {
 }
 
 export function AddAmigo({ cerrarAddAmigo, open }: AddAmigoProps) {
+  const queryClient = useQueryClient();
   const [query, setQuery] = useState<string>("");
   const [searchTerm] = useState<string>("");
-  const [isSearching, setIsSearching] = useState<boolean>(false);
-  const [searchResults, setSearchResults] = useState<Usuario[]>([]);
-  const [addingFriend, setAddingFriend] = useState<Record<number, boolean>>({});
-  const [addedFriends, setAddedFriends] = useState<Record<number, boolean>>({});
 
-  // Función para buscar usuarios
-  const buscarUsuarios = async (): Promise<void> => {
-    if (!query.trim()) return;
-    setIsSearching(true);
-    setSearchResults([]);
-    const res = await amigosService.buscarUsuarios(query);
-    setSearchResults(res);
-    setIsSearching(false);
-  };
+  // Buscar usuarios
+  const { data: searchResults = [], isLoading: isSearching, refetch } = useQuery({
+    queryKey: ["buscarUsuarios", query],
+    queryFn: () => amigosService.buscarUsuarios(query),
+    enabled: query.trim() !== "",
+  });
 
-  // Función para enviar solicitud de amistad
-  const seguirUsuario = async (usuarioId: number): Promise<void> => {
-    setAddingFriend((prev) => ({ ...prev, [usuarioId]: true }));
-    amigosService.seguirUsuario(usuarioId);
+  // Seguir/Dejar de seguir usuario
+  const seguirUsuarioMutation = useMutation({
+    mutationFn: amigosService.seguirUsuario,
+    onSuccess: () => {
+      // Invalidar y refrescar consultas relevantes
+      queryClient.invalidateQueries({ queryKey: ["buscarUsuarios"] });
+      queryClient.invalidateQueries({ queryKey: ["seguidores"] });
+      queryClient.invalidateQueries({ queryKey: ["seguidos"] });
+    },
+  });
+
+  const handleBuscarUsuarios = () => {
+    if (query.trim()) {
+      void refetch();
+    }
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -74,7 +80,7 @@ export function AddAmigo({ cerrarAddAmigo, open }: AddAmigoProps) {
             />
           </div>
           <Button
-            onClick={buscarUsuarios}
+            onClick={handleBuscarUsuarios}
             disabled={isSearching || !query.trim()}
             className="cursor-pointer"
           >
@@ -136,17 +142,18 @@ export function AddAmigo({ cerrarAddAmigo, open }: AddAmigoProps) {
                     </div>
 
                     <Button
-                      variant={addedFriends[usuario.id] ? "outline" : "default"}
+                      variant={usuario.siguiendo ? "outline" : "default"}
                       size="sm"
-                      disabled={false}
-                      onClick={() => seguirUsuario(usuario.id)}
+                      disabled={seguirUsuarioMutation.status === 'pending'}
+                      onClick={() => seguirUsuarioMutation.mutate(usuario.id)}
                       className="cursor-pointer"
                     >
-                      {true ?<>
+                      {usuario.siguiendo ? (
+                        <>
                           <Check className="h-4 w-4 mr-1" />
                           Dejar de seguir
                         </>
-                       : (
+                      ) : (
                         <>
                           <UserPlus className="h-4 w-4 mr-1" />
                           Seguir

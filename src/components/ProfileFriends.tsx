@@ -1,4 +1,5 @@
-import {useCallback, useEffect, useState} from "react";
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import {
   Card,
   CardContent,
@@ -40,9 +41,17 @@ export function ProfileFriends() {
 
   const [showAddFriendDialog, setShowAddFriendDialog] = useState(false);
   const [selectedSortOption, setSelectedSortOption] = useState("recent");
-  const [seguidores, setSeguidores] = useState<Seguidor[]>([]);
-  const [seguidos, setSeguidos] = useState<Seguidor[]>([]);
   const userId = Number(localStorage.getItem("id_usuario"));
+
+  const { data: seguidores = [], refetch: refetchSeguidores } = useQuery({
+    queryKey: ["seguidores", userId],
+    queryFn: () => amigosService.getSeguidores(userId),
+  });
+
+  const { data: seguidos = [], refetch: refetchSeguidos } = useQuery({
+    queryKey: ["seguidos", userId],
+    queryFn: () => amigosService.getSeguidos(userId),
+  });
 
   // Manejar búsqueda
   const handleSearchSeguidores = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -128,25 +137,6 @@ export function ProfileFriends() {
       return date.toLocaleDateString();
     }
   };
-
-  const getSeguidores = useCallback(async (): Promise<void> => {
-    const res = await amigosService.getSeguidores(userId);
-    setSeguidores(res);
-  }, [userId]);
-
-  const getSeguidos = useCallback(async (): Promise<void> => {
-    const res = await amigosService.getSeguidos(userId);
-    setSeguidos(res);
-  }, [userId]);
-
-  useEffect(() => {
-    getSeguidores();
-    getSeguidos();
-  }, [getSeguidores, getSeguidos]);
-
-  useEffect(() => {
-    console.log("SEGUIDOS", seguidos);
-  }, [seguidos]);
 
   return (
     <div className="space-y-6">

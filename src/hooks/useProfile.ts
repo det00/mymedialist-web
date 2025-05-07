@@ -1,5 +1,6 @@
 // src/hooks/useProfile.ts
-import {useEffect, useState} from "react";
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {useRouter} from "next/navigation";
 import {profileService} from "@/lib/profile";
 import {authService} from "@/lib/auth";
@@ -13,99 +14,44 @@ export interface PutPerfilRequest {
 }
 
 export function useProfile(idUsuario: number) {
-  const [datosPerfil, setDatosPerfil] = useState<Perfil | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
+  const router = useRouter();
   const [isEditMode, setIsEditMode] = useState<boolean>(false);
   const [previewMode, setPreviewMode] = useState<boolean>(false);
-  const [seguidos, setSeguidos] = useState<Seguidor[]>([]);
-  const [seguidores, setSeguidores] = useState<Seguidor[]>([]);
-  const router = useRouter();
 
-  // Cargar datos del perfil
-  const loadProfileData = async (idUsuario: number) => {
-    setLoading(true);
-    setError(null);
+  // Obtener datos de perfil
+  const { data: datosPerfil, isLoading: loadingPerfil, error: errorPerfil } = useQuery({
+    queryKey: ["perfil", idUsuario],
+    queryFn: () => profileService.getPerfil(idUsuario),
+    enabled: idUsuario !== -1,
+  });
 
-    try {
-      const isAuthenticated = authService.isAuthenticated();
-      if (!isAuthenticated) {
-        router.push("/");
-        return;
-      }
+  // Obtener seguidos
+  const { data: seguidos = [], isLoading: loadingSeguidos } = useQuery({
+    queryKey: ["seguidos", idUsuario],
+    queryFn: () => amigosService.getSeguidos(idUsuario),
+    enabled: idUsuario !== -1,
+  });
 
-      const perfil = await profileService.getPerfil(idUsuario);
-      
-      // Sincronizar el avatar del perfil con localStorage para consistencia
-      if (perfil.esMiPerfil && (perfil.avatar_id || perfil.avatar)) {
-        const currentAvatar = authService.getUserData()?.avatar;
-        const profileAvatar = perfil.avatar_id || perfil.avatar;
-        
-        // Si hay diferencia entre los avatares, actualizar localStorage
-        if (currentAvatar !== profileAvatar) {
-          authService.setUserAvatar(profileAvatar);
-        }
-      }
-
-      setDatosPerfil(perfil);
-    } catch (err) {
-      console.error("Error al cargar datos de perfil:", err);
-      setError("No se pudieron cargar los datos del perfil");
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Obtener seguidores
+  const { data: seguidores = [], isLoading: loadingSeguidores } = useQuery({
+    queryKey: ["seguidores", idUsuario],
+    queryFn: () => amigosService.getSeguidores(idUsuario),
+    enabled: idUsuario !== -1,
+  });
 
   const deleteAccount = async () => {
     try {
-      setLoading(true);
       await authService.deleteAccount();
       router.push("/");
     } catch (err) {
       console.error("Error al eliminar la cuenta:", err);
-      setError("No se pudo eliminar la cuenta");
-    } finally {
-      setLoading(false);
+      throw new Error("No se pudo eliminar la cuenta");
     }
   };
-
-  // Cargar seguidores
-  const getSeguidores = async (idUsuario: number) => {
-    try {
-      setLoading(true);
-      const response = await amigosService.getSeguidores(idUsuario)
-      setSeguidores(response)
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setLoading(false);
-    }
-
-  }
-  //Cargar seguidos
-  const getSeguidos = async (idUsuario: number) => {
-    setLoading(true);
-    try {
-      const response = await amigosService.getSeguidos(idUsuario);
-      setSeguidos(response)
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setLoading(false);
-    }
-  }
   // Guardar cambios del perfil
   const saveProfile = async (updatedData: Partial<PutPerfilRequest>) => {
     try {
-      if (!datosPerfil) {
-        throw new Error("No hay datos de perfil para actualizar");
-      }
-
-      setDatosPerfil({
-        ...datosPerfil,
-        ...updatedData,
-      });
-
       await profileService.updateProfile(updatedData);
 
       // Actualizar también el avatar en localStorage para que se refleje en la navbar
@@ -115,15 +61,12 @@ export function useProfile(idUsuario: number) {
 
       setIsEditMode(false);
       
-      // Recargar los datos del perfil para garantizar la sincronización
-      // de todos los componentes, especialmente para cambios de tipo de avatar
-      setTimeout(() => {
-        loadProfileData(idUsuario);
-        
-        // Disparar eventos para forzar la actualización de componentes
-        window.dispatchEvent(new Event("userDataUpdated"));
-        window.dispatchEvent(new Event("avatarUpdated"));
-      }, 100);
+      // Invalidar caché para forzar recarga
+      queryClient.invalidateQueries({ queryKey: ["perfil"] });
+      
+      // Disparar eventos para forzar la actualización de componentes
+      window.dispatchEvent(new Event("userDataUpdated"));
+      window.dispatchEvent(new Event("avatarUpdated"));
 
       return true;
     } catch (err) {
@@ -133,20 +76,23 @@ export function useProfile(idUsuario: number) {
   };
 
   // Manejar seguir/dejar de seguir
+  const toggleFollowMutation = useMutation({
+    mutationFn: (perfilId: string) => profileService.toggleFollow(perfilId),
+    onSuccess: (response) => {
+      // Invalidar y refrescar consultas relevantes
+      queryClient.invalidateQueries({ queryKey: ["seguidos"] });
+      queryClient.invalidateQueries({ queryKey: ["seguidores"] });
+      queryClient.invalidateQueries({ queryKey: ["perfil"] });
+    },
+  });
+
   const toggleFollow = async () => {
     try {
       if (!datosPerfil || datosPerfil.esMiPerfil) {
         return false;
       }
 
-      const response = await profileService.toggleFollow(datosPerfil.id);
-
-      // Actualizar estado local
-      setDatosPerfil({
-        ...datosPerfil,
-        siguiendo: response.siguiendo,
-      });
-
+      await toggleFollowMutation.mutateAsync(datosPerfil.id);
       return true;
     } catch (err) {
       console.error("Error al seguir/dejar de seguir:", err);
@@ -178,29 +124,28 @@ export function useProfile(idUsuario: number) {
     }
   };
 
-  // Cargar datos al montar el componente
-  useEffect(() => {
-    if (idUsuario !== -1) {
-      loadProfileData(idUsuario);
-      getSeguidos(idUsuario);
-      getSeguidores(idUsuario);
-    }
-  }, [idUsuario]);
+  // Ya no es necesario, React Query maneja la carga de datos
+
+  const refreshProfile = () => {
+    queryClient.invalidateQueries({ queryKey: ["perfil", idUsuario] });
+    queryClient.invalidateQueries({ queryKey: ["seguidos", idUsuario] });
+    queryClient.invalidateQueries({ queryKey: ["seguidores", idUsuario] });
+  };
 
   return {
     datosPerfil,
     seguidores,
     seguidos,
-    loading,
-    error,
+    loading: loadingPerfil || loadingSeguidos || loadingSeguidores,
+    error: errorPerfil,
     isEditMode,
     previewMode,
-    setDatosPerfil,
+    setDatosPerfil: (perfil) => queryClient.setQueryData(["perfil", idUsuario], perfil),
     saveProfile,
     toggleFollow,
     logout,
     toggleEditMode,
     togglePreviewMode,
-    refreshProfile: loadProfileData,
+    refreshProfile,
   };
 }
