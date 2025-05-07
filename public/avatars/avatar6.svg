@@ -1,27 +1,41 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
-  <!-- Fondo del avatar -->
-  <rect width="200" height="200" fill="#E84393" rx="100" ry="100" />
+<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <!-- Fondo circular -->
+  <circle cx="100" cy="100" r="100" fill="#FFCC80"/>
   
-  <!-- Cabello -->
-  <path d="M40 80 C40 40 60 30 100 30 C140 30 160 40 160 80 C160 90 155 100 150 105 C145 110 140 100 140 95 C140 90 138 80 135 75 C130 70 125 80 120 85 C115 90 110 75 100 70 C90 75 85 90 80 85 C75 80 70 70 65 75 C62 80 60 90 60 95 C60 100 55 110 50 105 C45 100 40 90 40 80 Z" fill="#444444" />
+  <!-- Cara del zorro -->
+  <ellipse cx="100" cy="100" rx="70" ry="65" fill="#FF8A65"/>
   
-  <!-- Cara -->
-  <circle cx="100" cy="100" r="40" fill="#FFFFFF" />
+  <!-- Orejas -->
+  <path d="M45 55 L70 80 L55 90 Z" fill="#BF360C"/>
+  <path d="M155 55 L130 80 L145 90 Z" fill="#BF360C"/>
+  <path d="M50 60 L70 80 L60 87 Z" fill="#FF8A65"/>
+  <path d="M150 60 L130 80 L140 87 Z" fill="#FF8A65"/>
+  
+  <!-- Parte blanca de la cara -->
+  <path d="M70 140 Q100 160 130 140 Q115 100 100 90 Q85 100 70 140 Z" fill="#FFFFFF"/>
   
   <!-- Ojos -->
-  <ellipse cx="85" cy="95" rx="6" ry="8" fill="#444444" />
-  <ellipse cx="115" cy="95" rx="6" ry="8" fill="#444444" />
+  <ellipse cx="80" cy="95" rx="10" ry="12" fill="#000000"/>
+  <ellipse cx="120" cy="95" rx="10" ry="12" fill="#000000"/>
   
-  <!-- Cejas -->
-  <path d="M75 80 Q85 75 95 80" stroke="#444444" stroke-width="3" fill="transparent" />
-  <path d="M105 80 Q115 75 125 80" stroke="#444444" stroke-width="3" fill="transparent" />
+  <!-- Brillos en los ojos -->
+  <ellipse cx="83" cy="92" rx="3" ry="4" fill="#FFFFFF"/>
+  <ellipse cx="123" cy="92" rx="3" ry="4" fill="#FFFFFF"/>
   
-  <!-- Sonrisa -->
-  <path d="M85 115 Q100 125 115 115" stroke="#444444" stroke-width="3" fill="transparent" />
+  <!-- Nariz -->
+  <path d="M95 115 Q100 120 105 115 Q100 123 95 115 Z" fill="#4E342E"/>
   
-  <!-- Cuello -->
-  <rect x="90" y="140" width="20" height="20" fill="#FFFFFF" />
+  <!-- Hocico/boca -->
+  <path d="M100 120 L100 130" stroke="#4E342E" stroke-width="1"/>
+  <path d="M100 130 Q95 135 90 132" stroke="#4E342E" stroke-width="1.5" fill="none"/>
+  <path d="M100 130 Q105 135 110 132" stroke="#4E342E" stroke-width="1.5" fill="none"/>
   
-  <!-- Cuerpo superior -->
-  <path d="M70 160 C70 145 80 140 100 140 C120 140 130 145 130 160 L130 200 L70 200 Z" fill="#FFFFFF" />
+  <!-- Bigotes -->
+  <line x1="95" y1="120" x2="70" y2="115" stroke="#4E342E" stroke-width="1"/>
+  <line x1="95" y1="123" x2="72" y2="123" stroke="#4E342E" stroke-width="1"/>
+  <line x1="95" y1="126" x2="75" y2="130" stroke="#4E342E" stroke-width="1"/>
+  
+  <line x1="105" y1="120" x2="130" y2="115" stroke="#4E342E" stroke-width="1"/>
+  <line x1="105" y1="123" x2="128" y2="123" stroke="#4E342E" stroke-width="1"/>
+  <line x1="105" y1="126" x2="125" y2="130" stroke="#4E342E" stroke-width="1"/>
 </svg>

@@ -1,17 +1,47 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
-  <!-- Fondo del avatar -->
-  <rect width="200" height="200" fill="#6C5CE7" rx="100" ry="100" />
+<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <!-- Fondo circular -->
+  <circle cx="100" cy="100" r="100" fill="#F8BBD0"/>
   
-  <!-- Cabeza -->
-  <circle cx="100" cy="85" r="40" fill="#FFFFFF" />
+  <!-- Cara del unicornio -->
+  <circle cx="100" cy="110" r="65" fill="#FFFFFF"/>
   
-  <!-- Cuerpo -->
-  <path d="M60 145 C60 125 80 120 100 120 C120 120 140 125 140 145 C140 165 120 185 100 185 C80 185 60 165 60 145 Z" fill="#FFFFFF" />
+  <!-- Orejas -->
+  <path d="M60 70 L75 40 L90 65 Z" fill="#F8BBD0"/>
+  <path d="M140 70 L125 40 L110 65 Z" fill="#F8BBD0"/>
+  <path d="M65 65 L75 45 L85 62 Z" fill="#FCE4EC"/>
+  <path d="M135 65 L125 45 L115 62 Z" fill="#FCE4EC"/>
   
   <!-- Ojos -->
-  <circle cx="85" cy="75" r="5" fill="#6C5CE7" />
-  <circle cx="115" cy="75" r="5" fill="#6C5CE7" />
+  <ellipse cx="80" cy="95" rx="10" ry="12" fill="#000000"/>
+  <ellipse cx="120" cy="95" rx="10" ry="12" fill="#000000"/>
   
-  <!-- Sonrisa -->
-  <path d="M85 95 Q100 110 115 95" stroke="#6C5CE7" stroke-width="4" fill="transparent" />
+  <!-- Brillos en los ojos -->
+  <ellipse cx="83" cy="92" rx="4" ry="5" fill="#FFFFFF"/>
+  <ellipse cx="123" cy="92" rx="4" ry="5" fill="#FFFFFF"/>
+  
+  <!-- Pestañas -->
+  <line x1="70" y1="85" x2="65" y2="80" stroke="#000000" stroke-width="2"/>
+  <line x1="75" y1="83" x2="72" y2="78" stroke="#000000" stroke-width="2"/>
+  <line x1="85" y1="83" x2="88" y2="78" stroke="#000000" stroke-width="2"/>
+  
+  <line x1="130" y1="85" x2="135" y2="80" stroke="#000000" stroke-width="2"/>
+  <line x1="125" y1="83" x2="128" y2="78" stroke="#000000" stroke-width="2"/>
+  <line x1="115" y1="83" x2="112" y2="78" stroke="#000000" stroke-width="2"/>
+  
+  <!-- Cuerno -->
+  <path d="M100 65 L100 25" stroke="#FFF176" stroke-width="8" stroke-linecap="round"/>
+  <path d="M100 65 L100 25" stroke="#FFEB3B" stroke-width="4" stroke-linecap="round"/>
+  
+  <!-- Mejillas -->
+  <circle cx="75" cy="110" r="10" fill="#FFCDD2" opacity="0.7"/>
+  <circle cx="125" cy="110" r="10" fill="#FFCDD2" opacity="0.7"/>
+  
+  <!-- Boca/hocico -->
+  <ellipse cx="100" cy="120" rx="10" ry="5" fill="#F8BBD0"/>
+  <path d="M95 115 Q100 125 105 115" stroke="#000000" stroke-width="1.5" fill="none"/>
+  
+  <!-- Crin/cabello -->
+  <path d="M65 40 Q75 20 90 40 Q105 20 120 40 Q135 20 145 40" stroke="#CE93D8" stroke-width="12" fill="none"/>
+  <path d="M65 45 Q75 25 90 45 Q105 25 120 45 Q135 25 145 45" stroke="#AB47BC" stroke-width="8" fill="none"/>
+  <path d="M65 50 Q75 30 90 50 Q105 30 120 50 Q135 30 145 50" stroke="#7B1FA2" stroke-width="4" fill="none"/>
 </svg>

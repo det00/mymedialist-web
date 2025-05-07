@@ -47,7 +47,7 @@ export default function Home() {
   const [showAuthModal, setShowAuthModal] = useState<boolean>(false);
   const [showAddAmigo, setShowAddAmigo] = useState<boolean>(false);
   const [userId, setUserId] = useState<number>(-1)
-  const {seguidos} = useProfile(userId)
+  const {seguidos, datosPerfil} = useProfile(userId)
 
   // Estado para almacenar todos los contenidos
   const [allContent, setAllContent] = useState<CardBasic[]>([]);
@@ -635,15 +635,15 @@ export default function Home() {
               <CardContent className="pt-0">
                 <div className="flex items-center space-x-4 mb-4">
                   <UserAvatar
-                    avatarData={userData?.avatar || "avatar1"}
+                    avatarData={datosPerfil?.avatar_id || "avatar1"}
                     size="lg"
                   />
                   <div>
                     <h3 className="font-medium">
-                      {userData?.nombre || "Usuario"}
+                      {datosPerfil?.nombre || "Usuario"}
                     </h3>
                     <p className="text-sm text-muted-foreground">
-                      {userData?.email || ""}
+                      @{datosPerfil?.username || ""}
                     </p>
                   </div>
                 </div>

@@ -189,6 +189,7 @@ export function Navbar() {
                   <div className="h-10 w-10 rounded-full bg-muted animate-pulse"></div>
                 ) : isAuthenticated && userData ? (
                   <UserAvatar
+                    key={`nav-avatar-${userData.avatar}`}
                     avatarData={userData.avatar || "avatar1"}
                     size="md"
                   />

@@ -14,6 +14,7 @@ export function UserAvatar({ avatarData, size = "md", className = "" }: UserAvat
     avatarData = "avatar1";
   }
 
+  // Forzar la evaluación del formato de avatar en cada renderizado
   // Determinar si es un avatar predefinido o de iniciales
   const isPredefined = avatarData.startsWith("avatar") || 
                        (avatarData.includes("/avatars/") && avatarData.endsWith(".png")) ||
@@ -30,6 +31,12 @@ export function UserAvatar({ avatarData, size = "md", className = "" }: UserAvat
       userInitials = parts[2];
     }
   }
+  
+  // Loguear para debug
+  // console.log(`Rendering avatar: ${avatarData}, isPredefined: ${isPredefined}`);
+  // if (!isPredefined) {
+  //   console.log(`Initial avatar: color=${avatarColor}, initials=${userInitials}`);
+  // }
   
   // Determinar la clase de tamaño
   const sizeClass = {

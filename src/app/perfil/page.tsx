@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { DeleteAccountDialog } from "@/components/DeleteAccountDialog";
 import {
   Card,
@@ -44,6 +44,7 @@ export function ProfilePage() {
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [activeTab, setActiveTab] = useState("profile");
+  const [avatarUpdateKey, setAvatarUpdateKey] = useState(Date.now());
 
   const {
     datosPerfil,
@@ -56,7 +57,26 @@ export function ProfilePage() {
     logout,
     toggleEditMode,
     togglePreviewMode,
+    refreshProfile
   } = useProfile(userId);
+  
+  // Escuchar eventos de actualización de avatar
+  useEffect(() => {
+    const handleAvatarUpdate = () => {
+      // Forzar re-renderizado del avatar actualizando la key
+      setAvatarUpdateKey(Date.now());
+      // También recargar los datos del perfil
+      refreshProfile(userId);
+    };
+    
+    window.addEventListener("avatarUpdated", handleAvatarUpdate);
+    window.addEventListener("userDataUpdated", handleAvatarUpdate);
+    
+    return () => {
+      window.removeEventListener("avatarUpdated", handleAvatarUpdate);
+      window.removeEventListener("userDataUpdated", handleAvatarUpdate);
+    };
+  }, [userId, refreshProfile]);
 
   if (loading) {
     return (
@@ -122,6 +142,7 @@ export function ProfilePage() {
             <CardContent className="pt-6">
               <div className="flex flex-col items-center text-center">
                 <UserAvatar
+                  key={`profile-avatar-${datosPerfil.avatar_id || datosPerfil.avatar}-${avatarUpdateKey}`}
                   avatarData={datosPerfil.avatar_id || datosPerfil.avatar}
                   size="xl"
                   className="mb-4"

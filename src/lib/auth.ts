@@ -65,14 +65,26 @@ export const authService = {
   },
 
   setUserAvatar(avatar: string): void {
+    // Guardar en ambas ubicaciones para mantener la consistencia
     localStorage.setItem("user_avatar", avatar);
 
+    // Actualizar completamente el objeto userData
     const currentUserData = this.getUserData();
     if (currentUserData) {
+      // Reemplazar completamente el avatar anterior
       currentUserData.avatar = avatar;
       localStorage.setItem("userData", JSON.stringify(currentUserData));
+    } else {
+      // Si por alguna razón no hay userData, crear uno básico
+      const basicUserData = {
+        nombre: "Usuario",
+        email: "",
+        avatar: avatar
+      };
+      localStorage.setItem("userData", JSON.stringify(basicUserData));
     }
 
+    // Forzar actualización en toda la aplicación con ambos eventos
     window.dispatchEvent(new Event("userDataUpdated"));
     window.dispatchEvent(new Event("storage"));
   },

@@ -35,6 +35,17 @@ export function useProfile(idUsuario: number) {
       }
 
       const perfil = await profileService.getPerfil(idUsuario);
+      
+      // Sincronizar el avatar del perfil con localStorage para consistencia
+      if (perfil.esMiPerfil && (perfil.avatar_id || perfil.avatar)) {
+        const currentAvatar = authService.getUserData()?.avatar;
+        const profileAvatar = perfil.avatar_id || perfil.avatar;
+        
+        // Si hay diferencia entre los avatares, actualizar localStorage
+        if (currentAvatar !== profileAvatar) {
+          authService.setUserAvatar(profileAvatar);
+        }
+      }
 
       setDatosPerfil(perfil);
     } catch (err) {
@@ -103,6 +114,16 @@ export function useProfile(idUsuario: number) {
       }
 
       setIsEditMode(false);
+      
+      // Recargar los datos del perfil para garantizar la sincronización
+      // de todos los componentes, especialmente para cambios de tipo de avatar
+      setTimeout(() => {
+        loadProfileData(idUsuario);
+        
+        // Disparar eventos para forzar la actualización de componentes
+        window.dispatchEvent(new Event("userDataUpdated"));
+        window.dispatchEvent(new Event("avatarUpdated"));
+      }, 100);
 
       return true;
     } catch (err) {

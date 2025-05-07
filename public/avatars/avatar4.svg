@@ -1,35 +1,43 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
-  <!-- Fondo del avatar -->
-  <rect width="200" height="200" fill="#00B894" rx="100" ry="100" />
+<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <!-- Fondo circular -->
+  <circle cx="100" cy="100" r="100" fill="#E8EAF6"/>
   
-  <!-- Especie de robot -->
-  <!-- Cabeza -->
-  <rect x="60" y="50" width="80" height="70" rx="10" ry="10" fill="#FFFFFF" />
+  <!-- Cabeza del robot -->
+  <rect x="60" y="50" width="80" height="90" rx="10" ry="10" fill="#7986CB"/>
   
   <!-- Antenas -->
-  <line x1="80" y1="50" x2="70" y2="30" stroke="#FFFFFF" stroke-width="4" />
-  <circle cx="70" cy="30" r="5" fill="#FFFFFF" />
+  <line x1="85" y1="50" x2="85" y2="30" stroke="#3F51B5" stroke-width="4" stroke-linecap="round"/>
+  <circle cx="85" cy="25" r="6" fill="#F44336"/>
   
-  <line x1="120" y1="50" x2="130" y2="30" stroke="#FFFFFF" stroke-width="4" />
-  <circle cx="130" cy="30" r="5" fill="#FFFFFF" />
+  <line x1="115" y1="50" x2="115" y2="35" stroke="#3F51B5" stroke-width="4" stroke-linecap="round"/>
+  <circle cx="115" cy="30" r="5" fill="#2196F3"/>
   
   <!-- Ojos -->
-  <rect x="75" y="70" width="20" height="15" rx="5" ry="5" fill="#00B894" />
-  <rect x="105" y="70" width="20" height="15" rx="5" ry="5" fill="#00B894" />
+  <circle cx="80" cy="80" r="12" fill="#000000"/>
+  <circle cx="120" cy="80" r="12" fill="#000000"/>
   
-  <!-- Boca -->
-  <rect x="80" y="95" width="40" height="10" rx="5" ry="5" fill="#00B894" />
-  <line x1="85" y1="100" x2="115" y2="100" stroke="#FFFFFF" stroke-width="2" stroke-dasharray="4 2" />
+  <!-- Pupilas con luces LED -->
+  <circle cx="80" cy="80" r="6" fill="#81D4FA"/>
+  <circle cx="120" cy="80" r="6" fill="#81D4FA"/>
+  <circle cx="82" cy="78" r="2" fill="#FFFFFF"/>
+  <circle cx="122" cy="78" r="2" fill="#FFFFFF"/>
+  
+  <!-- Boca/rejilla de ventilación -->
+  <rect x="75" y="105" width="50" height="15" rx="2" ry="2" fill="#37474F"/>
+  <line x1="85" y1="105" x2="85" y2="120" stroke="#ECEFF1" stroke-width="2"/>
+  <line x1="95" y1="105" x2="95" y2="120" stroke="#ECEFF1" stroke-width="2"/>
+  <line x1="105" y1="105" x2="105" y2="120" stroke="#ECEFF1" stroke-width="2"/>
+  <line x1="115" y1="105" x2="115" y2="120" stroke="#ECEFF1" stroke-width="2"/>
   
   <!-- Cuerpo -->
-  <rect x="70" y="120" width="60" height="50" rx="10" ry="10" fill="#FFFFFF" />
+  <rect x="70" y="140" width="60" height="30" fill="#5C6BC0"/>
   
   <!-- Botones -->
-  <circle cx="85" cy="135" r="5" fill="#00B894" />
-  <circle cx="100" cy="135" r="5" fill="#00B894" />
-  <circle cx="115" cy="135" r="5" fill="#00B894" />
+  <circle cx="85" cy="155" r="5" fill="#FF5252"/>
+  <circle cx="100" cy="155" r="5" fill="#FFEB3B"/>
+  <circle cx="115" cy="155" r="5" fill="#69F0AE"/>
   
-  <!-- Brazos -->
-  <rect x="40" y="130" width="30" height="10" rx="5" ry="5" fill="#FFFFFF" />
-  <rect x="130" y="130" width="30" height="10" rx="5" ry="5" fill="#FFFFFF" />
+  <!-- Orejas/sensores laterales -->
+  <rect x="50" y="75" width="10" height="25" rx="2" ry="2" fill="#3F51B5"/>
+  <rect x="140" y="75" width="10" height="25" rx="2" ry="2" fill="#3F51B5"/>
 </svg>

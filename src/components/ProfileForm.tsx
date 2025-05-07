@@ -51,6 +51,13 @@ export function ProfileForm({ profileData, onSave, onCancel }: ProfileFormProps)
   // Manejar selección de avatar
   const handleAvatarSelect = (avatarId: string) => {
     setFormData(prev => ({ ...prev, avatar_id: avatarId }));
+    
+    // Actualización inmediata de la vista previa para mejor UX
+    const previewAvatarElement = document.querySelector(".avatar-preview");
+    if (previewAvatarElement) {
+      // Forzar re-renderizado inmediato de la vista previa
+      previewAvatarElement.setAttribute("key", `preview-${avatarId}`);
+    }
   };
 
   // Validar y enviar el formulario
@@ -97,7 +104,12 @@ export function ProfileForm({ profileData, onSave, onCancel }: ProfileFormProps)
       <div className="space-y-2">
         <Label>Avatar</Label>
         <div className="flex flex-col sm:flex-row gap-4 items-center">
-          <UserAvatar avatarData={formData.avatar_id} size="xl" />
+          <UserAvatar 
+            avatarData={formData.avatar_id} 
+            size="xl" 
+            className="avatar-preview"
+            key={`form-preview-${formData.avatar_id}`}
+          />
           <div className="flex-1">
             <AvatarSelector selectedAvatar={formData.avatar_id} onSelectAvatar={handleAvatarSelect} />
           </div>
