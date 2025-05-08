@@ -45,15 +45,6 @@ export default function Busqueda() {
     S: "Series",
   };
 
-  // Función para cambiar el tipo de contenido
-  const cambiarTipo = (nuevoTipo: string) => {
-    const currentBusqueda = searchParams.get("busqueda") || "";
-    const url = `/busqueda?busqueda=${encodeURIComponent(
-      currentBusqueda
-    )}&tipo=${nuevoTipo}`;
-    router.push(url);
-  };
-
   // Obtener los resultados para la página actual
   const resultadosPaginados = resultados.slice(
     (currentPage - 1) * ITEMS_PER_PAGE,
@@ -103,12 +94,6 @@ export default function Busqueda() {
         setRutaTipo(tipoAMapeo[tipoValido]);
         setCurrentPage(1); // Reiniciar a la primera página con nueva búsqueda
 
-        console.log("Realizando búsqueda:", {
-          busqueda,
-          tipo: tipoValido,
-          rutaTipo: tipoAMapeo[tipoValido],
-        });
-
         // Llamar al servicio de búsqueda
         const resultadosBusqueda = await searchService.searchContent(
           busqueda,
@@ -123,7 +108,6 @@ export default function Busqueda() {
 
         setResultados(resultadosConTipo);
         setTotalPages(Math.ceil(resultadosConTipo.length / ITEMS_PER_PAGE));
-        console.log("Resultados de búsqueda:", resultadosConTipo);
       } catch (error) {
         console.error("Error al realizar la búsqueda:", error);
         setError("No se pudieron cargar los resultados. Inténtalo de nuevo.");
@@ -200,7 +184,7 @@ export default function Busqueda() {
               variant={currentPage === Number(pagina) ? "default" : "outline"}
               size="sm"
               onClick={() => cambiarPagina(Number(pagina))}
-              className="h-7 w-7 sm:h-8 sm:w-8 cursor-pointer"
+              className="h-8 w-8 cursor-pointer"
             >
               {pagina}
             </Button>
@@ -220,53 +204,7 @@ export default function Busqueda() {
     );
   };
 
-  // Renderizar grid de resultados
-  const renderResultados = () => {
-    // Crear placecard para mostrar cuando no hay suficientes elementos
-    const renderPlaceholder = (index: number) => (
-      <div key={`placeholder-${index}`} className="opacity-0 h-[136px]">
-        {/* La altura debe coincidir con la altura de CardSearch */}
-        <div className="border rounded-md p-4 h-full"></div>
-      </div>
-    );
-
-    // Calcular cuántos placeholders necesitamos
-    const placeholdersNeeded = Math.max(
-      0,
-      ITEMS_PER_PAGE - resultadosPaginados.length
-    );
-
-    // Crear array de placeholders
-    const placeholders = Array.from({ length: placeholdersNeeded }, (_, i) =>
-      renderPlaceholder(i)
-    );
-
-    return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6 md:gap-8">
-        {resultadosPaginados.map((item) => (
-          <Link
-            href={`/${rutaTipo}/${item.id_api}`}
-            key={`${item.id_api}-${rutaTipo}`}
-            className="block"
-          >
-            <CardSearch
-              id={item.item?.id ?? -1}
-              id_api={item.id_api}
-              tipo={item.tipo}
-              titulo={item.titulo}
-              estado={item.item?.estado ?? ""}
-              autor={item.autor}
-              genero={item.genero}
-              imagen={item.imagen}
-            />
-          </Link>
-        ))}
-        {placeholders}
-      </div>
-    );
-  };
-
-  // Mostrar modal de autenticación si no está autenticado
+  // Si el usuario no está autenticado, mostrar mensaje para iniciar sesión
   if (!isAuthenticated && !loading) {
     return (
       <div className="min-h-screen flex flex-col px-4 sm:px-6 md:px-8 lg:px-12 xl:px-24 max-w-[1400px] mx-auto">
@@ -300,7 +238,7 @@ export default function Busqueda() {
     <div className="min-h-screen flex flex-col px-4 sm:px-6 md:px-8 lg:px-12 xl:px-24 max-w-[1400px] mx-auto">
       <Card className="mt-4 sm:mt-6 md:mt-8 mb-8 sm:mb-12 shadow-md p-0 w-full">
         <CardContent className="p-4 sm:p-6 md:p-8 lg:p-10">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
             <h1 className="text-xl sm:text-2xl font-semibold line-clamp-2 mb-4 sm:mb-0">
               Resultados de búsqueda{" "}
               {searchParams.get("busqueda") &&
@@ -313,21 +251,6 @@ export default function Busqueda() {
                 {renderPaginacion()}
               </div>
             )}
-          </div>
-
-          {/* Filtros de tipo */}
-          <div className="flex flex-wrap gap-1 sm:gap-2 mb-4 sm:mb-6">
-            {(Object.keys(tipoAMapeo) as Array<string>).map((tipoKey) => (
-              <Button
-                key={tipoKey}
-                variant={tipo === tipoKey ? "default" : "outline"}
-                onClick={() => cambiarTipo(tipoKey)}
-                className="rounded-full cursor-pointer text-xs sm:text-sm py-1 h-auto sm:h-9"
-                size="sm"
-              >
-                {tipoCompleto[tipoKey]}
-              </Button>
-            ))}
           </div>
 
           {/* Contenedor principal */}
@@ -360,8 +283,26 @@ export default function Busqueda() {
               </div>
             ) : (
               <>
-                {/* Contenedor de resultados */}
-                <div>{renderResultados()}</div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6 md:gap-8">
+                  {resultadosPaginados.map((item) => (
+                    <Link
+                      href={`/${rutaTipo}/${item.id_api}`}
+                      key={`${item.id_api}-${item.tipo}`}
+                      className="block"
+                    >
+                      <CardSearch
+                        id={item.item?.id ?? -1}
+                        id_api={item.id_api}
+                        tipo={item.tipo}
+                        titulo={item.titulo}
+                        estado={item.item?.estado ?? ""}
+                        autor={item.autor}
+                        genero={item.genero}
+                        imagen={item.imagen}
+                      />
+                    </Link>
+                  ))}
+                </div>
                 
                 {/* Paginación inferior (solo en móviles) */}
                 <div className="mt-8 sm:hidden py-2">
@@ -372,6 +313,13 @@ export default function Busqueda() {
           </div>
         </CardContent>
       </Card>
+      
+      {/* Modal de autenticación */}
+      <AuthModal
+        showModal={showAuthModal}
+        setShowModal={setShowAuthModal}
+        initialView="login"
+      />
     </div>
   );
 }

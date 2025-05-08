@@ -8,15 +8,16 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { AuthModal } from "./ui/auth-modal";
-import { Search, Film, Tv, BookOpen, Gamepad2, Menu, X } from "lucide-react";
+import { Search, Film, Tv, BookOpen, Gamepad2 } from "lucide-react";
 import { ThemeSwitch } from "./theme-switch";
 import { UserAvatar } from "./UserAvatar";
 import { authService } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { useProfile } from "@/hooks/useProfile";
 import Link from "next/link";
+import { SearchExpanded } from "./SearchExpanded";
 
 interface UserData {
   nombre: string;
@@ -30,9 +31,11 @@ export function Navbar() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [userData, setUserData] = useState<UserData | null>(null);
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [showInicioSesion, setShowInicioSesion] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
   const [showTipoDropdown, setShowTipoDropdown] = useState<boolean>(false);
+  const [showSearchExpanded, setShowSearchExpanded] = useState<boolean>(false);
   const { datosPerfil } = useProfile(authService.getUserId());
 
   // Tipos de contenido con sus iconos
@@ -51,22 +54,19 @@ export function Navbar() {
   const handleEnter = (event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.key === "Enter" && busqueda.trim()) {
       event.preventDefault();
-      router.push(
-        `/busqueda?busqueda=${encodeURIComponent(
-          busqueda
-        )}&tipo=${encodeURIComponent(tipo)}`
-      );
+      setShowSearchExpanded(true);
     }
   };
 
   const handleSearch = () => {
     if (busqueda.trim()) {
-      router.push(
-        `/busqueda?busqueda=${encodeURIComponent(
-          busqueda
-        )}&tipo=${encodeURIComponent(tipo)}`
-      );
+      setShowSearchExpanded(true);
     }
+  };
+  
+  // Cerrar búsqueda expandida
+  const handleCloseSearch = () => {
+    setShowSearchExpanded(false);
   };
 
   const handleTipoChange = (nuevoTipo: string) => {
@@ -121,8 +121,6 @@ export function Navbar() {
     router.push("/");
   };
 
-  const [mobileMenuOpen, setMobileMenuOpen] = useState<boolean>(false);
-
   return (
     <header className="w-full border-b bg-background px-4 py-2 shadow-sm text-foreground">
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-4">
@@ -134,13 +132,29 @@ export function Navbar() {
           MyMediaList
         </div>
 
-        {/* Botón del menú móvil - sólo visible en móviles */}
-        <button
-          className="lg:hidden ml-auto mr-2 p-1"
-          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-        >
-          {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-        </button>
+        {/* Elementos visibles en móviles */}
+        <div className="lg:hidden flex items-center gap-3 ml-auto">
+          <Button
+            size="icon"
+            variant="ghost"
+            onClick={() => setShowSearchExpanded(true)}
+            className="h-9 w-9"
+            aria-label="Buscar"
+          >
+            <Search className="h-5 w-5" />
+          </Button>
+          
+          <ThemeSwitch />
+          
+          <Link href={`/perfil?tabAction=profile`}>
+            <UserAvatar
+              key={`nav-avatar-mobile-${datosPerfil?.avatar}`}
+              avatarData={datosPerfil?.avatar || "avatar1"}
+              size="sm"
+              tabAction="profile"
+            />
+          </Link>
+        </div>
 
         {/* Barra de búsqueda - oculta en móviles, visible en desktop */}
         <div className="hidden lg:flex relative justify-center w-2xl mx-auto items-center">
@@ -154,7 +168,8 @@ export function Navbar() {
                 setBusqueda(e.target.value)
               }
               onKeyDown={handleEnter}
-              className={"rounded-2xl pl-10 pr-24"}
+              onClick={() => setShowSearchExpanded(true)}
+              className={"rounded-2xl pl-10 pr-24 cursor-pointer"}
             />
             <div className="absolute right-1 top-1/2 -translate-y-1/2">
               <DropdownMenu
@@ -210,122 +225,19 @@ export function Navbar() {
         </div>
       </div>
 
-      {/* Menú móvil desplegable - visible sólo cuando está abierto en móviles */}
-      {mobileMenuOpen && (
-        <div className="lg:hidden mt-4 py-2 space-y-4 border-t">
-          {/* Barra de búsqueda para móvil */}
-          <div className="relative flex items-center mt-2">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-5 w-5" />
-            <Input
-              type="text"
-              placeholder="Buscar series, pelis, libros..."
-              value={busqueda}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                setBusqueda(e.target.value)
-              }
-              onKeyDown={handleEnter}
-              className={"rounded-2xl pl-10 pr-24 w-full"}
-            />
-            <div className="absolute right-12 top-1/2 -translate-y-1/2">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-7 gap-1 text-xs"
-                  >
-                    <IconoActual className="h-4 w-4" />
-                    {tipoActual.nombre}
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  {tiposContenido.map((tipoItem) => (
-                    <DropdownMenuItem
-                      key={tipoItem.id}
-                      onClick={() => handleTipoChange(tipoItem.id)}
-                      className="cursor-pointer gap-2"
-                    >
-                      <tipoItem.icon className="h-4 w-4" />
-                      {tipoItem.nombre}
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-            <Button
-              size="icon"
-              variant="ghost"
-              className="absolute right-1"
-              onClick={handleSearch}
-            >
-              <Search className="h-5 w-5" />
-            </Button>
-          </div>
-
-          {/* Opciones de usuario en móvil */}
-          <div className="flex items-center justify-between p-2">
-            <ThemeSwitch />
-            <div className="flex items-center gap-2">
-              {loading ? (
-                <div className="h-10 w-10 rounded-full bg-muted animate-pulse"></div>
-              ) : isAuthenticated && userData ? (
-                <div className="flex items-center gap-2">
-                  <div 
-                    className="cursor-pointer"
-                    onClick={() => {
-                      router.push('/perfil');
-                      setMobileMenuOpen(false);
-                    }}
-                  >
-                    <UserAvatar
-                      key={`nav-avatar-mobile-${userData.avatar}`}
-                      avatarData={userData.avatar || "avatar1"}
-                      size="md"
-                    />
-                  </div>
-                  <div className="flex flex-col">
-                    <span 
-                      className="text-sm font-medium cursor-pointer"
-                      onClick={() => {
-                        router.push('/perfil');
-                        setMobileMenuOpen(false);
-                      }}
-                    >
-                      {userData.nombre}
-                    </span>
-                    <Button
-                      variant="link"
-                      size="sm"
-                      className="h-auto p-0 text-xs text-muted-foreground"
-                      onClick={cerrarSesion}
-                    >
-                      Cerrar sesión
-                    </Button>
-                  </div>
-                </div>
-              ) : (
-                <Button
-                  onClick={() => {
-                    setShowInicioSesion(true);
-                    setMobileMenuOpen(false);
-                  }}
-                  variant="outline"
-                  size="sm"
-                >
-                  Iniciar sesión
-                </Button>
-              )}
-            </div>
-          </div>
-
-          {/* Enlaces rápidos para móvil - eliminados */}
-        </div>
-      )}
-
+      {/* Modal de autenticación */}
       <AuthModal
         showModal={showInicioSesion}
         setShowModal={setShowInicioSesion}
         initialView="login"
+      />
+      
+      {/* Componente de búsqueda expandida */}
+      <SearchExpanded
+        isOpen={showSearchExpanded}
+        onClose={handleCloseSearch}
+        initialQuery={busqueda}
+        initialType={tipo}
       />
     </header>
   );
