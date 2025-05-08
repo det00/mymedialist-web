@@ -17,6 +17,7 @@ interface SearchExpandedProps {
   onClose: () => void;
   initialQuery?: string;
   initialType?: string;
+  sourceRect?: DOMRect | null;
 }
 
 export function SearchExpanded({
@@ -24,6 +25,7 @@ export function SearchExpanded({
   onClose,
   initialQuery = "",
   initialType = "P",
+  sourceRect = null,
 }: SearchExpandedProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -147,6 +149,21 @@ export function SearchExpanded({
     }
   };
 
+  // Calcular los estilos iniciales para la animación
+  const getSearchBarStyles = () => {
+    if (!sourceRect) return {};
+    
+    return {
+      position: 'fixed' as const,
+      top: sourceRect.top,
+      left: sourceRect.left,
+      width: sourceRect.width,
+      height: sourceRect.height,
+      borderRadius: '1rem',
+      zIndex: 50,
+    };
+  };
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -161,9 +178,26 @@ export function SearchExpanded({
             {/* Barra de búsqueda expandida */}
             <motion.div
               className="relative mb-6"
-              initial={{ y: -20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.1, duration: 0.3 }}
+              initial={sourceRect ? { opacity: 0 } : { y: -20, opacity: 0 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              transition={{
+                duration: 0.3,
+                ease: 'easeInOut',
+              }}
+              style={sourceRect ? {
+                ...getSearchBarStyles(),
+                transition: 'all 0.3s ease-in-out',
+                ...(isOpen && {
+                  position: 'relative',
+                  top: 'auto',
+                  left: 'auto',
+                  width: '100%',
+                  height: 'auto',
+                  borderRadius: '9999px',
+                  transitionDelay: '0.1s'
+                })
+              } : {}}
             >
               <div className="flex items-center">
                 <div className="relative flex-1">

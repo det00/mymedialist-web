@@ -1,16 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Input } from "@/components/ui/input";
-import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuItem,
-} from "@/components/ui/dropdown-menu";
+// Ya no necesitamos los componentes de dropdown
 import { useRouter, useSearchParams } from "next/navigation";
 import { AuthModal } from "./ui/auth-modal";
-import { Search, Film, Tv, BookOpen, Gamepad2 } from "lucide-react";
+import { Search } from "lucide-react";
 import { ThemeSwitch } from "./theme-switch";
 import { UserAvatar } from "./UserAvatar";
 import { authService } from "@/lib/auth";
@@ -34,45 +30,32 @@ export function Navbar() {
   const searchParams = useSearchParams();
   const [showInicioSesion, setShowInicioSesion] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
-  const [showTipoDropdown, setShowTipoDropdown] = useState<boolean>(false);
   const [showSearchExpanded, setShowSearchExpanded] = useState<boolean>(false);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const [searchBarRect, setSearchBarRect] = useState<DOMRect | null>(null);
   const { datosPerfil } = useProfile(authService.getUserId());
 
-  // Tipos de contenido con sus iconos
-  const tiposContenido = [
-    { id: "P", nombre: "Películas", icon: Film },
-    { id: "S", nombre: "Series", icon: Tv },
-    { id: "L", nombre: "Libros", icon: BookOpen },
-    { id: "V", nombre: "Videojuegos", icon: Gamepad2 },
-  ];
-
-  // Obtener el icono y nombre actual del tipo seleccionado
-  const tipoActual =
-    tiposContenido.find((t) => t.id === tipo) || tiposContenido[0];
-  const IconoActual = tipoActual.icon;
+  // Ya no necesitamos los tipos de contenido para el dropdown
 
   const handleEnter = (event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.key === "Enter" && busqueda.trim()) {
       event.preventDefault();
+      // Capturar las dimensiones y posición de la barra de búsqueda antes de expandirla
+      if (searchInputRef.current) {
+        setSearchBarRect(searchInputRef.current.getBoundingClientRect());
+      }
       setShowSearchExpanded(true);
     }
   };
 
-  const handleSearch = () => {
-    if (busqueda.trim()) {
-      setShowSearchExpanded(true);
-    }
-  };
-  
+  // Ya no necesitamos la función handleSearch
+
   // Cerrar búsqueda expandida
   const handleCloseSearch = () => {
     setShowSearchExpanded(false);
   };
 
-  const handleTipoChange = (nuevoTipo: string) => {
-    setTipo(nuevoTipo);
-    setShowTipoDropdown(false);
-  };
+  // Ya no necesitamos manejar el cambio de tipo en la navbar
 
   // Función para manejar cambios en los datos de usuario
   const handleUserDataUpdate = () => {
@@ -143,9 +126,9 @@ export function Navbar() {
           >
             <Search className="h-5 w-5" />
           </Button>
-          
+
           <ThemeSwitch />
-          
+
           <Link href={`/perfil?tabAction=profile`}>
             <UserAvatar
               key={`nav-avatar-mobile-${datosPerfil?.avatar}`}
@@ -161,6 +144,7 @@ export function Navbar() {
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-5 w-5" />
             <Input
+              ref={searchInputRef}
               type="text"
               placeholder="Buscar series, pelis, libros..."
               value={busqueda}
@@ -168,47 +152,16 @@ export function Navbar() {
                 setBusqueda(e.target.value)
               }
               onKeyDown={handleEnter}
-              onClick={() => setShowSearchExpanded(true)}
-              className={"rounded-2xl pl-10 pr-24 cursor-pointer"}
+              onClick={() => {
+                if (searchInputRef.current) {
+                  setSearchBarRect(searchInputRef.current.getBoundingClientRect());
+                }
+                setShowSearchExpanded(true);
+              }}
+              className={"rounded-2xl pl-10 pr-4 cursor-pointer"}
             />
-            <div className="absolute right-1 top-1/2 -translate-y-1/2">
-              <DropdownMenu
-                open={showTipoDropdown}
-                onOpenChange={setShowTipoDropdown}
-              >
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-7 gap-1 text-xs"
-                  >
-                    <IconoActual className="h-4 w-4" />
-                    {tipoActual.nombre}
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  {tiposContenido.map((tipoItem) => (
-                    <DropdownMenuItem
-                      key={tipoItem.id}
-                      onClick={() => handleTipoChange(tipoItem.id)}
-                      className="cursor-pointer gap-2"
-                    >
-                      <tipoItem.icon className="h-4 w-4" />
-                      {tipoItem.nombre}
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
           </div>
-          <Button
-            size="icon"
-            variant="ghost"
-            className="ml-1"
-            onClick={handleSearch}
-          >
-            <Search className="h-5 w-5" />
-          </Button>
+          {/* Eliminado el botón de búsqueda */}
         </div>
 
         {/* Iconos de usuario y tema - visibles en desktop, ocultos en móvil */}
@@ -231,14 +184,19 @@ export function Navbar() {
         setShowModal={setShowInicioSesion}
         initialView="login"
       />
-      
+
       {/* Componente de búsqueda expandida */}
-      <SearchExpanded
-        isOpen={showSearchExpanded}
-        onClose={handleCloseSearch}
-        initialQuery={busqueda}
-        initialType={tipo}
-      />
+      <AnimatePresence>
+        {showSearchExpanded && (
+          <SearchExpanded
+            isOpen={showSearchExpanded}
+            onClose={handleCloseSearch}
+            initialQuery={busqueda}
+            initialType={tipo}
+            sourceRect={searchBarRect}
+          />
+        )}
+      </AnimatePresence>
     </header>
   );
 }
