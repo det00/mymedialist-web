@@ -53,25 +53,40 @@ const EstadoContenidoApi: React.FC<EstadoContenidoApiProps> = ({
     setItemIdLocal(itemId);
   }, [estado, itemId]);
 
-  /*   useEffect(() => {
+  useEffect(() => {
     if (success) {
       const timer = setTimeout(() => setSuccess(false), 2000);
       return () => clearTimeout(timer);
     }
-  }, [success]); */
+  }, [success]);
 
   const getEstadoColor = () => {
     switch (estadoLocal) {
       case "C":
-        return "green";
+        return "#10b981"; // Emerald-500
       case "E":
-        return "blue";
+        return "#3b82f6"; // Blue-500
       case "P":
-        return "yellow";
+        return "#f59e0b"; // Amber-500
       case "A":
-        return "red";
+        return "#ef4444"; // Red-500
       default:
-        return "gray";
+        return "#6b7280"; // Gray-500
+    }
+  };
+  
+  const getEstadoBgColor = () => {
+    switch (estadoLocal) {
+      case "C":
+        return "rgba(16, 185, 129, 0.1)"; // Emerald con transparencia
+      case "E":
+        return "rgba(59, 130, 246, 0.1)"; // Blue con transparencia
+      case "P":
+        return "rgba(245, 158, 11, 0.1)"; // Amber con transparencia
+      case "A":
+        return "rgba(239, 68, 68, 0.1)"; // Red con transparencia
+      default:
+        return "transparent";
     }
   };
 
@@ -138,9 +153,15 @@ const EstadoContenidoApi: React.FC<EstadoContenidoApiProps> = ({
 
   // Configurar tamaños según la prop size
   const buttonSize = {
-    sm: "h-8 w-8",
-    md: "h-9 w-9",
-    lg: "h-10 w-10",
+    sm: "h-8",
+    md: "h-9",
+    lg: "h-10",
+  }[size];
+  
+  const buttonPadding = {
+    sm: "xl:px-3",
+    md: "xl:px-4",
+    lg: "xl:px-5",
   }[size];
 
   const iconSize = {
@@ -162,31 +183,40 @@ const EstadoContenidoApi: React.FC<EstadoContenidoApiProps> = ({
             <DropdownMenu open={open} onOpenChange={setOpen}>
               <DropdownMenuTrigger asChild>
                 <Button
-                  variant="outline"
-                  className={`transition-all duration-200 relative ${buttonSize} cursor-pointer`}
+                  variant={estadoLocal ? "default" : "outline"}
+                  className={`transition-all duration-300 relative ${buttonSize} ${buttonPadding} cursor-pointer overflow-hidden rounded-full flex items-center ${!estadoLocal ? 'px-0 justify-center xl:justify-start xl:px-2' : 'px-2 justify-center xl:justify-start'} gap-2`}
                   style={{
-                    boxShadow:
-                      getEstadoColor() !== "gray"
-                        ? `0 0 ${
-                            isHovering ? "12px" : "8px"
-                          } ${getEstadoColor()}`
-                        : isHovering
-                        ? "0 0 5px rgba(0,0,0,0.2)"
-                        : "none",
-                    transform: isHovering ? "scale(1.05)" : "scale(1)",
+                    backgroundColor: getEstadoBgColor(),
+                    borderColor: getEstadoColor(),
+                    borderWidth: estadoLocal ? "2px" : "1px",
+                    transform: isHovering ? "scale(1.03)" : "scale(1)",
                     opacity: loading ? 0.7 : 1,
                   }}
                   onClick={handleClick}
                   disabled={loading}
                 >
                   <Tag
-                    color={getEstadoColor()}
-                    className={`transition-transform duration-200 ${iconSize} ${
+                    style={{ color: getEstadoColor() }}
+                    className={`transition-transform duration-300 ${iconSize} flex-shrink-0 ${
                       isHovering ? "scale-110" : ""
                     }`}
                   />
+                  {estadoLocal && (
+                    <span 
+                      className="text-xs font-medium truncate hidden xl:inline"
+                      style={{ color: getEstadoColor() }}
+                    >
+                      {getEstadoNombre()}
+                    </span>
+                  )}
+                  {estadoLocal && (
+                    <span 
+                      className="absolute inset-0 opacity-20 rounded-full" 
+                      style={{ backgroundColor: getEstadoColor() }}
+                    ></span>
+                  )}
                   {success && (
-                    <span className="absolute -top-1 -right-1 h-3 w-3 bg-green-500 rounded-full border border-background animate-pulse"></span>
+                    <span className="absolute -top-1 -right-1 h-3 w-3 bg-green-500 rounded-full border border-background animate-ping"></span>
                   )}
                 </Button>
               </DropdownMenuTrigger>

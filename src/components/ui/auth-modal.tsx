@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { LoginForm } from "../login-form";
 import { RegisterForm } from "../register-form";
 
@@ -12,6 +12,11 @@ interface AuthModalProps {
 
 export function AuthModal({ showModal, setShowModal, initialView = "login" }: AuthModalProps) {
   const [currentView, setCurrentView] = useState<"login" | "register">(initialView);
+
+  // Actualizar currentView cuando cambia initialView
+  useEffect(() => {
+    setCurrentView(initialView);
+  }, [initialView]);
 
   // Usar useCallback para evitar recreaciones innecesarias de estas funciones
   const showLogin = useCallback(() => {

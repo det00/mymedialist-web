@@ -52,27 +52,31 @@ const CardSearch: React.FC<CardBasic> = ({
         />
       </div>
       <CardContent className="p-0 flex flex-col w-full justify-between">
-        <CardTitle className="text-lg line-clamp-1">{titulo}</CardTitle>
-        <div className="flex justify-between">
-          <div>
-            <p className="text-sm text-muted-foreground line-clamp-2">
-              {autor || "Sin autor"}
-            </p>
-            <p className="flex flex-wrap gap-1 mt-2">
-              {genero?.slice(0, 2).map((gen, idx) => (
-                <Badge key={idx} variant="secondary" className="text-xs">
+        <div>
+          <CardTitle className="text-lg line-clamp-1">{titulo}</CardTitle>
+          <p className="text-sm text-muted-foreground line-clamp-2">
+            {autor || "Sin autor"}
+          </p>
+        </div>
+        
+        <div className="flex justify-between items-end mt-2">
+          <div className="flex flex-col space-y-2 max-w-[70%]">
+            <div className="flex flex-wrap gap-1">
+              {genero?.slice(0, tipo === "L" ? 1 : 2).map((gen, idx) => (
+                <Badge key={idx} variant="secondary" className="text-xs truncate max-w-[100px]">
                   {gen}
                 </Badge>
               ))}
-            </p>
-            <div className="flex justify-between items-center mt-2">
-              <Badge variant="outline" className="flex items-center gap-1">
-                {renderContentTypeIcon(tipo)}
-                {tipoInfo[tipo as keyof typeof tipoInfo]?.nombre}
-              </Badge>
             </div>
+            <Badge variant="outline" className="flex items-center gap-1 truncate max-w-[150px] w-fit">
+              {renderContentTypeIcon(tipo)}
+              <span className="truncate">
+                {tipoInfo[tipo as keyof typeof tipoInfo]?.nombre}
+              </span>
+            </Badge>
           </div>
-          <div className="flex items-end">
+          
+          <div className="flex-shrink-0">
             <EstadoContenidoApi
               id_api={String(id_api)}
               tipo={tipoMayuscula}

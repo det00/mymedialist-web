@@ -4,6 +4,9 @@ import { useState, useEffect, useCallback } from "react";
 import { useParams } from "next/navigation";
 import Image from "next/image";
 import { Card, CardContent } from "@/components/ui/card";
+import { Users } from "lucide-react";
+import { FaPlaystation, FaXbox, FaDesktop, FaSteam } from "react-icons/fa";
+import { SiNintendoswitch } from "react-icons/si";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
@@ -224,50 +227,91 @@ const ContenidoPage = () => {
               
               {/* Información adicional */}
               <div className="space-y-4">
-                <h2 className="text-lg font-semibold mb-2">Información</h2>
+                <h2 className="text-lg font-semibold mb-2" data-component-name="ContenidoPage">Información</h2>
                 
                 {/* Géneros */}
-                <div className="flex">
-                  <span className="font-medium w-28 text-foreground">Géneros:</span>
+                <div className="flex mb-2">
+                  <span className="font-medium w-28 text-foreground mr-4" data-component-name="ContenidoPage">Géneros:</span>
                   <span className="text-muted-foreground">
                     {contenido.genero?.join(', ') || 'No disponible'}
                   </span>
                 </div>
                 
-                {/* Fecha de lanzamiento */}
-                <div className="flex">
-                  <span className="font-medium w-28 text-foreground">Lanzamiento:</span>
-                  <span className="text-muted-foreground">{contenido.fechaLanzamiento}</span>
+                {/* Campos de información */}
+                {contenido.fechaLanzamiento && (
+                  <div className="flex mb-2">
+                    <span className="font-medium w-28 text-foreground mr-4" data-component-name="ContenidoPage">Estreno:</span>
+                    <span className="text-muted-foreground" data-component-name="ContenidoPage">
+                      {new Intl.DateTimeFormat('es-ES', { 
+                        year: 'numeric', 
+                        month: 'long', 
+                        day: 'numeric' 
+                      }).format(new Date(contenido.fechaLanzamiento))}
+                    </span>
+                  </div>
+                )}
+                {contenido.año && (
+                  <div className="flex mb-2">
+                    <span className="font-medium w-28 text-foreground mr-4" data-component-name="ContenidoPage">Año:</span>
+                    <span className="text-muted-foreground" data-component-name="ContenidoPage">
+                      {contenido.año}
+                    </span>
+                  </div>
+                )}
+                {contenido.desarrolladora && (
+                  <div className="flex mb-2">
+                    <span className="font-medium w-28 text-foreground mr-4" data-component-name="ContenidoPage">Desarrolladora:</span>
+                    <span className="text-muted-foreground" data-component-name="ContenidoPage">
+                      {contenido.desarrolladora}
+                    </span>
+                  </div>
+                )}
+                {contenido.plataforma && contenido.plataforma.length > 0 && (
+                <div className="flex mb-2">
+                  <span className="font-medium w-28 text-foreground mr-4" data-component-name="ContenidoPage">Plataformas:</span>
+                  <div className="flex items-center gap-2">
+                    {contenido.plataforma.map((plataforma, index) => {
+                      const platformIcons = {
+                        "PlayStation 4": <FaPlaystation key={`platform-${index}`} className="w-6 h-6" />,
+                        "PlayStation 5": <FaPlaystation key={`platform-${index}`} className="w-6 h-6" />,
+                        "Xbox One": <FaXbox key={`platform-${index}`} className="w-6 h-6" />,
+                        "Xbox Series X": <FaXbox key={`platform-${index}`} className="w-6 h-6" />,
+                        "PC": <FaDesktop key={`platform-${index}`} className="w-6 h-6" />,
+                        "Steam": <FaSteam key={`platform-${index}`} className="w-6 h-6" />,
+                        "Nintendo Switch": <SiNintendoswitch key={`platform-${index}`} className="w-6 h-6" />
+                      };
+                      return platformIcons[plataforma as keyof typeof platformIcons] || <span key={`platform-${index}`}>{plataforma}</span>;
+                    })}
+                  </div>
                 </div>
+              )}
                 
                 {/* Temporadas (si es una serie) */}
                 {tipo === 'serie' && (
-                  <div className="flex">
-                    <span className="font-medium w-28 text-foreground">Temporadas:</span>
-                    <span className="text-muted-foreground">{contenido.temporadas}</span>
+                  <div className="flex mb-2" data-component-name="ContenidoPage">
+                    <span className="font-medium w-28 text-foreground mr-4">Temporadas:</span>
+                    <span className="text-muted-foreground">{contenido.temporadas || 'No disponible'}</span>
                   </div>
                 )}
-                
-                {/* Episodios (si es una serie) */}
-                {tipo === 'serie' && contenido.episodios && (
-                  <div className="flex">
-                    <span className="font-medium w-28 text-foreground">Episodios:</span>
-                    <span className="text-muted-foreground">{contenido.episodios}</span>
+                {tipo === 'serie' && (
+                  <div className="flex mb-2" data-component-name="ContenidoPage">
+                    <span className="font-medium w-28 text-foreground mr-4">Episodios:</span>
+                    <span className="text-muted-foreground">{contenido.episodios || 'No disponible'}</span>
                   </div>
                 )}
                 
                 {/* Páginas (si es un libro) */}
                 {tipo === 'libro' && (
-                  <div className="flex">
-                    <span className="font-medium w-28 text-foreground">Páginas:</span>
-                    <span className="text-muted-foreground">{contenido.paginas}</span>
+                  <div className="flex mb-2" data-component-name="ContenidoPage">
+                    <span className="font-medium w-28 text-foreground mr-4">Páginas:</span>
+                    <span className="text-muted-foreground">{contenido.paginas || 'No disponible'}</span>
                   </div>
                 )}
                 
                 {/* Duración (si es una película) */}
                 {tipo === 'pelicula' && contenido.duracion && (
-                  <div className="flex">
-                    <span className="font-medium w-28 text-foreground">Duración:</span>
+                  <div className="flex mb-2" data-component-name="ContenidoPage">
+                    <span className="font-medium w-28 text-foreground mr-4">Duración:</span>
                     <span className="text-muted-foreground">
                       {contenido.duracion} minutos
                     </span>

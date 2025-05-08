@@ -19,25 +19,46 @@ export function useProfile(idUsuario: number) {
   const [isEditMode, setIsEditMode] = useState<boolean>(false);
   const [previewMode, setPreviewMode] = useState<boolean>(false);
 
+  // Verificar autenticación antes de realizar consultas
+  const isAuthenticated = authService.isAuthenticated();
+
   // Obtener datos de perfil
   const { data: datosPerfil, isLoading: loadingPerfil, error: errorPerfil } = useQuery({
     queryKey: ["perfil", idUsuario],
-    queryFn: () => profileService.getPerfil(idUsuario),
-    enabled: idUsuario !== -1,
+    queryFn: () => {
+      if (!isAuthenticated) {
+        router.push("/login");
+        throw new Error("No autenticado");
+      }
+      return profileService.getPerfil(idUsuario);
+    },
+    enabled: idUsuario !== -1 && isAuthenticated,
   });
 
   // Obtener seguidos
   const { data: seguidos = [], isLoading: loadingSeguidos } = useQuery({
     queryKey: ["seguidos", idUsuario],
-    queryFn: () => amigosService.getSeguidos(idUsuario),
-    enabled: idUsuario !== -1,
+    queryFn: () => {
+      if (!isAuthenticated) {
+        router.push("/login");
+        throw new Error("No autenticado");
+      }
+      return amigosService.getSeguidos(idUsuario);
+    },
+    enabled: idUsuario !== -1 && isAuthenticated,
   });
 
   // Obtener seguidores
   const { data: seguidores = [], isLoading: loadingSeguidores } = useQuery({
     queryKey: ["seguidores", idUsuario],
-    queryFn: () => amigosService.getSeguidores(idUsuario),
-    enabled: idUsuario !== -1,
+    queryFn: () => {
+      if (!isAuthenticated) {
+        router.push("/login");
+        throw new Error("No autenticado");
+      }
+      return amigosService.getSeguidores(idUsuario);
+    },
+    enabled: idUsuario !== -1 && isAuthenticated,
   });
 
   const deleteAccount = async () => {

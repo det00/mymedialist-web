@@ -270,13 +270,29 @@ export function Navbar() {
                 <div className="h-10 w-10 rounded-full bg-muted animate-pulse"></div>
               ) : isAuthenticated && userData ? (
                 <div className="flex items-center gap-2">
-                  <UserAvatar
-                    key={`nav-avatar-mobile-${userData.avatar}`}
-                    avatarData={userData.avatar || "avatar1"}
-                    size="md"
-                  />
+                  <div 
+                    className="cursor-pointer"
+                    onClick={() => {
+                      router.push('/perfil');
+                      setMobileMenuOpen(false);
+                    }}
+                  >
+                    <UserAvatar
+                      key={`nav-avatar-mobile-${userData.avatar}`}
+                      avatarData={userData.avatar || "avatar1"}
+                      size="md"
+                    />
+                  </div>
                   <div className="flex flex-col">
-                    <span className="text-sm font-medium">{userData.nombre}</span>
+                    <span 
+                      className="text-sm font-medium cursor-pointer"
+                      onClick={() => {
+                        router.push('/perfil');
+                        setMobileMenuOpen(false);
+                      }}
+                    >
+                      {userData.nombre}
+                    </span>
                     <Button
                       variant="link"
                       size="sm"
@@ -302,34 +318,7 @@ export function Navbar() {
             </div>
           </div>
 
-          {/* Enlaces rápidos para móvil */}
-          {isAuthenticated && (
-            <div className="flex justify-between px-2">
-              <Button
-                variant="ghost"
-                onClick={() => {
-                  const userId = localStorage.getItem("id_usuario");
-                  if (userId) {
-                    router.push(`/perfil?id=${userId}`);
-                  } else {
-                    router.push("/perfil");
-                  }
-                  setMobileMenuOpen(false);
-                }}
-              >
-                Mi perfil
-              </Button>
-              <Button
-                variant="ghost"
-                onClick={() => {
-                  router.push("/coleccion");
-                  setMobileMenuOpen(false);
-                }}
-              >
-                Mi colección
-              </Button>
-            </div>
-          )}
+          {/* Enlaces rápidos para móvil - eliminados */}
         </div>
       )}
 

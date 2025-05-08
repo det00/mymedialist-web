@@ -46,6 +46,7 @@ export default function Home() {
   const [userData, setUserData] = useState<UserData | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [showAuthModal, setShowAuthModal] = useState<boolean>(false);
+  const [initialAuthView, setInitialAuthView] = useState<"login" | "register">("login");
   const [showAddAmigo, setShowAddAmigo] = useState<boolean>(false);
   const [userId, setUserId] = useState<number>(-1)
   const { seguidos, datosPerfil } = useProfile(userId)
@@ -231,7 +232,11 @@ export default function Home() {
             <Button
               size="lg"
               className="w-full cursor-pointer"
-              onClick={() => setShowAuthModal(true)}
+              onClick={() => {
+                // Asegurarse de que el modal se abra en modo login
+                setInitialAuthView("login");
+                setShowAuthModal(true);
+              }}
             >
               Iniciar sesión
             </Button>
@@ -242,7 +247,12 @@ export default function Home() {
                 variant="link"
                 className="p-0 h-auto cursor-pointer"
                 onClick={() => {
-                  setShowAuthModal(true);
+                  // Asegurarse de que el modal se abra en modo registro
+                  setInitialAuthView("register");
+                  // Pequeño retraso para asegurar que el estado se actualice antes de mostrar el modal
+                  setTimeout(() => {
+                    setShowAuthModal(true);
+                  }, 50);
                 }}
               >
                 Regístrate
@@ -279,7 +289,7 @@ export default function Home() {
         <AuthModal
           showModal={showAuthModal}
           setShowModal={setShowAuthModal}
-          initialView="login"
+          initialView={initialAuthView}
         />
       </div>
     );

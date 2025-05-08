@@ -176,6 +176,9 @@ export interface ContentDetail {
   episodios?: number;
   valoracion?: number;
   tipo: string;
+  año?: number;
+  desarrolladora?: string;
+  plataforma?: string[];
   item?: {
     id: string;
     estado: string;

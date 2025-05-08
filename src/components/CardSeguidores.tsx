@@ -54,83 +54,43 @@ const CardSeguidores = ({seguidoresOrdenados}: CardSeguidoresProp) => {
     } else if (diffDays < 7) {
       return `Hace ${diffDays} ${diffDays === 1 ? "día" : "días"}`;
     } else {
-      return date.toLocaleDateString();
+      return new Intl.DateTimeFormat('es-ES', { 
+        day: '2-digit', 
+        month: '2-digit', 
+        year: 'numeric' 
+      }).format(date);
     }
   };
   return <>
     {seguidoresOrdenados.length > 0 ? (
-      <div className="space-y-3">
-        {seguidoresOrdenados.map((friend) => (
-          <Link href={`/perfil/${friend.id}`} key={friend.id}>
-            <div
-              className="border rounded-lg p-4 hover:border-primary transition-colors cursor-pointer space-y-3 mb-4">
-              <div className="flex items-start gap-4">
-                {/* Avatar e información básica */}
-                <div className="relative">
-                  <UserAvatar avatarData={friend.avatar} size="lg"/>
-                </div>
-
-                <div className="flex-1">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <h3 className="font-medium">{friend.nombre}</h3>
-                      <p className="text-sm text-muted-foreground">
-                        @{friend.username}
-                      </p>
-                    </div>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="cursor-pointer"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        dejarSeguirMutation.mutate(friend.id);
-                      }}
-                    >
-                      <UserMinus className="h-4 w-4 mr-2" />
-                      Dejar de seguir
-                    </Button>
+      <div className="space-y-6">
+        {seguidoresOrdenados.map((friend, index) => (
+          <React.Fragment key={`follower-${friend.id}-${index}`}>
+            <Link href={`/perfil/${friend.id}`} key={friend.id}>
+              <div className="border rounded-lg p-4 hover:border-primary transition-colors cursor-pointer flex items-center gap-4">
+                <UserAvatar avatarData={friend.avatar} size="sm"/>
+                <div className="flex-1 min-w-0">
+                  <div className="flex justify-between items-start">
+                    <h3 className="font-medium truncate">{friend.nombre}</h3>
+                    <p className="text-sm text-muted-foreground">
+                      @{friend.username}
+                    </p>
                   </div>
-
-                  {/* Información adicional */}
-                  <div className="mt-2 space-y-2">
-                    {/* Actividad reciente */}
-                    {friend.ultimaActividad && (
-                      <div className="text-sm">
-                                  <span className="text-muted-foreground">
-                                    Actividad reciente:{" "}
-                                  </span>
-                        <span className="flex items-center gap-1">
-                                    {getContentTypeIcon(
-                                      friend.ultimaActividad.tipo
-                                    )}
-                          <span>{friend.ultimaActividad.titulo}</span>
-                          <Badge
-                            variant="outline"
-                            className="text-xs ml-2"
-                          >
-            {formatRelativeTime(
-              friend.ultimaActividad.fecha
-            )}
-                                    </Badge>
-                                  </span>
-                      </div>
-                    )}
-
-                    {/* Etiquetas adicionales */}
-                    <div className="flex flex-wrap gap-2">
-                      <Badge variant="outline">
-                        {friend.contenidosTotales} contenidos
-                      </Badge>
-                      <Badge variant="outline">
-                        {friend.contenidosCompartidos} coincidencias
-                      </Badge>
+                  {friend.ultimaActividad && (
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
+                      {getContentTypeIcon(friend.ultimaActividad.tipo)}
+                      <span className="truncate">
+                        {friend.ultimaActividad.titulo}
+                      </span>
                     </div>
-                  </div>
+                  )}
                 </div>
               </div>
-            </div>
-          </Link>
+            </Link>
+            {index < seguidoresOrdenados.length - 1 && (
+              <div className="border-t my-2"></div>
+            )}
+          </React.Fragment>
         ))}
       </div>
     ) : "Aún no sigues a nadie"}</>

@@ -178,7 +178,7 @@ export default function Busqueda() {
     }
 
     return (
-      <div className="flex justify-center items-center gap-2">
+      <div className="flex justify-center sm:justify-end items-center gap-1 sm:gap-2 flex-wrap">
         <Button
           variant="outline"
           size="icon"
@@ -200,7 +200,7 @@ export default function Busqueda() {
               variant={currentPage === Number(pagina) ? "default" : "outline"}
               size="sm"
               onClick={() => cambiarPagina(Number(pagina))}
-              className="h-8 w-8 cursor-pointer"
+              className="h-7 w-7 sm:h-8 sm:w-8 cursor-pointer"
             >
               {pagina}
             </Button>
@@ -242,7 +242,7 @@ export default function Busqueda() {
     );
 
     return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6 md:gap-8">
         {resultadosPaginados.map((item) => (
           <Link
             href={`/${rutaTipo}/${item.id_api}`}
@@ -269,15 +269,15 @@ export default function Busqueda() {
   // Mostrar modal de autenticación si no está autenticado
   if (!isAuthenticated && !loading) {
     return (
-      <div className="min-h-screen flex flex-col px-8 sm:px-12 md:px-24 lg:px-32">
-        <Card className="mt-8 mb-12 shadow-md p-0">
-          <CardContent className="p-6 sm:p-10">
-            <div className="flex flex-col items-center justify-center h-64 text-center">
-              <AlertCircle className="h-16 w-16 text-muted-foreground mb-4" />
-              <h2 className="text-xl font-semibold mb-2">
+      <div className="min-h-screen flex flex-col px-4 sm:px-6 md:px-8 lg:px-12 xl:px-24 max-w-[1400px] mx-auto">
+        <Card className="mt-4 sm:mt-6 md:mt-8 mb-8 sm:mb-12 shadow-md p-0 w-full">
+          <CardContent className="p-4 sm:p-6 md:p-8 lg:p-10">
+            <div className="flex flex-col items-center justify-center h-48 sm:h-64 text-center px-4">
+              <AlertCircle className="h-10 w-10 sm:h-16 sm:w-16 text-muted-foreground mb-3 sm:mb-4" />
+              <h2 className="text-lg sm:text-xl font-semibold mb-2">
                 Necesitas iniciar sesión
               </h2>
-              <p className="text-muted-foreground mb-6">
+              <p className="text-sm sm:text-base text-muted-foreground mb-4 sm:mb-6">
                 Para buscar y explorar contenido, primero debes iniciar sesión
               </p>
               <Button onClick={() => setShowAuthModal(true)}>
@@ -297,64 +297,74 @@ export default function Busqueda() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col px-8 sm:px-12 md:px-24 lg:px-32">
-      <Card className="mt-8 mb-12 shadow-md p-0">
-        <CardContent className="p-6 sm:p-10">
-          <h1 className="text-2xl font-semibold mb-6">
-            Resultados de búsqueda{" "}
-            {searchParams.get("busqueda") &&
-              `para "${searchParams.get("busqueda")}"`}
-          </h1>
+    <div className="min-h-screen flex flex-col px-4 sm:px-6 md:px-8 lg:px-12 xl:px-24 max-w-[1400px] mx-auto">
+      <Card className="mt-4 sm:mt-6 md:mt-8 mb-8 sm:mb-12 shadow-md p-0 w-full">
+        <CardContent className="p-4 sm:p-6 md:p-8 lg:p-10">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6">
+            <h1 className="text-xl sm:text-2xl font-semibold line-clamp-2 mb-4 sm:mb-0">
+              Resultados de búsqueda{" "}
+              {searchParams.get("busqueda") &&
+                `para "${searchParams.get("busqueda")}"`}
+            </h1>
+            
+            {/* Paginación en la parte superior */}
+            {!loading && !error && resultados.length > 0 && (
+              <div className="self-end sm:self-auto">
+                {renderPaginacion()}
+              </div>
+            )}
+          </div>
 
           {/* Filtros de tipo */}
-          <div className="flex flex-wrap gap-2 mb-6">
+          <div className="flex flex-wrap gap-1 sm:gap-2 mb-4 sm:mb-6">
             {(Object.keys(tipoAMapeo) as Array<string>).map((tipoKey) => (
               <Button
                 key={tipoKey}
                 variant={tipo === tipoKey ? "default" : "outline"}
                 onClick={() => cambiarTipo(tipoKey)}
-                className="rounded-full cursor-pointer"
+                className="rounded-full cursor-pointer text-xs sm:text-sm py-1 h-auto sm:h-9"
+                size="sm"
               >
                 {tipoCompleto[tipoKey]}
               </Button>
             ))}
           </div>
 
-          {/* Contenedor principal con altura fija y posicionamiento relativo */}
-          <div className="relative min-h-[600px]">
+          {/* Contenedor principal */}
+          <div>
             {loading ? (
-              <div className="flex items-center justify-center h-[540px]">
+              <div className="flex items-center justify-center h-[300px] sm:h-[400px] md:h-[500px]">
                 <div className="text-center">
-                  <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-primary mx-auto mb-4"></div>
-                  <div>Cargando resultados...</div>
+                  <div className="animate-spin rounded-full h-6 w-6 sm:h-8 sm:w-8 border-t-2 border-primary mx-auto mb-3 sm:mb-4"></div>
+                  <div className="text-sm sm:text-base">Cargando resultados...</div>
                 </div>
               </div>
             ) : error ? (
-              <div className="flex items-center justify-center h-[540px]">
-                <div className="text-center text-red-500">
-                  <AlertCircle className="h-8 w-8 mx-auto mb-4" />
-                  <div>{error}</div>
+              <div className="flex items-center justify-center h-[300px] sm:h-[400px] md:h-[500px]">
+                <div className="text-center text-red-500 px-4">
+                  <AlertCircle className="h-6 w-6 sm:h-8 sm:w-8 mx-auto mb-3 sm:mb-4" />
+                  <div className="text-sm sm:text-base">{error}</div>
                 </div>
               </div>
             ) : resultados.length === 0 ? (
-              <div className="flex items-center justify-center h-[540px]">
-                <div className="text-center">
-                  <Search className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-                  <div className="text-lg mb-2">
+              <div className="flex items-center justify-center h-[300px] sm:h-[400px] md:h-[500px]">
+                <div className="text-center px-4">
+                  <Search className="h-10 w-10 sm:h-16 sm:w-16 text-muted-foreground mx-auto mb-3 sm:mb-4" />
+                  <div className="text-base sm:text-lg mb-2">
                     No se encontraron resultados para tu búsqueda
                   </div>
-                  <p className="text-muted-foreground">
+                  <p className="text-xs sm:text-sm text-muted-foreground">
                     Intenta con otro término o cambia el tipo de contenido
                   </p>
                 </div>
               </div>
             ) : (
               <>
-                {/* Altura reducida para dejar espacio a la paginación */}
-                <div className="mb-16">{renderResultados()}</div>
-
-                {/* Paginación con posición absoluta en la parte inferior */}
-                <div className="absolute bottom-0 left-0 right-0 py-4">
+                {/* Contenedor de resultados */}
+                <div>{renderResultados()}</div>
+                
+                {/* Paginación inferior (solo en móviles) */}
+                <div className="mt-8 sm:hidden py-2">
                   {renderPaginacion()}
                 </div>
               </>

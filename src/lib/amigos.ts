@@ -46,6 +46,10 @@ const amigosService = {
   },
 
   async getSeguidores (userId: number): Promise<Seguidor[]> {
+    const isAuthenticated = authService.isAuthenticated();
+    if (!isAuthenticated) {
+      throw new Error("No autenticado");
+    }
     try{
       const token = authService.getToken();
       if (!token) {
@@ -62,6 +66,10 @@ const amigosService = {
   },
 
   async getSeguidos (userId: number): Promise<Seguidor[]> {
+    const isAuthenticated = authService.isAuthenticated();
+    if (!isAuthenticated) {
+      throw new Error("No autenticado");
+    }
     try{
       const token = authService.getToken();
       if (!token) {

@@ -8,6 +8,10 @@ import { PutPerfilRequest } from "@/hooks/useProfile";
 export const profileService = {
   
   async getPerfil(id: number): Promise<Perfil> {
+    const isAuthenticated = authService.isAuthenticated();
+    if (!isAuthenticated) {
+      throw new Error("No autenticado");
+    }
     try {
       const token = authService.getToken();
       if (!token) {
