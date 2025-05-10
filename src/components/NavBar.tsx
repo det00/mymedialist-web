@@ -13,6 +13,7 @@ import { authService } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { useProfile } from "@/hooks/useProfile";
 import Link from "next/link";
+import Image from "next/image";
 import { SearchExpanded } from "./SearchExpanded";
 
 interface UserData {
@@ -109,10 +110,17 @@ export function Navbar() {
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-4">
         {/* Logo siempre visible */}
         <div
-          className="text-xl font-bold text-primary cursor-pointer"
+          className="flex w-1/8 items-center justify-center cursor-pointer p-0 ml-4"
           onClick={() => router.push("/")}
         >
-          MyMediaList
+          <Image 
+            src="/log.svg" 
+            alt="MyMediaList Logo" 
+            width={250} 
+            height={20} 
+            className="h-10 w-auto" 
+            style={{ margin: 0, padding: 0 }}
+          />
         </div>
 
         {/* Elementos visibles en móviles */}

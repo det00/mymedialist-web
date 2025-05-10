@@ -219,9 +219,16 @@ export default function Home() {
       <div className="min-h-screen flex flex-col items-center justify-center px-4 py-12">
         <div className="max-w-md w-full space-y-8 text-center">
           <div>
-            <h1 className="text-3xl font-extrabold">
-              Bienvenido a MyMediaList
-            </h1>
+            <div className="flex justify-center mb-4">
+              <Image 
+                src="/log.svg" 
+                alt="MyMediaList Logo" 
+                width={300} 
+                height={30} 
+                className="h-16 w-auto" 
+                style={{ margin: 0, padding: 0 }}
+              />
+            </div>
             <p className="mt-3 text-lg text-muted-foreground">
               Organiza y comparte todo lo que ves, lees y juegas en un solo
               lugar.
