@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Contenido } from "@/lib/types";
+import { CardBasic } from "@/lib/types";
 import { Circle } from "lucide-react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { ColeccionSkeleton } from "@/components/ColeccionSkeleton";
@@ -36,7 +36,7 @@ export default function ColeccionPage() {
   
   const [tipoFiltro, setTipoFiltro] = useState<TipoFiltro>(tipoParam && ["pelicula", "serie", "libro", "videojuego"].includes(tipoParam) ? tipoParam : "todo");
   const [estadoFiltro, setEstadoFiltro] = useState<EstadoFiltro>(estadoParam && ["C", "E", "P", "A"].includes(estadoParam) ? estadoParam : "todo");
-  const [coleccion, setColeccion] = useState<Contenido[]>([]);
+  const [coleccion, setColeccion] = useState<CardBasic[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [sortOption, setSortOption] = useState<SortOption>(sortParam && ["title_asc", "title_desc", "date_desc", "date_asc", "rating_desc"].includes(sortParam) ? sortParam : "title_asc");
@@ -102,7 +102,13 @@ export default function ColeccionPage() {
         setLoading(true);
         
         // Crear objeto de filtros para la API
-        const filters: any = {};
+        interface CollectionFilters {
+          tipo?: string;
+          estado?: string;
+          calificacion?: number;
+        }
+        
+        const filters: CollectionFilters = {};
         
         // Convierte el tipo de filtro a formato de API
         if (tipoFiltro !== "todo") {
@@ -144,16 +150,14 @@ export default function ColeccionPage() {
         case "title_desc":
           return b.titulo.localeCompare(a.titulo);
         case "date_desc":
-          // Extraer años para comparar (asumiendo formato YYYY-MM-DD o año como string)
-          const yearA = a.fechaLanzamiento?.match(/(\d{4})/)?.[1] || "0";
-          const yearB = b.fechaLanzamiento?.match(/(\d{4})/)?.[1] || "0";
-          return parseInt(yearB) - parseInt(yearA);
+          // Como CardBasic no tiene fechaLanzamiento, ordenamos por id como alternativa
+          return b.id - a.id;
         case "date_asc":
-          const yearAsc1 = a.fechaLanzamiento?.match(/(\d{4})/)?.[1] || "0";
-          const yearAsc2 = b.fechaLanzamiento?.match(/(\d{4})/)?.[1] || "0";
-          return parseInt(yearAsc1) - parseInt(yearAsc2);
+          // Como CardBasic no tiene fechaLanzamiento, ordenamos por id como alternativa
+          return a.id - b.id;
         case "rating_desc":
-          return (b.valoracion || 0) - (a.valoracion || 0);
+          // Como CardBasic no tiene valoracion, ordenamos por id como alternativa
+          return b.id - a.id;
         default:
           return 0;
       }
@@ -200,13 +204,13 @@ export default function ColeccionPage() {
                   </div>
                   <div className="text-center">
                     <span className="text-lg font-bold text-green-500">
-                      {coleccion.filter(item => item.item?.estado === 'C').length}
+                      {coleccion.filter(item => item.estado === 'C').length}
                     </span>
                     <p className="text-xs text-muted-foreground">Completados</p>
                   </div>
                   <div className="text-center">
                     <span className="text-lg font-bold text-blue-500">
-                      {coleccion.filter(item => item.item?.estado === 'E').length}
+                      {coleccion.filter(item => item.estado === 'E').length}
                     </span>
                     <p className="text-xs text-muted-foreground">En progreso</p>
                   </div>
@@ -361,7 +365,7 @@ export default function ColeccionPage() {
                     {/* En progreso */}
                     <ColeccionGroup 
                       title="En progreso" 
-                      contenido={coleccion.filter(item => item.item?.estado === "E")}
+                      contenido={coleccion.filter(item => item.estado === "E")}
                       verMasUrl="?estado=E" 
                       limite={4}
                     />
@@ -369,7 +373,7 @@ export default function ColeccionPage() {
                     {/* Pendientes */}
                     <ColeccionGroup 
                       title="Pendientes" 
-                      contenido={coleccion.filter(item => item.item?.estado === "P")}
+                      contenido={coleccion.filter(item => item.estado === "P")}
                       verMasUrl="?estado=P"
                       limite={4}
                     />
@@ -377,7 +381,7 @@ export default function ColeccionPage() {
                     {/* Completados */}
                     <ColeccionGroup 
                       title="Completados" 
-                      contenido={coleccion.filter(item => item.item?.estado === "C")}
+                      contenido={coleccion.filter(item => item.estado === "C")}
                       verMasUrl="?estado=C"
                       limite={4}
                     />
@@ -385,7 +389,7 @@ export default function ColeccionPage() {
                     {/* Abandonados */}
                     <ColeccionGroup 
                       title="Abandonados" 
-                      contenido={coleccion.filter(item => item.item?.estado === "A")}
+                      contenido={coleccion.filter(item => item.estado === "A")}
                       verMasUrl="?estado=A"
                       limite={4}
                     />

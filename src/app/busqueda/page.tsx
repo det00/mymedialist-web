@@ -15,10 +15,8 @@ import CardSearch from "@/components/CardSearch";
 
 export default function Busqueda() {
   const searchParams = useSearchParams();
-  const router = useRouter();
   const [resultados, setResultados] = useState<CardBuscar[]>([]);
   const [rutaTipo, setRutaTipo] = useState<string>("");
-  const [tipo, setTipo] = useState<string>("P");
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
@@ -36,13 +34,6 @@ export default function Busqueda() {
     P: "pelicula",
     L: "libro",
     S: "serie",
-  };
-
-  const tipoCompleto: Record<string, string> = {
-    V: "Videojuegos",
-    P: "Películas",
-    L: "Libros",
-    S: "Series",
   };
 
   // Obtener los resultados para la página actual
@@ -90,7 +81,7 @@ export default function Busqueda() {
             ? rawTipo
             : "P";
 
-        setTipo(tipoValido);
+        // Ya no usamos setTipo porque eliminamos la variable tipo
         setRutaTipo(tipoAMapeo[tipoValido]);
         setCurrentPage(1); // Reiniciar a la primera página con nueva búsqueda
 
@@ -117,7 +108,7 @@ export default function Busqueda() {
     };
 
     realizarBusqueda();
-  }, [searchParams, isAuthenticated]); // Dependencias actualizadas
+  }, [searchParams, isAuthenticated, tipoAMapeo]); // Añadimos tipoAMapeo como dependencia
 
   // Renderizar paginación
   const renderPaginacion = () => {

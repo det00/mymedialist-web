@@ -191,6 +191,35 @@ export const collectionService = {
       return [];
     }
   },
+
+  async getUserCollection(filters: { tipo?: string; estado?: string; calificacion?: number }): Promise<CardBasic[]> {
+    try {
+      const token = authService.getToken();
+      if (!token) {
+        throw new Error("No hay token de autenticación");
+      }
+      
+      // Construir los parámetros de consulta
+      const params = new URLSearchParams();
+      if (filters.tipo) params.append('tipo', filters.tipo);
+      if (filters.estado) params.append('estado', filters.estado);
+      if (filters.calificacion) params.append('calificacion', filters.calificacion.toString());
+      
+      const queryString = params.toString() ? `?${params.toString()}` : '';
+      const userId = localStorage.getItem("id_usuario");
+      
+      const response = await api.get<CardBasic[]>(`/user-items/coleccion/${userId}${queryString}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      
+      return response.data;
+    } catch (error) {
+      console.error("Error al obtener la colección del usuario:", error);
+      return [];
+    }
+  },
 };
 
 export default collectionService;
