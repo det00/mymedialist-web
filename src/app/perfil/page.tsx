@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { DeleteAccountDialog } from "@/components/DeleteAccountDialog";
+import { ResetPasswordDialog } from "@/components/ResetPasswordDialog";
 import {
   Card,
   CardContent,
@@ -48,6 +49,7 @@ export function ProfilePage() {
   const userId = authService.getUserId();
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showResetPasswordDialog, setShowResetPasswordDialog] = useState(false);
   const [activeTab, setActiveTab] = useState(tabActionParam || 'collection');
   const [avatarUpdateKey, setAvatarUpdateKey] = useState(Date.now());
 
@@ -425,6 +427,14 @@ export function ProfilePage() {
                         Editar perfil
                       </Button>
                       <Button
+                        variant="secondary"
+                        className="cursor-pointer"
+                        onClick={() => setShowResetPasswordDialog(true)}
+                      >
+                        <Settings className="h-4 w-4 mr-2" />
+                        Cambiar contraseña
+                      </Button>
+                      <Button
                         variant="destructive"
                         className="cursor-pointer"
                         onClick={() => setShowDeleteDialog(true)}
@@ -469,6 +479,10 @@ export function ProfilePage() {
         open={showDeleteDialog}
         onOpenChange={setShowDeleteDialog}
         onSuccess={logout}
+      />
+      <ResetPasswordDialog
+        open={showResetPasswordDialog}
+        onOpenChange={setShowResetPasswordDialog}
       />
     </div>
   );

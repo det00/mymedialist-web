@@ -104,6 +104,15 @@ export function useProfile(idUsuario: number) {
       queryClient.invalidateQueries({ queryKey: ["seguidos"] });
       queryClient.invalidateQueries({ queryKey: ["seguidores"] });
       queryClient.invalidateQueries({ queryKey: ["perfil"] });
+      queryClient.invalidateQueries({ queryKey: ["buscarUsuarios"] });
+      
+      // Invalidar todas las consultas relacionadas con perfiles
+      queryClient.invalidateQueries({ 
+        predicate: (query) => 
+          query.queryKey[0] === "perfil" || 
+          (Array.isArray(query.queryKey) && query.queryKey.includes("perfil")) ||
+          query.queryKey[0] === "buscarUsuarios"
+      });
     },
   });
 

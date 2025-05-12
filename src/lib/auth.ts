@@ -169,6 +169,56 @@ export const authService = {
       throw error; // Propagar el error para que pueda ser manejado por el componente
     }
   },
+
+  async changePassword(currentPassword: string, newPassword: string): Promise<void> {
+    try {
+      const token = this.getToken();
+      if (!token) {
+        throw new Error("No hay token de autenticación");
+      }
+
+      // Verificar que la nueva contraseña cumpla con los requisitos mínimos
+      if (newPassword.length < 6) {
+        throw new Error("La contraseña debe tener al menos 6 caracteres");
+      }
+
+      // Realizar la solicitud POST al endpoint para cambiar la contraseña
+      const response = await api.post("/auth/change-password", 
+        { 
+          currentPassword, 
+          newPassword 
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json"
+          }
+        }
+      );
+      
+      console.log("Contraseña actualizada correctamente");
+      
+      // No es necesario cerrar sesión ni limpiar datos, solo notificar el cambio
+      window.dispatchEvent(new Event("userDataUpdated"));
+      
+      return Promise.resolve();
+    } catch (error: any) {
+      // Registrar el error completo para depuración
+      console.error("Error al cambiar la contraseña:", error);
+      
+      // Mejorar el mensaje de error para proporcionar información más útil
+      if (error.response) {
+        // Si el servidor devuelve una respuesta con un mensaje de error, usarlo
+        if (error.response.data && (error.response.data.message || error.response.data.error)) {
+          const serverMessage = error.response.data.message || error.response.data.error;
+          throw new Error(serverMessage);
+        }
+      }
+      
+      // Si no hay un mensaje específico del servidor, propagar el error original
+      throw error;
+    }
+  },
 };
 
 export default authService;

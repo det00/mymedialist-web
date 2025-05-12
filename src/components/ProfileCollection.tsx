@@ -176,9 +176,9 @@ export function ProfileCollection({ userId }: ProfileCollectionProps) {
       <Link 
         href={getItemRoute(item)} 
         key={`${item.id_api}-${item.tipo}`}
-        className="cursor-pointer"
+        className="cursor-pointer block h-full"
       >
-        <div className="border rounded-lg overflow-hidden flex flex-col hover:border-primary transition-colors h-full">
+        <div className="border rounded-lg overflow-hidden flex flex-col hover:border-primary hover:shadow-md transition-all h-full hover:scale-[1.02] hover:bg-accent/5">
           {/* Imagen */}
           <div className="relative h-40 w-full">
             {item.imagen ? (

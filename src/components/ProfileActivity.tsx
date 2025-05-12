@@ -155,60 +155,61 @@ export function ProfileActivity({ userId }: { userId: string | number }): JSX.El
     return (
       <div className="space-y-4">
         {activities.map((item, index) => (
-          <div key={index} className="border rounded-lg overflow-hidden hover:border-primary transition-colors">
-            <div className="flex p-4">
-              {/* Imagen */}
-              <div className="relative h-24 w-16 flex-shrink-0 mr-4">
-                {item.imagen ? (
-                  <Image
-                    src={item.imagen}
-                    alt={item.titulo}
-                    fill
-                    sizes={item.imagen}
-                    className="object-cover rounded-md"
-                  />
-                ) : (
-                  <div className="bg-muted h-full w-full rounded-md flex items-center justify-center">
-                    {getContentIcon(item.tipo)}
-                  </div>
-                )}
-              </div>
+          <Link
+            href={`/${activityService.getContentTypeUrl(item.tipo)}/${item.id_api}`}
+            key={index}
+            className="block cursor-pointer"
+          >
+            <div className="border rounded-lg overflow-hidden hover:border-primary hover:shadow-md transition-all hover:scale-[1.01] hover:bg-accent/5">
+              <div className="flex p-4">
+                {/* Imagen */}
+                <div className="relative h-24 w-16 flex-shrink-0 mr-4">
+                  {item.imagen ? (
+                    <Image
+                      src={item.imagen}
+                      alt={item.titulo}
+                      fill
+                      sizes={item.imagen}
+                      className="object-cover rounded-md"
+                    />
+                  ) : (
+                    <div className="bg-muted h-full w-full rounded-md flex items-center justify-center">
+                      {getContentIcon(item.tipo)}
+                    </div>
+                  )}
+                </div>
 
-              {/* Contenido */}
-              <div className="flex-1">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <div className="flex items-center gap-1 mb-1">
-                      <Badge variant="outline" className="flex items-center gap-1">
-                        {getContentIcon(item.tipo)}
-                        {activityService.getContentTypeName(item.tipo)}
-                      </Badge>
-                      <Badge className="ml-2 flex items-center gap-1" variant="secondary">
-                        {getActivityIcon(getActionTypeFromStatus(item.estado))}
-                        {getActionDescription(item.estado)}
-                      </Badge>
+                {/* Contenido */}
+                <div className="flex-1">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <div className="flex items-center gap-1 mb-1">
+                        <Badge variant="outline" className="flex items-center gap-1">
+                          {getContentIcon(item.tipo)}
+                          {activityService.getContentTypeName(item.tipo)}
+                        </Badge>
+                        <Badge className="ml-2 flex items-center gap-1" variant="secondary">
+                          {getActivityIcon(getActionTypeFromStatus(item.estado))}
+                          {getActionDescription(item.estado)}
+                        </Badge>
+                      </div>
+
+                      <h3 className="font-medium">{item.titulo}</h3>
+
+                      <p className="text-sm mt-1">
+                        {getActionDescriptionForSentence(item.estado)} {activityService.getContentTypeName(item.tipo).toLowerCase()}
+                      </p>
                     </div>
 
-                    <Link
-                      href={`/${activityService.getContentTypeUrl(item.tipo)}/${item.id_api}`}
-                      className="hover:underline"
-                    >
-                      <h3 className="font-medium">{item.titulo}</h3>
-                    </Link>
-
-                    <p className="text-sm mt-1">
-                      {getActionDescriptionForSentence(item.estado)} {activityService.getContentTypeName(item.tipo).toLowerCase()}
-                    </p>
-                  </div>
-
-                  <div className="text-xs text-muted-foreground flex items-center whitespace-nowrap">
-                    <CalendarDays className="h-3 w-3 mr-1" />
-                    {formatRelativeTime(item.created_at)}
+                    <div className="text-xs text-muted-foreground flex items-center whitespace-nowrap">
+                      <CalendarDays className="h-3 w-3 mr-1" />
+                      {formatRelativeTime(item.created_at)}
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
+          </Link>
         ))}
 
         {/* Botón para cargar más */}

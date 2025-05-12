@@ -118,7 +118,7 @@ export function Navbar() {
             alt="MyMediaList Logo" 
             width={250} 
             height={20} 
-            className="h-10 w-auto" 
+            className="h-10 w-auto min-w-20" 
             style={{ margin: 0, padding: 0 }}
           />
         </div>

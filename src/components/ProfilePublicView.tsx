@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -40,8 +40,7 @@ import Link from "next/link";
 
 export function ProfilePublicView({ idUsuario }: { idUsuario: number }) {
   const [activeTab, setActiveTab] = useState("activity");
-  const [isFollowing, setIsFollowing] = useState(false);
-  const { datosPerfil, loading, seguidos, seguidores } = useProfile(idUsuario);
+  const { datosPerfil, loading, seguidos, seguidores, toggleFollow } = useProfile(idUsuario);
   const { activities } = useActivity(idUsuario);
   const {
     enProgreso,
@@ -54,6 +53,16 @@ export function ProfilePublicView({ idUsuario }: { idUsuario: number }) {
     juego,
     loading: loadingCollection
   } = useCollection({ userId: idUsuario, autoLoad: true });
+  
+  // Determinar si el usuario actual ya está siguiendo a este perfil
+  const [isFollowing, setIsFollowing] = useState(false);
+  
+  // Actualizar el estado de seguimiento cuando los datos del perfil estén disponibles
+  useEffect(() => {
+    if (datosPerfil) {
+      setIsFollowing(datosPerfil.siguiendo || false);
+    }
+  }, [datosPerfil]);
 
   // Condición de carga para mostrar el spinner
   if ((loading || loadingCollection) && !datosPerfil) {
@@ -64,8 +73,18 @@ export function ProfilePublicView({ idUsuario }: { idUsuario: number }) {
     );
   }
   // Manejar seguir/dejar de seguir
-  const handleFollowToggle = () => {
-    setIsFollowing(!isFollowing);
+  const handleFollowToggle = async () => {
+    try {
+      // Llamar al endpoint real de seguir/dejar de seguir
+      const success = await toggleFollow();
+      
+      if (success) {
+        // Actualizar el estado local solo si la operación fue exitosa
+        setIsFollowing(!isFollowing);
+      }
+    } catch (error) {
+      console.error("Error al seguir/dejar de seguir:", error);
+    }
   };
 
   // Manejar compartir perfil
@@ -212,7 +231,7 @@ export function ProfilePublicView({ idUsuario }: { idUsuario: number }) {
               variant={isFollowing ? "outline" : "default"}
               size="sm"
               onClick={handleFollowToggle}
-              className="w-full"
+              className="w-full cursor-pointer"
             >
               {isFollowing ? (
                 <>

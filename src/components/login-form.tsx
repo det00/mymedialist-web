@@ -127,9 +127,9 @@ export function LoginForm(props: LoginFormProps) {
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <Label htmlFor="password">Contraseña</Label>
-              <Button variant="link" className="p-0 h-auto text-xs">
+{/*               <Button variant="link" className="p-0 h-auto text-xs">
                 ¿Olvidaste tu contraseña?
-              </Button>
+              </Button> */}
             </div>
             <Input
               id="password"

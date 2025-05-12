@@ -11,6 +11,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { ScrollArea } from "./ui/scroll-area";
 import amigosService from "@/lib/amigos";
 import { Usuario } from "@/lib/types";
+import { useRouter } from "next/navigation";
 
 interface AddAmigoProps {
   cerrarAddAmigo: () => void;
@@ -19,6 +20,7 @@ interface AddAmigoProps {
 
 export function AddAmigo({ cerrarAddAmigo, open }: AddAmigoProps) {
   const queryClient = useQueryClient();
+  const router = useRouter();
   const [query, setQuery] = useState<string>("");
   const [searchTerm] = useState<string>("");
 
@@ -37,6 +39,13 @@ export function AddAmigo({ cerrarAddAmigo, open }: AddAmigoProps) {
       queryClient.invalidateQueries({ queryKey: ["buscarUsuarios"] });
       queryClient.invalidateQueries({ queryKey: ["seguidores"] });
       queryClient.invalidateQueries({ queryKey: ["seguidos"] });
+      queryClient.invalidateQueries({ queryKey: ["perfil"] });
+      // Invalidar consultas específicas de perfil por ID
+      queryClient.invalidateQueries({ 
+        predicate: (query) => 
+          query.queryKey[0] === "perfil" || 
+          (Array.isArray(query.queryKey) && query.queryKey.includes("perfil"))
+      });
     },
   });
 
@@ -51,8 +60,14 @@ export function AddAmigo({ cerrarAddAmigo, open }: AddAmigoProps) {
   };
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
-      buscarUsuarios();
+      handleBuscarUsuarios();
     }
+  };
+  
+  // Navegar al perfil del usuario
+  const navigateToProfile = (userId: number) => {
+    router.push(`/perfil/${userId}`);
+    cerrarAddAmigo();
   };
 
   return (
@@ -107,9 +122,12 @@ export function AddAmigo({ cerrarAddAmigo, open }: AddAmigoProps) {
                 {searchResults.map((usuario) => (
                   <div
                     key={usuario.id}
-                    className="flex items-center justify-between"
+                    className="flex items-center justify-between border rounded-lg p-3 hover:border-primary transition-colors"
                   >
-                    <div className="flex items-center space-x-3">
+                    <div 
+                      className="flex items-center space-x-3 flex-1 cursor-pointer"
+                      onClick={() => navigateToProfile(usuario.id)}
+                    >
                       <Avatar className="h-10 w-10">
                         {usuario.avatar.startsWith("avatar") ? (
                           <AvatarImage

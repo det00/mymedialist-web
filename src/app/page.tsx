@@ -643,9 +643,6 @@ export default function Home() {
               <CardHeader className="pb-2">
                 <CardTitle className="flex justify-between items-center">
                   <span>Mi perfil</span>
-                  <Button variant="ghost" size="sm" className="cursor-pointer">
-                    <MoreHorizontal className="h-4 w-4" />
-                  </Button>
                 </CardTitle>
               </CardHeader>
               <CardContent className="pt-0">
