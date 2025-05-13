@@ -49,6 +49,7 @@ export default function Home() {
   const [initialAuthView, setInitialAuthView] = useState<"login" | "register">("login");
   const [showAddAmigo, setShowAddAmigo] = useState<boolean>(false);
   const [userId, setUserId] = useState<number>(-1)
+  const [avatarUpdateKey, setAvatarUpdateKey] = useState<number>(Date.now())
   const { seguidos, datosPerfil } = useProfile(userId)
   const router = useRouter()
 
@@ -102,6 +103,12 @@ export default function Home() {
     // Listener para actualizaciones de autenticación
     const handleAuthChange = () => {
       checkAuthAndLoadUserData();
+      setAvatarUpdateKey(Date.now());
+    };
+    
+    // Listener para actualizaciones de avatar
+    const handleAvatarUpdate = () => {
+      setAvatarUpdateKey(Date.now());
     };
 
     // Listener para actualizaciones de estado de contenido
@@ -122,6 +129,7 @@ export default function Home() {
     // Escuchar eventos
     window.addEventListener("userDataUpdated", handleAuthChange);
     window.addEventListener("storage", handleAuthChange);
+    window.addEventListener("avatarUpdated", handleAvatarUpdate);
     window.addEventListener(
       "contentStateUpdated",
       handleContentUpdate as EventListener
@@ -130,6 +138,7 @@ export default function Home() {
     return () => {
       window.removeEventListener("userDataUpdated", handleAuthChange);
       window.removeEventListener("storage", handleAuthChange);
+      window.removeEventListener("avatarUpdated", handleAvatarUpdate);
       window.removeEventListener(
         "contentStateUpdated",
         handleContentUpdate as EventListener
@@ -648,7 +657,8 @@ export default function Home() {
               <CardContent className="pt-0">
                 <div className="flex items-center space-x-4 mb-4">
                   <UserAvatar
-                    avatarData={datosPerfil?.avatar_id || "avatar1"}
+                    key={`home-profile-avatar-${datosPerfil?.avatar_id || datosPerfil?.avatar}-${avatarUpdateKey}`}
+                    avatarData={datosPerfil?.avatar_id || datosPerfil?.avatar || "avatar1"}
                     size="lg"
                   />
                   <div>

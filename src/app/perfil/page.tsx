@@ -418,17 +418,17 @@ export function ProfilePage() {
                     </div>
                   </CardContent>
                   {datosPerfil.esMiPerfil && (
-                    <CardFooter className="flex justify-end gap-2">
+                    <CardFooter className="flex flex-col sm:flex-row justify-end gap-2">
                       <Button
                         onClick={toggleEditMode}
-                        className="cursor-pointer"
+                        className="cursor-pointer w-full sm:w-auto"
                       >
                         <Edit className="h-4 w-4 mr-2" />
                         Editar perfil
                       </Button>
                       <Button
                         variant="secondary"
-                        className="cursor-pointer"
+                        className="cursor-pointer w-full sm:w-auto"
                         onClick={() => setShowResetPasswordDialog(true)}
                       >
                         <Settings className="h-4 w-4 mr-2" />
@@ -436,7 +436,7 @@ export function ProfilePage() {
                       </Button>
                       <Button
                         variant="destructive"
-                        className="cursor-pointer"
+                        className="cursor-pointer w-full sm:w-auto"
                         onClick={() => setShowDeleteDialog(true)}
                       >
                         <LogOut className="h-4 w-4 mr-2" />
