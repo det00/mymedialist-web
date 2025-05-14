@@ -45,6 +45,12 @@ Abre [http://localhost:3000](http://localhost:3000) en tu navegador para ver la 
 
 Esta aplicación puede ser fácilmente desplegada en la plataforma [Vercel](https://vercel.com) o cualquier otro proveedor que soporte aplicaciones Next.js.
 
+### Demo en vivo
+
+Puedes ver una versión en vivo de la aplicación en: [https://mymedialist-henna.vercel.app/](https://mymedialist-henna.vercel.app/)
+
+> Nota: Reemplaza la URL anterior con la URL real de tu aplicación desplegada en Vercel.
+
 ## Contribuciones
 
 Las contribuciones son bienvenidas. Si deseas contribuir al proyecto, por favor:
