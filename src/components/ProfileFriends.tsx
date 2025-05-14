@@ -178,19 +178,6 @@ export function ProfileFriends() {
                     className="pl-8"
                   />
                 </div>
-                {/* <Select
-                  value={selectedSortOption}
-                  onValueChange={setSelectedSortOption}
-                >
-                  <SelectTrigger className="w-full sm:w-[180px]">
-                    <SelectValue placeholder="Ordenar por"/>
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="recent">Actividad reciente</SelectItem>
-                    <SelectItem value="name">Nombre</SelectItem>
-                    <SelectItem value="mutual">Amigos en común</SelectItem>
-                  </SelectContent>
-                </Select> */}
               </div>
 
               {/* Lista de seguidores */}
@@ -308,19 +295,6 @@ export function ProfileFriends() {
                     className="pl-8"
                   />
                 </div>
-                {/* <Select
-                  value={selectedSortOption}
-                  onValueChange={setSelectedSortOption}
-                >
-                  <SelectTrigger className="w-full sm:w-[180px]">
-                    <SelectValue placeholder="Ordenar por"/>
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="recent">Actividad reciente</SelectItem>
-                    <SelectItem value="name">Nombre</SelectItem>
-                    <SelectItem value="mutual">Amigos en común</SelectItem>
-                  </SelectContent>
-                </Select> */}
               </div>
 
               {/* Lista de seguidos */}
@@ -421,33 +395,6 @@ export function ProfileFriends() {
         open={showAddFriendDialog}
         cerrarAddAmigo={() => setShowAddFriendDialog(false)}
       />
-
-      {/* Alerta para eliminar amigo */}
-      {/* <AlertDialog
-        open={showRemoveFriendAlert}
-        onOpenChange={setShowRemoveFriendAlert}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>¿Eliminar amigo?</AlertDialogTitle>
-            <AlertDialogDescription>
-              {selectedFriend && (
-                <>
-                  ¿Estás seguro de que quieres eliminar a{" "}
-                  <strong>{selectedFriend.name}</strong> de tu lista de amigos?
-                  Esta acción no se puede deshacer.
-                </>
-              )}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-              Eliminar
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog> */}
     </div>
   );
 }

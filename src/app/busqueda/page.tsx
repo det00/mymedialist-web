@@ -25,7 +25,7 @@ export default function Busqueda() {
   // Paginación
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [totalPages, setTotalPages] = useState<number>(1);
-  const ITEMS_PER_PAGE = 9; // 9 items por página (3 filas de 3 columnas)
+  const ITEMS_PER_PAGE = 9;
 
   moment.locale("es");
 

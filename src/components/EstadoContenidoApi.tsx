@@ -29,10 +29,6 @@ interface EstadoContenidoApiProps {
   size?: "sm" | "md" | "lg";
 }
 
-/**
- * Componente para gestionar el estado de un contenido (película, serie, libro, etc.)
- * Permite marcar como completado, en progreso, pendiente, abandonado o desmarcar
- */
 const EstadoContenidoApi: React.FC<EstadoContenidoApiProps> = ({
   id_api,
   tipo,

@@ -150,13 +150,10 @@ export default function ColeccionPage() {
         case "title_desc":
           return b.titulo.localeCompare(a.titulo);
         case "date_desc":
-          // Como CardBasic no tiene fechaLanzamiento, ordenamos por id como alternativa
           return b.id - a.id;
         case "date_asc":
-          // Como CardBasic no tiene fechaLanzamiento, ordenamos por id como alternativa
           return a.id - b.id;
         case "rating_desc":
-          // Como CardBasic no tiene valoracion, ordenamos por id como alternativa
           return b.id - a.id;
         default:
           return 0;

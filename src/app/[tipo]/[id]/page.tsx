@@ -317,14 +317,6 @@ const ContenidoPage = () => {
                     </span>
                   </div>
                 )}
-                
-                {/* Valoración */}
-                {/* <div className="flex">
-                  <span className="font-medium w-28 text-foreground">Valoración:</span>
-                  <span className="text-muted-foreground">
-                    {contenido.valoracion ? `${contenido.valoracion}/10` : 'No disponible'}
-                  </span>
-                </div> */}
               </div>
             </div>
             

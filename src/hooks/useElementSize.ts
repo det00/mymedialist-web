@@ -1,10 +1,5 @@
 import { useState, useCallback, useEffect, RefObject } from 'react';
 
-/**
- * Hook para medir y observar el tamaño de un elemento
- * @param elementRef Referencia al elemento a medir
- * @returns Objeto con el ancho y alto del elemento
- */
 export function useElementSize<T extends HTMLElement = HTMLDivElement>(
   elementRef: RefObject<T>
 ) {

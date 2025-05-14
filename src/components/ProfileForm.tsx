@@ -136,42 +136,6 @@ export function ProfileForm({ profileData, onSave, onCancel }: ProfileFormProps)
           {errors.name && <p className="text-sm text-destructive">{errors.name}</p>}
         </div>
         
-        {/* Nombre de usuario */}
-        {/* <div className="space-y-2">
-          <Label htmlFor="username">Nombre de usuario</Label>
-          <div className="flex">
-            <span className="flex items-center px-3 bg-muted border border-r-0 rounded-l-md">
-              @
-            </span>
-            <Input
-              id="username"
-              name="username"
-              value={formData.username}
-              onChange={handleChange}
-              placeholder="username"
-              className={`rounded-l-none ${errors.username ? "border-destructive" : ""}`}
-            />
-          </div>
-          {errors.username && <p className="text-sm text-destructive">{errors.username}</p>}
-          <p className="text-xs text-muted-foreground">Este nombre será visible para otros usuarios.</p>
-        </div> */}
-        
-        {/* Email */}
-        {/* <div className="space-y-2">
-          <Label htmlFor="email">Email</Label>
-          <Input
-            id="email"
-            name="email"
-            type="email"
-            value={formData.email}
-            onChange={handleChange}
-            placeholder="tu@email.com"
-            className={errors.email ? "border-destructive" : ""}
-          />
-          {errors.email && <p className="text-sm text-destructive">{errors.email}</p>}
-          <p className="text-xs text-muted-foreground">No compartiremos tu email con otros usuarios.</p>
-        </div> */}
-        
         {/* Bio */}
         <div className="space-y-2">
           <Label htmlFor="bio">Sobre mí</Label>

@@ -60,16 +60,6 @@ export function useProfile(idUsuario: number) {
     },
     enabled: idUsuario !== -1 && isAuthenticated,
   });
-
-  const deleteAccount = async () => {
-    try {
-      await authService.deleteAccount();
-      router.push("/");
-    } catch (err) {
-      console.error("Error al eliminar la cuenta:", err);
-      throw new Error("No se pudo eliminar la cuenta");
-    }
-  };
   // Guardar cambios del perfil
   const saveProfile = async (updatedData: Partial<PutPerfilRequest>) => {
     try {

@@ -666,48 +666,7 @@ export function ProfilePublicView({ idUsuario }: { idUsuario: number }) {
             </Card>
           </TabsContent>
 
-          {/* Pestaña de amigos */}
-          {/* <TabsContent value="friends" className="mt-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Amigos</CardTitle>
-                <CardDescription>
-                  {datosPerfil.nombre} tiene {seguidos.length} amigos
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {seguidos.map((friend) => (
-                    <Link href={`/perfil/${friend.id}`} key={friend.id}>
-                      <div
-                        className="border rounded-lg p-4 flex items-center gap-4 hover:border-primary transition-colors cursor-pointer"
-                      >
-                        <UserAvatar avatarData={friend.avatar} size="lg" />
-                        <div className="flex-1">
-                          <h3 className="font-medium">{friend.nombre}</h3>
-                          <p className="text-sm text-muted-foreground">
-                            @{friend.username}
-                          </p>
-                        </div>
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button variant="ghost" size="icon">
-                                <UserPlus className="h-4 w-4" />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p>Seguir a {friend.nombre}</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                      </div>
-                    </Link>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent> */}
+          
         </Tabs>
       </div>
     </div>
