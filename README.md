@@ -1,36 +1,60 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# My Media List 📚🎬🎮
 
-## Getting Started
+## Descripción
 
-First, run the development server:
+My Media List es una aplicación web moderna diseñada para ayudarte a organizar y gestionar tu colección personal de medios. Ya sean películas, series, libros, videojuegos o cualquier otro tipo de contenido multimedia, esta plataforma te permite catalogar, calificar y llevar un seguimiento de todo lo que has consumido o deseas consumir en el futuro.
+
+## Características Principales
+
+- **Gestión de Colecciones**: Organiza tus medios por categorías personalizadas
+- **Seguimiento de Progreso**: Marca elementos como pendientes, en progreso o completados
+- **Interfaz Moderna**: Diseño responsive con modo claro/oscuro usando TailwindCSS
+- **Experiencia Personalizada**: Crea perfiles y personaliza tu experiencia
+
+## Tecnologías Utilizadas
+
+- **Frontend**: Next.js 15, React 19, TailwindCSS 4
+- **UI Components**: Radix UI, Framer Motion
+- **Estado**: TanStack React Query
+- **Estilos**: Tailwind CSS con class-variance-authority
+
+## Arquitectura del Proyecto
+
+Este repositorio contiene únicamente el **frontend** de la aplicación My Media List. La aplicación completa está compuesta por:
+
+- **Frontend** (este repositorio): Interfaz de usuario desarrollada con Next.js
+- **Backend**: API y lógica de negocio disponible en [my-media-list-backend](https://github.com/Raen98/my-media-list-backend.git)
+
+Para ejecutar la aplicación completa, necesitarás configurar tanto el frontend como el backend.
+
+## Comenzando
+
+Para ejecutar el proyecto localmente:
 
 ```bash
+# Instalar dependencias
+npm install
+
+# Iniciar servidor de desarrollo
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Abre [http://localhost:3000](http://localhost:3000) en tu navegador para ver la aplicación.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Despliegue
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Esta aplicación puede ser fácilmente desplegada en la plataforma [Vercel](https://vercel.com) o cualquier otro proveedor que soporte aplicaciones Next.js.
 
-## Learn More
+## Contribuciones
 
-To learn more about Next.js, take a look at the following resources:
+Las contribuciones son bienvenidas. Si deseas contribuir al proyecto, por favor:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1. Haz fork del repositorio
+2. Crea una rama para tu función (`git checkout -b feature/amazing-feature`)
+3. Haz commit de tus cambios (`git commit -m 'Añadir nueva característica'`)
+4. Haz push a la rama (`git push origin feature/amazing-feature`)
+5. Abre un Pull Request
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Licencia
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Este proyecto está bajo la Licencia MIT. Consulta el archivo `LICENSE` para más detalles.
