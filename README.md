@@ -49,8 +49,6 @@ Esta aplicación puede ser fácilmente desplegada en la plataforma [Vercel](http
 
 Puedes ver una versión en vivo de la aplicación en: [https://mymedialist-henna.vercel.app/](https://mymedialist-henna.vercel.app/)
 
-> Nota: Reemplaza la URL anterior con la URL real de tu aplicación desplegada en Vercel.
-
 ## Contribuciones
 
 Las contribuciones son bienvenidas. Si deseas contribuir al proyecto, por favor:
