@@ -547,14 +547,14 @@ export default function Home() {
                   ) : watchlist.length > 0 ? (
                     watchlist.map((item) => (
                       <Link
-                        href={`/${`/${item.tipo === "P"
+                        href={`/${item.tipo === "P"
                           ? "pelicula"
                           : item.tipo === "S"
                             ? "serie"
                             : item.tipo === "L"
                               ? "libro"
                               : "videojuego"
-                          }/${item.id_api}`}/${item.id_api}`}
+                          }/${item.id_api}`}
                         key={`${item.id || item.id_api}-${item.tipo}`}
                         className="block"
                       >
@@ -600,14 +600,14 @@ export default function Home() {
                   ) : trendingContent.length > 0 ? (
                     trendingContent.map((item) => (
                       <Link
-                        href={`/${`/${item.tipo === "P"
+                        href={`/${item.tipo === "P"
                           ? "pelicula"
                           : item.tipo === "S"
                             ? "serie"
                             : item.tipo === "L"
                               ? "libro"
                               : "videojuego"
-                          }/${item.id_api}`}/${item.id_api}`}
+                          }/${item.id_api}`}
                         key={`${item.id || item.id_api}-${item.tipo}`}
                         className="block"
                       >
